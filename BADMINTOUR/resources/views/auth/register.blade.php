@@ -16,6 +16,21 @@
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
+        <!-- Role -->
+        <div class="mt-4">
+            <x-input-label :value="__('I am a')" />
+            <div class="mt-2 space-y-2">
+                <label class="inline-flex items-center">
+                    <input type="radio" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="role" value="player" {{ old('role', 'player') == 'player' ? 'checked' : ''  }} required>
+                    <span class="ms-2 text-s, text-gray-600">Player</span>
+                </label>
+                <label>
+                    <input type="radio" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-inidigo-500" name="role" value="manager" {{ old('role') == 'manager' ? 'checked' : '' }} required>
+                    <span class="ms-2 text-sm text-gray-600">Club Manager</span>
+                </label>
+                <x-input-error :messages="$errors->get('role')" class="mt-2" />
+        </div>
+
         <!-- Password -->
         <div class="mt-4">
             <x-input-label for="password" :value="__('Password')" />
