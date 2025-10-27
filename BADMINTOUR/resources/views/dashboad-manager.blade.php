@@ -17,4 +17,24 @@
                     <p class="text-sm text-indigo-700">View and manage all player in your club.</p>
                 </div>
 
+                <div class="bg-red-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-red-900 mb-2">Team Management</h4>
+                    <p class="text-sm text-indigo-700">Create teams, assign players, and set lineups.</p>
+                </div>
+
+                <div class="bg-red-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-red-900 mb-2">Schedule Events</h4>
+                    <p class="text-sm text-indigo-700">Schedule matches, training sessions, and events.</p>
+                </div>
+
+                <div class="bg-red-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-red-900 mb-2">Reports & Analytics</h4>
+                    <p class="text-sm text-indigo-700">View club statistics and player performance reports.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+</div>
+
+</x-app-layout>
