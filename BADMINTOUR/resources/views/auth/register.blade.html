@@ -106,5 +106,139 @@
                                 class="px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
                             >
                         </div>
+
+                        <!-- Region, Province, City -->
+                        <div class="grid grid-cols-3 gap-4">
+                            <select 
+                                name="region"
+                                class="px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-500 text-sm"
+                            >
+                                <option value="">Region</option>
+                                <option value="ncr">NCR</option>
+                                <option value="region1">Region I</option>
+                                <option value="region2">Region II</option>
+                            </select>
+                            <select 
+                                name="province"
+                                class="px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-500 text-sm"
+                            >
+                                <option value="">Province</option>
+                                <option value="metro_manila">Metro Manila</option>
+                            </select>
+                            <select 
+                                name="city"
+                                class="px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-500 text-sm"
+                            >
+                                <option value="">City</option>
+                                <option value="manila">Manila</option>
+                                <option value="quezon">Quezon City</option>
+                            </select>
+                        </div>
+
+                        <!-- Gender and Height -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <select 
+                                name="gender"
+                                class="px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-500 text-sm"
+                            >
+                                <option value="">Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <select 
+                                name="height"
+                                class="px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-500 text-sm"
+                            >
+                                <option value="">Height</option>
+                                <option value="150">150 cm</option>
+                                <option value="160">160 cm</option>
+                                <option value="170">170 cm</option>
+                                <option value="180">180 cm</option>
+                            </select>
+                        </div>
+
+                        <!-- Next Button -->
+                        <div class="pt-4 flex justify-center">
+                            <button 
+                                type="button"
+                                onclick="showStep2()"
+                                class="bg-[#7B1F3C] text-white font-semibold py-2.5 px-16 rounded-md hover:bg-[#5D1730] transition duration-200"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div id="step2" class="space-y-4 hidden">
+                        <!-- Email Address -->
+                        <div>
+                            <input 
+                                type="email" 
+                                name="email" 
+                                placeholder="Email Address"
+                                value="{{ old('email') }}"
+                                class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
+                            >
+                        </div>
+
+                        <!-- Username -->
+                        <div>
+                            <input 
+                                type="text" 
+                                name="username" 
+                                placeholder="Create username"
+                                value="{{ old('username') }}"
+                                class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
+                            >
+                        </div>
+
+                        <!-- Password -->
+                        <div>
+                            <input 
+                                type="password" 
+                                name="password" 
+                                placeholder="Create password"
+                                class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
+                            >
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div>
+                            <input 
+                                type="password" 
+                                name="password_confirmation" 
+                                placeholder="Confirm password"
+                                class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
+                            >
+                        </div>
+
+                        <!-- Create Button -->
+                        <div class="pt-6 flex justify-center">
+                            <button 
+                                type="submit"
+                                class="bg-[#7B1F3C] text-white font-semibold py-2.5 px-16 rounded-md hover:bg-[#5D1730] transition duration-200"
+                            >
+                                Create
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showStep2() {
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+        }
+
+        function showStep1() {
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step1').classList.remove('hidden');
+        }
+    </script>
 </body>
 </html>
