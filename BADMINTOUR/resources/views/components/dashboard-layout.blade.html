@@ -132,6 +132,144 @@
                                 <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#C85A54] rounded-full border-2 border-white"></span>
                             </button>
 
-                            
+                            <!-- Dropdown -->
+                            <div x-show="open"
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 scale-95"
+                                 x-transition:enter-end="opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100 scale-100"
+                                 x-transition:leave-end="opacity-0 scale-95"
+                                 class="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border-2 border-[#D4A574] z-50"
+                                 style="display: none;">
+                                
+                                <!-- Header -->
+                                <div class="px-4 py-3 border-b border-gray-200">
+                                    <h3 class="text-lg font-bold text-gray-900">Notifications</h3>
+                                </div>
+
+                                <!-- Notifications List -->
+                                <div class="max-h-96 overflow-y-auto">
+                                    <!-- Notification Item 1 - Unread -->
+                                    <div class="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 transition">
+                                        <div class="flex items-start space-x-3">
+                                            <!-- Icon -->
+                                            <div class="flex-shrink-0 w-10 h-10 bg-[#C85A54] rounded-full flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3z"/>
+                                                </svg>
+                                            </div>
+                                            <!-- Content -->
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center justify-between">
+                                                    <p class="text-sm font-bold text-gray-900">Tournament Registration Open</p>
+                                                    <span class="w-2 h-2 bg-[#C85A54] rounded-full"></span>
+                                                </div>
+                                                <p class="text-xs text-gray-600 mt-1">Registration for MYSB Club Tournament 2025 is now open. Don't miss out!</p>
+                                                <p class="text-xs text-gray-400 mt-1">2h ago</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Notification Item 2 - Unread -->
+                                    <div class="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 transition">
+                                        <div class="flex items-start space-x-3">
+                                            <!-- Icon -->
+                                            <div class="flex-shrink-0 w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </div>
+                                            <!-- Content -->
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center justify-between">
+                                                    <p class="text-sm font-bold text-gray-900">Match Schedule Updated</p>
+                                                    <span class="w-2 h-2 bg-[#C85A54] rounded-full"></span>
+                                                </div>
+                                                <p class="text-xs text-gray-600 mt-1">Your match in Men's Singles has been rescheduled to tomorrow at 10:00 AM.</p>
+                                                <p class="text-xs text-gray-400 mt-1">5h ago</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Notification Item 3 - Read -->
+                                    <div class="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 transition">
+                                        <div class="flex items-start space-x-3">
+                                            <!-- Icon -->
+                                            <div class="flex-shrink-0 w-10 h-10 bg-[#2C5F4F] rounded-full flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </div>
+                                            <!-- Content -->
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-semibold text-gray-700">Match Victory!</p>
+                                                <p class="text-xs text-gray-600 mt-1">Congratulations! You won your match in the City Championship.</p>
+                                                <p class="text-xs text-gray-400 mt-1">1d ago</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Notification Item 4 - Read -->
+                                    <div class="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 transition">
+                                        <div class="flex items-start space-x-3">
+                                            <!-- Icon -->
+                                            <div class="flex-shrink-0 w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </div>
+                                            <!-- Content -->
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-semibold text-gray-700">Ranking Updated</p>
+                                                <p class="text-xs text-gray-600 mt-1">Your ranking in Men's Singles has moved up to #12. Keep it up!</p>
+                                                <p class="text-xs text-gray-400 mt-1">2d ago</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Notification Item 5 - Read -->
+                                    <div class="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 transition">
+                                        <div class="flex items-start space-x-3">
+                                            <!-- Icon -->
+                                            <div class="flex-shrink-0 w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+                                                </svg>
+                                            </div>
+                                            <!-- Content -->
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-semibold text-gray-700">New Club Member</p>
+                                                <p class="text-xs text-gray-600 mt-1">Welcome the new member John Santos to Smashers Club!</p>
+                                                <p class="text-xs text-gray-400 mt-1">3d ago</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+
+                                <!-- Footer -->
+                                <div class="px-4 py-3 border-t border-gray-200 bg-gray-50 space-y-2">
+                                    <button class="w-full text-sm text-[#1B4965] hover:text-[#2C5F4F] font-semibold text-center py-1 transition">
+                                        Mark all as read
+                                    </button>
+                                    <a href="/notifications" class="block w-full">
+                                        <button class="w-full bg-[#C85A54] text-white px-4 py-2 rounded-lg hover:bg-[#B54A44] transition text-sm font-semibold">
+                                            View all notifications
+                                        </button>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <main class="flex-1 overflow-y-auto bg-gray-50 p-8">
+                {{ $slot }}
+            </main>
+        </div>
+    </div>
  </body>
 </html>
