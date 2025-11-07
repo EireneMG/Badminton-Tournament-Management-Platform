@@ -11,4 +11,16 @@
             </button>
         </div>
 
+         <!-- Notifications List -->
+        <div class="bg-white rounded-lg border-2 border-[#D4A574] overflow-hidden">
+            <!-- Notification Item 1 - Unread -->
+            <div class="px-6 py-4 hover:bg-gray-50 border-b border-gray-200 transition">
+                <div class="flex items-start space-x-4">
+                    <!-- Icon -->
+                    <div class="flex-shrink-0 w-12 h-12 bg-[#C85A54] rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3z"/>
+                        </svg>
+                    </div>
+
 </x-dashboard-layout>
