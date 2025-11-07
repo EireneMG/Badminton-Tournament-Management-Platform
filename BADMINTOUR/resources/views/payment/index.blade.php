@@ -114,3 +114,14 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Additional Notes -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Additional Notes (Optional)</label>
+                <textarea 
+                    x-model="notes"
+                    rows="3"
+                    placeholder="Any additional information or payment reference notes..."
+                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C85A54] focus:border-[#C85A54] resize-none"></textarea>
+            </div>
+
