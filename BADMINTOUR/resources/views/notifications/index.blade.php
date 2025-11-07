@@ -119,4 +119,10 @@
                 </div>
             </div>
 
+            <!-- More notifications would appear here -->
+            <div class="px-6 py-8 text-center text-gray-500">
+                <p class="text-sm">No more notifications</p>
+            </div>
+        </div>
+    </div>
 </x-dashboard-layout>
