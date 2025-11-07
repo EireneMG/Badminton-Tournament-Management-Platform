@@ -72,4 +72,29 @@
                 </div>
             </div>
 
+            <!-- Club Information -->
+            <div class="bg-white rounded-lg p-6 border-l-4 border-[#D4A574]">
+                <h2 class="text-xl font-bold mb-4">CLUB INFORMATION</h2>
+                <div class="space-y-3 text-sm">
+                    <div>
+                        <p class="text-gray-600">Club:</p>
+                        <p class="font-semibold">Smashers Club</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Skill level:</p>
+                        <p class="font-semibold">B</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Position:</p>
+                        <p class="font-semibold">Singles</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Member since:</p>
+                        <p class="font-semibold">2025</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
 </x-dashboard-layout>
