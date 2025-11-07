@@ -35,4 +35,22 @@
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Registration Fee -->
+            <div class="mb-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b-2 border-[#D4A574]">Registration Fee</h2>
+                <div class="bg-[#E8DCC4] rounded-lg p-6 border-2 border-[#D4A574]">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-gray-700">Men's Singles</span>
+                        <span class="font-semibold text-gray-900">₱ 500.00</span>
+                    </div>
+                    <div class="flex items-center justify-between mb-4 pb-4 border-b border-[#D4A574]">
+                        <span class="text-gray-700">Mixed Doubles</span>
+                        <span class="font-semibold text-gray-900">₱ 800.00</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xl font-bold text-gray-900">Total Amount</span>
+                        <span class="text-3xl font-bold text-[#C85A54]">₱ 1,300.00</span>
+                    </div>
+                </div>
+            </div>
