@@ -23,4 +23,21 @@
                         </svg>
                     </div>
 
+                    <!-- Content -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between">
+                            <p class="text-base font-bold text-gray-900">Tournament Registration Open</p>
+                            <div class="flex items-center space-x-3">
+                                <span class="text-sm text-gray-400">2h ago</span>
+                                <span class="w-3 h-3 bg-[#C85A54] rounded-full"></span>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-1">Registration for MYSB Club Tournament 2025 is now open. Don't miss out!</p>
+                    </div>
+                </div>
+            </div>
+
+            
+
+
 </x-dashboard-layout>
