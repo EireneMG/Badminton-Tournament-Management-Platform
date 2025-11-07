@@ -99,6 +99,24 @@
                 </div>
             </div>
 
-            
+            <!-- Notification Item 5 - Read -->
+            <div class="px-6 py-4 hover:bg-gray-50 border-b border-gray-200 transition">
+                <div class="flex items-start space-x-4">
+                    <!-- Icon -->
+                    <div class="flex-shrink-0 w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+                        </svg>
+                    </div>
+                    <!-- Content -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between">
+                            <p class="text-base font-semibold text-gray-700">New Club Member</p>
+                            <span class="text-sm text-gray-400">3d ago</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-1">Welcome the new member John Santos to Smashers Club!</p>
+                    </div>
+                </div>
+            </div>
 
 </x-dashboard-layout>
