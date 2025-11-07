@@ -28,5 +28,48 @@
                     </div>
                 </div>
 
-                
+                <!-- Club Badge -->
+                <div class="text-right">
+                    <p class="font-bold">SMASHERS CLUB</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personal & Club Information -->
+        <div class="grid grid-cols-2 gap-6 mb-6">
+            <!-- Personal Information -->
+            <div class="bg-white rounded-lg p-6 border-l-4 border-[#D4A574]">
+                <h2 class="text-xl font-bold mb-4">PERSONAL INFORMATION</h2>
+                <div class="space-y-3 text-sm">
+                    <div>
+                        <p class="text-gray-600">Full Name:</p>
+                        <p class="font-semibold">Carl Mangerman</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Age:</p>
+                        <p class="font-semibold">25</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Height:</p>
+                        <p class="font-semibold">175 cm</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Gender:</p>
+                        <p class="font-semibold">Male</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Date of Birth:</p>
+                        <p class="font-semibold">October 9, 1999</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Contact Number:</p>
+                        <p class="font-semibold">09260567891</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Address:</p>
+                        <p class="font-semibold">402 Matalino Street, Quezon City</p>
+                    </div>
+                </div>
+            </div>
+
 </x-dashboard-layout>
