@@ -1,40 +1,43 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Player Dashboard') }}
-        </h2>
-    </x-slot>
-
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <h3 class="text-lg font-semibold mb-4">Welcome, {{ Auth::user()->name }}!</h3>
-                    <p class="text-gray-600 mb-4">You're logged in as a <span class="font-semibold text-indigo-600">Player</span>.</p>
-                    
-                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-blue-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-blue-900 mb-2">My Stats</h4>
-                            <p class="text-sm text-blue-700">View your performance statistics and achievements.</p>
-                        </div>
-                        
-                        <div class="bg-green-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-green-900 mb-2">My Teams</h4>
-                            <p class="text-sm text-green-700">Manage your team memberships and schedules.</p>
-                        </div>
-                        
-                        <div class="bg-purple-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-purple-900 mb-2">Training Sessions</h4>
-                            <p class="text-sm text-purple-700">Book and view upcoming training sessions.</p>
-                        </div>
-                        
-                        <div class="bg-yellow-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-yellow-900 mb-2">Messages</h4>
-                            <p class="text-sm text-yellow-700">Check messages from your club managers.</p>
-                        </div>
-                    </div>
+<x-dashboard-layout greeting="WELCOME, PLAYER!" title="Player Dashboard">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Tournaments Section -->
+        <div class="lg:col-span-2 bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Tournaments</h2>
+            <div class="space-y-4">
+                <!-- Placeholder for tournament items -->
+                <div class="h-32 bg-gray-100 rounded border-2 border-dashed border-gray-300 flex items-center justify-center">
+                    <p class="text-gray-400">Tournament items will appear here</p>
+                </div>
+                <div class="h-32 bg-gray-100 rounded border-2 border-dashed border-gray-300 flex items-center justify-center">
+                    <p class="text-gray-400">Tournament items will appear here</p>
+                </div>
+                <div class="h-32 bg-gray-100 rounded border-2 border-dashed border-gray-300 flex items-center justify-center">
+                    <p class="text-gray-400">Tournament items will appear here</p>
                 </div>
             </div>
         </div>
+
+        <!-- Top Players Section -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Top Players</h2>
+            <div class="space-y-3">
+                <!-- Placeholder for top players -->
+                <div class="h-16 bg-gray-100 rounded border-2 border-dashed border-gray-300"></div>
+                <div class="h-16 bg-gray-100 rounded border-2 border-dashed border-gray-300"></div>
+                <div class="h-16 bg-gray-100 rounded border-2 border-dashed border-gray-300"></div>
+                <div class="h-16 bg-gray-100 rounded border-2 border-dashed border-gray-300"></div>
+            </div>
+        </div>
+
+        <!-- Top Clubs Section -->
+        <div class="lg:col-span-2 bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Top Clubs</h2>
+            <div class="space-y-3">
+                <!-- Placeholder for top clubs -->
+                <div class="h-20 bg-gray-100 rounded border-2 border-dashed border-gray-300"></div>
+                <div class="h-20 bg-gray-100 rounded border-2 border-dashed border-gray-300"></div>
+                <div class="h-20 bg-gray-100 rounded border-2 border-dashed border-gray-300"></div>
+            </div>
+        </div>
     </div>
-</x-app-layout>
+</x-dashboard-layout>
