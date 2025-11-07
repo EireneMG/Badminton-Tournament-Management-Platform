@@ -73,3 +73,44 @@
                     </p>
                 </div>
             </div>
+
+            <!-- Upload Payment Proof -->
+            <div class="mb-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b-2 border-[#D4A574]">Upload Payment Proof</h2>
+                <div class="border-2 border-dashed border-[#D4A574] rounded-lg p-6 text-center">
+                    <input 
+                        type="file" 
+                        id="payment-proof" 
+                        @change="handleFileUpload($event)"
+                        accept="image/*,.pdf"
+                        class="hidden">
+                    
+                    <div x-show="!uploadedFile">
+                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                        <label for="payment-proof" class="cursor-pointer">
+                            <span class="px-6 py-2.5 bg-[#C85A54] text-white rounded-lg font-semibold hover:bg-[#B54A44] transition inline-block">
+                                Choose File
+                            </span>
+                        </label>
+                        <p class="text-xs text-gray-500 mt-2">Upload screenshot, photo, or PDF of payment receipt</p>
+                        <p class="text-xs text-gray-500">Maximum file size: 5MB</p>
+                    </div>
+
+                     <div x-show="uploadedFile" class="flex items-center justify-center space-x-3">
+                        <svg class="h-8 w-8 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <div class="text-left">
+                            <p class="font-semibold text-gray-900" x-text="uploadedFile?.name"></p>
+                            <p class="text-xs text-gray-600" x-text="uploadedFile?.size"></p>
+                        </div>
+                        <button 
+                            @click="removeFile()"
+                            class="text-[#C85A54] hover:text-[#B54A44] font-semibold text-sm">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            </div>
