@@ -96,5 +96,41 @@
             </div>
         </div>
 
+        <!-- Player Statistics -->
+        <div class="bg-white rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">PLAYER STATISTICS</h2>
+            <div class="grid grid-cols-4 gap-4">
+                <div class="bg-[#C85A54] text-white rounded-lg p-6 text-center">
+                    <p class="text-sm mb-2">MATCHES PLAYED</p>
+                    <p class="text-4xl font-bold">40</p>
+                </div>
+                <div class="bg-[#C85A54] text-white rounded-lg p-6 text-center">
+                    <p class="text-sm mb-2">WINS</p>
+                    <p class="text-4xl font-bold">30</p>
+                </div>
+                <div class="bg-[#C85A54] text-white rounded-lg p-6 text-center">
+                    <p class="text-sm mb-2">LOSSES</p>
+                    <p class="text-4xl font-bold">10</p>
+                </div>
+                <div class="bg-[#C85A54] text-white rounded-lg p-6 text-center">
+                    <p class="text-sm mb-2">WIN RATE</p>
+                    <p class="text-4xl font-bold">60%</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Match History Tracking -->
+        <div class="bg-white rounded-lg p-6 mb-6 border-2 border-[#D4A574]">
+            <h2 class="text-xl font-bold mb-4">Match History Tracking</h2>
+            <div class="h-64 bg-gray-50 rounded flex items-center justify-center">
+                <p class="text-gray-400">Match history data will appear here</p>
+            </div>
+        </div>
+
+        <div class="flex justify-end mb-6">
+            <button class="bg-[#D4A574] text-white px-8 py-2 rounded-md hover:bg-[#C49664] transition font-semibold">
+                View more
+            </button>
+        </div>
 
 </x-dashboard-layout>
