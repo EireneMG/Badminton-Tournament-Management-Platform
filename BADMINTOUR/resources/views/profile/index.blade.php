@@ -133,4 +133,20 @@
             </button>
         </div>
 
+        <!-- Tournament History -->
+        <div class="bg-white rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">TOURNAMENT HISTORY</h2>
+            <div class="h-48 bg-gray-50 rounded flex items-center justify-center">
+                <p class="text-gray-400">Tournament history will appear here</p>
+            </div>
+        </div>
+
+        <!-- Ranking History -->
+        <div class="bg-white rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">RANKING HISTORY</h2>
+            <div class="h-48 bg-gray-50 rounded flex items-center justify-center">
+                <p class="text-gray-400">Ranking history chart will appear here</p>
+            </div>
+        </div>
+    </div>
 </x-dashboard-layout>
