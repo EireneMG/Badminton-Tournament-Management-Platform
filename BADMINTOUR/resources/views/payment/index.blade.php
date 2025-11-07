@@ -54,3 +54,22 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Payment Instructions -->
+            <div class="mb-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b-2 border-[#D4A574]">Payment Instructions</h2>
+                <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+                    <p class="text-sm text-gray-800 mb-3">
+                        <strong>Please transfer the registration fee to the following account:</strong>
+                    </p>
+                    <div class="space-y-2 text-sm text-gray-800">
+                        <p><strong>Bank Name:</strong> Philippine National Bank (PNB)</p>
+                        <p><strong>Account Name:</strong> Badminton Tournament Management</p>
+                        <p><strong>Account Number:</strong> 1234-5678-9012-3456</p>
+                        <p><strong>Payment Reference:</strong> Your Full Name + Tournament Name</p>
+                    </div>
+                    <p class="text-xs text-gray-600 mt-3">
+                        ⚠️ After making the payment, please upload the proof of payment below and submit this form.
+                    </p>
+                </div>
+            </div>
