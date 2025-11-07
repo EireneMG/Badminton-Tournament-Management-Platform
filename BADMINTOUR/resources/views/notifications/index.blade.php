@@ -79,5 +79,50 @@
                 </div>
             </div>
 
+            <!-- Notification Item 4 - Read -->
+            <div class="px-6 py-4 hover:bg-gray-50 border-b border-gray-200 transition">
+                <div class="flex items-start space-x-4">
+                    <!-- Icon -->
+                    <div class="flex-shrink-0 w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <!-- Content -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between">
+                            <p class="text-base font-semibold text-gray-700">Ranking Updated</p>
+                            <span class="text-sm text-gray-400">2d ago</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-1">Your ranking in Men's Singles has moved up to #12. Keep it up!</p>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Notification Item 5 - Read -->
+            <div class="px-6 py-4 hover:bg-gray-50 border-b border-gray-200 transition">
+                <div class="flex items-start space-x-4">
+                    <!-- Icon -->
+                    <div class="flex-shrink-0 w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+                        </svg>
+                    </div>
+                    <!-- Content -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between">
+                            <p class="text-base font-semibold text-gray-700">New Club Member</p>
+                            <span class="text-sm text-gray-400">3d ago</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-1">Welcome the new member John Santos to Smashers Club!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- More notifications would appear here -->
+            <div class="px-6 py-8 text-center text-gray-500">
+                <p class="text-sm">No more notifications</p>
+            </div>
+        </div>
+    </div>
 </x-dashboard-layout>
