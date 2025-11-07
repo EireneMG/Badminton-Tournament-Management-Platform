@@ -141,3 +141,48 @@
                 </div>
             </div>
 
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-between">
+                <a href="/tournaments" class="text-gray-600 hover:text-gray-900 font-semibold">
+                    ← Back to Tournaments
+                </a>
+                <div class="flex space-x-3">
+                    <button 
+                        @click="resetForm()"
+                        class="px-6 py-2.5 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition">
+                        Reset
+                    </button>
+                    <button 
+                        @click="submitPayment()"
+                        :disabled="!uploadedFile"
+                        :class="!uploadedFile ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#C85A54] hover:bg-[#B54A44]'"
+                        class="px-6 py-2.5 text-white rounded-lg font-semibold transition">
+                        Confirm Payment
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Message (Hidden by default) -->
+        <div x-show="showSuccess" x-cloak class="mt-6 bg-green-50 border-2 border-green-400 rounded-lg p-6 text-center">
+            <div class="mb-4">
+                <svg class="mx-auto h-12 w-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Payment Submitted Successfully!</h3>
+            <p class="text-gray-700 mb-4">Your payment proof has been uploaded. The tournament manager will review and verify your payment within 24-48 hours. You will receive a notification once your payment is confirmed.</p>
+            <div class="flex justify-center space-x-3">
+                <a href="/tournaments" class="px-6 py-2.5 bg-[#C85A54] text-white rounded-lg font-semibold hover:bg-[#B54A44] transition">
+                    Back to Tournaments
+                </a>
+                <a href="/player/dashboard" class="px-6 py-2.5 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition">
+                    Go to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
