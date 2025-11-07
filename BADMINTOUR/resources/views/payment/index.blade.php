@@ -184,5 +184,51 @@
     </div>
 </div>
 
+<script>
+function paymentData() {
+    return {
+        uploadedFile: null,
+        notes: '',
+        showSuccess: false,
+        
+        handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
+                this.uploadedFile = {
+                    name: file.name,
+                    size: `${fileSizeMB} MB`
+                };
+            }
+        },
+        
+        removeFile() {
+            this.uploadedFile = null;
+            document.getElementById('payment-proof').value = '';
+        },
+        
+        resetForm() {
+            this.uploadedFile = null;
+            this.notes = '';
+            this.showSuccess = false;
+            document.getElementById('payment-proof').value = '';
+        },
+        
+        submitPayment() {
+            if (this.uploadedFile) {
+                // UI-only: Simulate submission
+                this.showSuccess = true;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+    }
+}
+</script>
+
+<style>
+[x-cloak] { display: none !important; }
+</style>
+@endsection
+
 
 
