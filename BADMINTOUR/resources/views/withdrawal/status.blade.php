@@ -245,3 +245,27 @@
         </div>
     </div>
 </div>
+
+<script>
+function withdrawalStatusData() {
+    return {
+        showDeniedModal: false,
+        
+        openDeniedModal(requestId) {
+            this.showDeniedModal = true;
+        },
+        
+        cancelRequest(requestId) {
+            if (confirm('Are you sure you want to cancel this withdrawal request?')) {
+                // UI-only: Would remove request from list
+                alert('Request cancelled successfully!');
+            }
+        }
+    }
+}
+</script>
+
+<style>
+[x-cloak] { display: none !important; }
+</style>
+@endsection
