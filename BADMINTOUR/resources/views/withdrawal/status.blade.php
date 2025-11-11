@@ -171,5 +171,77 @@
         </div>
     </div>
 
-    
+    <!-- Denied Reason Modal -->
+    <div x-show="showDeniedModal" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div @click.away="showDeniedModal = false" class="bg-white rounded-lg max-w-2xl w-full p-6">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between mb-4 pb-4 border-b-2 border-[#D4A574]">
+                <h3 class="text-2xl font-bold text-gray-900">Withdrawal Request Result</h3>
+                <button @click="showDeniedModal = false" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="mb-6">
+                <!-- Status Badge -->
+                <div class="mb-4">
+                    <span class="px-4 py-2 border-2 border-[#C85A54] bg-red-50 text-red-700 text-sm rounded-full font-semibold inline-flex items-center space-x-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Request Denied</span>
+                    </span>
+                </div>
+
+                <!-- Tournament Info -->
+                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-xs text-gray-600 mb-1">Tournament</p>
+                            <p class="font-semibold text-gray-900">City Open Tournament</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-600 mb-1">Category</p>
+                            <p class="font-semibold text-gray-900">Women's Singles</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-600 mb-1">Request Date</p>
+                            <p class="font-semibold text-gray-900">Sep 28, 2025</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-600 mb-1">Decision Date</p>
+                            <p class="font-semibold text-gray-900">Sep 30, 2025</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Denial Reason -->
+                <div>
+                    <h4 class="text-sm font-bold text-gray-700 mb-2">Reason for Denial</h4>
+                    <div class="bg-red-50 border-l-4 border-[#C85A54] p-4 rounded">
+                        <p class="text-gray-800">
+                            Your withdrawal request has been denied because the tournament is currently in the bracket generation phase. All registered participants are required to compete as teams have already been finalized. Withdrawal at this stage would disrupt the tournament structure. Please contact the tournament organizer if you have extenuating circumstances.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Actions -->
+            <div class="flex justify-end space-x-3">
+                <button 
+                    @click="showDeniedModal = false"
+                    class="px-6 py-2.5 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition">
+                    Close
+                </button>
+                <a 
+                    href="/withdrawal"
+                    class="px-6 py-2.5 bg-[#C85A54] text-white rounded-lg font-semibold hover:bg-[#B54A44] transition">
+                    Submit New Request
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
