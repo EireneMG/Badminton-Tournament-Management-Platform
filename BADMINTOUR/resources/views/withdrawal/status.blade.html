@@ -1,0 +1,64 @@
+@extends('components.dashboard-layout')
+
+@section('content')
+<div class="min-h-screen bg-gray-50 p-6" x-data="withdrawalStatusData()">
+    <div class="max-w-6xl mx-auto">
+        <!-- Page Header -->
+        <div class="mb-6">
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">Withdrawal Request Status</h1>
+            <p class="text-gray-600">Track the status of your tournament withdrawal requests.</p>
+        </div>
+
+        <!-- Withdrawal Requests Table -->
+        <div class="bg-white rounded-lg border-2 border-[#D4A574] overflow-hidden">
+            <!-- Table Header -->
+            <div class="bg-gray-50 px-6 py-4 border-b-2 border-[#D4A574]">
+                <h2 class="text-lg font-bold text-gray-900">Your Withdrawal Requests</h2>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-100 border-b-2 border-[#D4A574]">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Tournament</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Categories</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Date Submitted</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Decision Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <!-- Pending Request -->
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4">
+                                <div class="font-semibold text-gray-900">National Badminton Championship 2025</div>
+                                <div class="text-sm text-gray-600">Jan 15-20, 2025</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                Men's Singles, Mixed Doubles
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-3 py-1 border-2 border-[#D4A574] bg-yellow-50 text-yellow-700 text-xs rounded-full font-semibold flex items-center space-x-1">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span>Pending</span>
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">Nov 1, 2025</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">—</td>
+                            <td class="px-6 py-4">
+                                <button 
+                                    @click="cancelRequest('request1')"
+                                    class="text-[#C85A54] hover:text-[#B54A44] font-semibold text-sm">
+                                    Cancel Request
+                                </button>
+                            </td>
+                        </tr>
+                        
+    </div>
+</div>
