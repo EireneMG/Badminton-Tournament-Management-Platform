@@ -59,6 +59,92 @@
                                 </button>
                             </td>
                         </tr>
-                        
+
+                        <!-- Approved Request -->
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4">
+                                <div class="font-semibold text-gray-900">Summer Smash Tournament</div>
+                                <div class="text-sm text-gray-600">Oct 20-22, 2025</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                Men's Doubles
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-3 py-1 border-2 border-[#2C5F4F] bg-green-50 text-green-700 text-xs rounded-full font-semibold flex items-center space-x-1">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span>Approved</span>
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">Oct 10, 2025</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">Oct 12, 2025</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">—</td>
+                        </tr>
+
+                        <!-- Denied Request -->
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4">
+                                <div class="font-semibold text-gray-900">City Open Tournament</div>
+                                <div class="text-sm text-gray-600">Oct 5-7, 2025</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                Women's Singles
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-3 py-1 border-2 border-[#C85A54] bg-red-50 text-red-700 text-xs rounded-full font-semibold flex items-center space-x-1">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span>Denied</span>
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">Sep 28, 2025</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">Sep 30, 2025</td>
+                            <td class="px-6 py-4">
+                                <button 
+                                    @click="openDeniedModal('request3')"
+                                    class="px-3 py-1 bg-[#C85A54] text-white text-sm rounded hover:bg-[#B54A44] transition font-semibold">
+                                    View Reason
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Another Pending Request -->
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4">
+                                <div class="font-semibold text-gray-900">Regional Championship</div>
+                                <div class="text-sm text-gray-600">Nov 12-14, 2025</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                Mixed Doubles
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-3 py-1 border-2 border-[#D4A574] bg-yellow-50 text-yellow-700 text-xs rounded-full font-semibold flex items-center space-x-1">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span>Pending</span>
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">Nov 3, 2025</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">—</td>
+                            <td class="px-6 py-4">
+                                <button 
+                                    @click="cancelRequest('request4')"
+                                    class="text-[#C85A54] hover:text-[#B54A44] font-semibold text-sm">
+                                    Cancel Request
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
     </div>
 </div>
