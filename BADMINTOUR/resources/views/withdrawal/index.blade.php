@@ -1,4 +1,6 @@
-@extends('components.dashboard-layout') @section('content')
+@extends('components.dashboard-layout') 
+
+@section('content')
 <div class="min-h-screen bg-gray-50 p-6" x-data="withdrawalRequestData()">
     <div class="max-w-4xl mx-auto">
         <!-- Page Header -->
@@ -160,5 +162,57 @@
                 </div>
             </div>
         </div>
+
+        <!-- Success Message (Hidden by default) -->
+        <div x-show="showSuccess" x-cloak class="mt-6 bg-green-50 border-2 border-green-400 rounded-lg p-6 text-center">
+            <div class="mb-4">
+                <svg class="mx-auto h-12 w-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Withdrawal Request Submitted!</h3>
+            <p class="text-gray-700 mb-4">Your request has been sent to the tournament manager for review. You will be notified once a decision is made.</p>
+            <div class="flex justify-center space-x-3">
+                <a href="/withdrawal/status" class="px-6 py-2.5 bg-[#C85A54] text-white rounded-lg font-semibold hover:bg-[#B54A44] transition">
+                    View Withdrawal Status
+                </a>
+                <a href="/tournaments" class="px-6 py-2.5 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition">
+                    Back to Tournaments
+                </a>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+function withdrawalRequestData() {
+    return {
+        selectedTournament: null,
+        withdrawalReason: '',
+        showSuccess: false,
+        
+        selectTournament(id) {
+            this.selectedTournament = id;
+        },
+        
+        resetForm() {
+            this.selectedTournament = null;
+            this.withdrawalReason = '';
+            this.showSuccess = false;
+        },
+        
+        submitRequest() {
+            if (this.selectedTournament && this.withdrawalReason.length >= 20) {
+                // UI-only: Simulate submission
+                this.showSuccess = true;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+    }
+}
+</script>
+
+<style>
+[x-cloak] { display: none !important; }
+</style>
+@endsection
