@@ -20,7 +20,92 @@
 
                 <!-- Tournament Cards List -->
                 <div class="space-y-3">
-                    
+                    <!-- Tournament 1 - Eligible -->
+                    <div 
+                        @click="selectTournament('tournament1')"
+                        :class="selectedTournament === 'tournament1' ? 'border-[#C85A54] bg-red-50' : 'border-[#D4A574] hover:border-[#C85A54]'"
+                        class="border-2 rounded-lg p-4 cursor-pointer transition">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <h3 class="font-bold text-gray-900">National Badminton Championship 2025</h3>
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-semibold">Eligible</span>
+                                </div>
+                                <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                    <span>📅 Jan 15-20, 2025</span>
+                                    <span>📍 Metro Sports Complex</span>
+                                    <span class="text-[#C85A54] font-semibold">Withdrawal Deadline: Jan 10, 2025</span>
+                                </div>
+                                <div class="mt-2 text-sm text-gray-700">
+                                    <span class="font-semibold">Joined Categories:</span> Men's Singles, Mixed Doubles
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <input 
+                                    type="radio" 
+                                    name="tournament" 
+                                    :checked="selectedTournament === 'tournament1'"
+                                    class="w-5 h-5 text-[#C85A54] focus:ring-[#C85A54]">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tournament 2 - Eligible -->
+                    <div 
+                        @click="selectTournament('tournament2')"
+                        :class="selectedTournament === 'tournament2' ? 'border-[#C85A54] bg-red-50' : 'border-[#D4A574] hover:border-[#C85A54]'"
+                        class="border-2 rounded-lg p-4 cursor-pointer transition">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <h3 class="font-bold text-gray-900">City Open Tournament</h3>
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-semibold">Eligible</span>
+                                </div>
+                                <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                    <span>📅 Feb 5-7, 2025</span>
+                                    <span>📍 Central Arena</span>
+                                    <span class="text-[#C85A54] font-semibold">Withdrawal Deadline: Jan 30, 2025</span>
+                                </div>
+                                <div class="mt-2 text-sm text-gray-700">
+                                    <span class="font-semibold">Joined Categories:</span> Men's Doubles
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <input 
+                                    type="radio" 
+                                    name="tournament" 
+                                    :checked="selectedTournament === 'tournament2'"
+                                    class="w-5 h-5 text-[#C85A54] focus:ring-[#C85A54]">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tournament 3 - Deadline Passed -->
+                    <div class="border-2 border-gray-300 rounded-lg p-4 bg-gray-50 opacity-60 cursor-not-allowed">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <h3 class="font-bold text-gray-900">Summer Smash Tournament</h3>
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full font-semibold">Deadline Passed</span>
+                                </div>
+                                <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                    <span>📅 Jan 8-10, 2025</span>
+                                    <span>📍 Stadium Arena</span>
+                                    <span class="text-gray-500 font-semibold">❌ Withdrawal not allowed</span>
+                                </div>
+                                <div class="mt-2 text-sm text-gray-700">
+                                    <span class="font-semibold">Joined Categories:</span> Women's Singles
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <input 
+                                    type="radio" 
+                                    name="tournament" 
+                                    disabled
+                                    class="w-5 h-5 text-gray-400">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
