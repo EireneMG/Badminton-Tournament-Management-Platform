@@ -57,5 +57,38 @@ Route::middleware('auth')->group(function () {
         return redirect()->route('manager.dashboard');
     })->middleware('manager')->name('manager.create-club.submit');
 
+    // Manager Routes
+    Route::get('/manager/tournaments', function () {
+        return view('manager.tournaments');
+    })->middleware('manager')->name('manager.tournaments');
+    
+    Route::get('/manager/tournaments/create', function () {
+        return view('manager.tournaments.create');
+    })->middleware('manager')->name('manager.tournaments.create');
+    
+    Route::get('/manager/tournaments/generate', function () {
+        return view('manager.tournaments.generate');
+    })->middleware('manager')->name('manager.tournaments.generate');
+    
+    Route::get('/manager/matches', function () {
+        return view('manager.matches');
+    })->middleware('manager')->name('manager.matches');
+    
+    Route::get('/manager/club', function () {
+        return view('manager.club');
+    })->middleware('manager')->name('manager.club');
+    
+    Route::get('/manager/ranking', function () {
+        return view('manager.ranking');
+    })->middleware('manager')->name('manager.ranking');
+    
+    Route::get('/manager/players', function () {
+        return view('manager.players');
+    })->middleware('manager')->name('manager.players');
+    
+    Route::get('/manager/profile', function () {
+        return view('manager.profile');
+    })->middleware('manager')->name('manager.profile');
+
     
 });
