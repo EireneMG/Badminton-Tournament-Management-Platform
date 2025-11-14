@@ -184,4 +184,28 @@
                                 </div>
                             </div>
 
+                            <!-- ACTION BUTTONS -->
+                            <div x-show="categories.mens_singles.withdrawalStatus !== 'approved'">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <!-- Withdraw Button: Show if registered, deadline not passed, and status is null or denied -->
+                                    <button 
+                                        x-show="categories.mens_singles.registered && !categories.mens_singles.deadlinePassed && (categories.mens_singles.withdrawalStatus === null || categories.mens_singles.withdrawalStatus === 'denied')"
+                                        @click="openWithdrawModal('mens_singles')"
+                                        class="bg-gray-600 text-white px-3 py-1.5 rounded text-sm hover:bg-gray-700 transition">
+                                        Withdraw
+                                    </button>
+                                    
+                                    <!-- Register Button: Show if not registered -->
+                                    <button 
+                                        x-show="!categories.mens_singles.registered"
+                                        class="bg-[#C85A54] text-white px-3 py-1.5 rounded text-sm hover:bg-[#B54A44] transition">
+                                        Register
+                                    </button>
+                                    
+                                    <!-- View Button: Always show unless approved -->
+                                    <button class="bg-[#C85A54] text-white px-3 py-1.5 rounded text-sm hover:bg-[#B54A44] transition">View</button>
+                                </div>
+                            </div>
+                        </div>
+
 </x-dashboard-layout>
