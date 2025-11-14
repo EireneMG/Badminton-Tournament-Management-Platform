@@ -128,4 +128,60 @@
                             </div>
                             <p class="text-xs text-gray-500 mb-3">8/10 Registered</p>
 
+                            <!-- STATE: Withdrawal Approved -->
+                            <div x-show="categories.mens_singles.withdrawalStatus === 'approved'" class="mb-3">
+                                <div class="bg-green-50 border-l-4 border-green-500 p-3 rounded">
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="text-xs font-semibold text-green-800">Withdrawn</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- STATE: Withdrawal Pending -->
+                            <div x-show="categories.mens_singles.withdrawalStatus === 'pending'" class="mb-3">
+                                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <div class="flex items-center mb-1">
+                                                <svg class="w-4 h-4 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <span class="text-xs font-semibold text-yellow-800">Withdrawal Request Pending</span>
+                                            </div>
+                                            <p class="text-xs text-yellow-700 ml-6">Waiting for manager approval</p>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        @click="cancelWithdrawal('mens_singles')"
+                                        class="text-xs text-[#C85A54] hover:text-[#B54A44] font-semibold mt-2 ml-6">
+                                        Cancel Withdrawal Request
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- STATE: Withdrawal Denied -->
+                            <div x-show="categories.mens_singles.withdrawalStatus === 'denied'" class="mb-3">
+                                <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded">
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="text-xs font-semibold text-red-800">Withdrawal Request Denied</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- STATE: Deadline Passed -->
+                            <div x-show="categories.mens_singles.registered && categories.mens_singles.deadlinePassed && !categories.mens_singles.withdrawalStatus" class="mb-3">
+                                <div class="flex items-center text-gray-500">
+                                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span class="text-xs font-semibold">Withdrawal period has ended</span>
+                                </div>
+                            </div>
+
 </x-dashboard-layout>
