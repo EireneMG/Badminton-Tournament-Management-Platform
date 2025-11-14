@@ -442,4 +442,86 @@
                             </div>
                         </div>
 
+                        <!-- Mixed Doubles (Demonstrates Deadline Passed) -->
+                        <div class="border-2 border-[#D4A574] rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-semibold">Mixed Doubles</span>
+                                <span class="text-sm text-[#C85A54] font-semibold">Full</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mb-3">10/10 Registered</p>
+                            
+                            <div x-show="categories.mixed_doubles.withdrawalStatus === 'approved'" class="mb-3">
+                                <div class="bg-green-50 border-l-4 border-green-500 p-3 rounded">
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="text-xs font-semibold text-green-800">Withdrawn</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div x-show="categories.mixed_doubles.withdrawalStatus === 'pending'" class="mb-3">
+                                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <div class="flex items-center mb-1">
+                                                <svg class="w-4 h-4 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <span class="text-xs font-semibold text-yellow-800">Withdrawal Request Pending</span>
+                                            </div>
+                                            <p class="text-xs text-yellow-700 ml-6">Waiting for manager approval</p>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        @click="cancelWithdrawal('mixed_doubles')"
+                                        class="text-xs text-[#C85A54] hover:text-[#B54A44] font-semibold mt-2 ml-6">
+                                        Cancel Withdrawal Request
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div x-show="categories.mixed_doubles.withdrawalStatus === 'denied'" class="mb-3">
+                                <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded">
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="text-xs font-semibold text-red-800">Withdrawal Request Denied</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div x-show="categories.mixed_doubles.registered && categories.mixed_doubles.deadlinePassed && !categories.mixed_doubles.withdrawalStatus" class="mb-3">
+                                <div class="flex items-center text-gray-500">
+                                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span class="text-xs font-semibold">Withdrawal period has ended</span>
+                                </div>
+                            </div>
+                            
+                            <div x-show="categories.mixed_doubles.withdrawalStatus !== 'approved'">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button 
+                                        x-show="categories.mixed_doubles.registered && !categories.mixed_doubles.deadlinePassed && (categories.mixed_doubles.withdrawalStatus === null || categories.mixed_doubles.withdrawalStatus === 'denied')"
+                                        @click="openWithdrawModal('mixed_doubles')"
+                                        class="bg-gray-600 text-white px-3 py-1.5 rounded text-sm hover:bg-gray-700 transition">
+                                        Withdraw
+                                    </button>
+                                    <button 
+                                        x-show="!categories.mixed_doubles.registered"
+                                        class="bg-[#C85A54] text-white px-3 py-1.5 rounded text-sm hover:bg-[#B54A44] transition">
+                                        Register
+                                    </button>
+                                    <button class="bg-[#C85A54] text-white px-3 py-1.5 rounded text-sm hover:bg-[#B54A44] transition">View</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 </x-dashboard-layout>
