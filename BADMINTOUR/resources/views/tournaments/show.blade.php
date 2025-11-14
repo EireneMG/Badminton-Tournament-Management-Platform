@@ -96,4 +96,24 @@
                             <span>Organizer: Coach Luisa Gregorio</span>
                         </div>
                     </div>
+
+                    <!-- Tabs -->
+                    <div class="border-b-2 border-[#D4A574] mb-6">
+                        <div class="flex space-x-6">
+                            <button class="px-2 py-3 border-b-2 border-[#C85A54] font-semibold text-gray-900 text-sm">Overview</button>
+                            <button class="px-2 py-3 border-b-2 border-transparent font-semibold text-gray-600 hover:text-[#C85A54] text-sm">Registration Details</button>
+                            <button class="px-2 py-3 border-b-2 border-transparent font-semibold text-gray-600 hover:text-[#C85A54] text-sm">Match Fixtures</button>
+                            <button class="px-2 py-3 border-b-2 border-transparent font-semibold text-gray-600 hover:text-[#C85A54] text-sm">Participants</button>
+                        </div>
+                    </div>
+
+                    <!-- Overview Content -->
+                    <div class="text-gray-700 leading-relaxed">
+                        <p>The MYSB Club Tournament 2025 is the club's annual event, bringing together players of all skill levels for a competitive yet community-centered event. The tournament is currently in progress, with players competing across categories. Live updates of matches, results, and standings are available throughout the event.</p>
+                    </div>
+                </div>
+            </div>
+
+            
+
 </x-dashboard-layout>
