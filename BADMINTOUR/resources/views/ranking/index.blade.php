@@ -47,3 +47,69 @@
             <button class="bg-white text-gray-700 px-6 py-2 rounded font-semibold hover:bg-gray-100">WOMEN'S DOUBLES</button>
             <button class="bg-white text-gray-700 px-6 py-2 rounded font-semibold hover:bg-gray-100">MIXED DOUBLES</button>
         </div>
+
+        <!-- Ranking Table -->
+        <div class="bg-white border-2 border-[#D4A574] rounded-lg overflow-hidden shadow-sm">
+            <table class="w-full">
+                <thead class="bg-gray-100 border-b">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Rank</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Region</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Club</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Tournaments</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Points</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Breakdown</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 font-semibold">1</td>
+                        <td class="px-6 py-4 font-semibold">ONG, Emmanuel</td>
+                        <td class="px-6 py-4">Luzon</td>
+                        <td class="px-6 py-4">Ninjas</td>
+                        <td class="px-6 py-4">7</td>
+                        <td class="px-6 py-4 font-semibold">645</td>
+                        <td class="px-6 py-4">
+                            <button class="text-gray-600 hover:text-gray-900">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 font-semibold">2</td>
+                        <td class="px-6 py-4 font-semibold">DELA CRUZ, Ken</td>
+                        <td class="px-6 py-4">NCR</td>
+                        <td class="px-6 py-4">Panthers</td>
+                        <td class="px-6 py-4">6</td>
+                        <td class="px-6 py-4 font-semibold">598</td>
+                        <td class="px-6 py-4">
+                            <button class="text-gray-600 hover:text-gray-900">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 font-semibold">3</td>
+                        <td class="px-6 py-4 font-semibold">MEGAN, Hanns</td>
+                        <td class="px-6 py-4">NCR</td>
+                        <td class="px-6 py-4">Ninjas</td>
+                        <td class="px-6 py-4">5</td>
+                        <td class="px-6 py-4 font-semibold">564</td>
+                        <td class="px-6 py-4">
+                            <button class="text-gray-600 hover:text-gray-900">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</x-dashboard-layout>
