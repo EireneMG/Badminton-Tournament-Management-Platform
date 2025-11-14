@@ -90,5 +90,71 @@ Route::middleware('auth')->group(function () {
         return view('manager.profile');
     })->middleware('manager')->name('manager.profile');
 
+    // Tournaments
+    Route::get('/tournaments', function () {
+        return view('tournaments.index');
+    })->name('tournaments.index');
     
+    Route::get('/tournaments/{id}', function () {
+        return view('tournaments.show');
+    })->name('tournaments.show');
+    
+    // Ranking
+    Route::get('/ranking', function () {
+        return view('ranking.index');
+    })->name('ranking.index');
+    
+    // Clubs
+    Route::get('/clubs', function () {
+        return view('clubs.index');
+    })->name('clubs.index');
+    
+    Route::get('/clubs/{id}', function () {
+        return view('clubs.show');
+    })->name('clubs.show');
+    
+    // Players
+    Route::get('/players', function () {
+        return view('players.index');
+    })->name('players.index');
+    
+    Route::get('/players/{id}', function () {
+        return view('players.show');
+    })->name('players.show');
+    
+    // Profile
+    Route::get('/profile', function () {
+        return view('profile.index');
+    })->name('profile.index');
+    
+    // Notifications
+    Route::get('/notifications', function () {
+        return view('notifications.index');
+    })->name('notifications.index');
+    
+    // Withdrawal
+    Route::get('/withdrawal', function () {
+        return view('withdrawal.index');
+    })->name('withdrawal.index');
+    
+    Route::get('/withdrawal/status', function () {
+        return view('withdrawal.status');
+    })->name('withdrawal.status');
+    
+    // Payment
+    Route::get('/payment', function () {
+        return view('payment.index');
+    })->name('payment.index');
+    
+    // Restricted Access
+    Route::get('/restricted', function () {
+        return view('restricted');
+    })->name('restricted');
+    
+    // Original profile routes (Breeze)
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+require __DIR__.'/auth.php';
