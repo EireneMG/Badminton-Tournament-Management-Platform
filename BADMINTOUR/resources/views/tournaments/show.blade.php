@@ -114,6 +114,18 @@
                 </div>
             </div>
 
-            
+            <!-- Categories Sidebar -->
+            <div class="col-span-1">
+                <div class="bg-white rounded-lg p-6 sticky top-6">
+                    <h3 class="text-xl font-bold mb-4">Categories</h3>
+                    
+                    <div class="space-y-3">
+                        <!-- Men's Singles -->
+                        <div class="border-2 border-[#D4A574] rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-semibold">Men's Singles</span>
+                                <span class="text-sm text-[#C85A54] font-semibold">Open</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mb-3">8/10 Registered</p>
 
 </x-dashboard-layout>
