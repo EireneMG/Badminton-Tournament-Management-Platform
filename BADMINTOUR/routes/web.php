@@ -38,3 +38,24 @@ Route::get('/player/dashboard', function () {
 Route::get('/manager/dashboard', function () {
     return view('manager.dashboard');
 })->middleware(['auth', 'verified', 'manager'])->name('manager.dashboard');
+
+Route::middleware('auth')->group(function () {
+    // Manager Onboarding Routes
+    Route::get('/manager/verify-id', function () {
+        return view('manager.verify-id');
+    })->middleware('manager')->name('manager.verify-id');
+    
+    Route::post('/manager/verify-id', function () {
+        return redirect()->route('manager.create-club');
+    })->middleware('manager')->name('manager.verify-id.submit');
+    
+    Route::get('/manager/create-club', function () {
+        return view('manager.create-club');
+    })->middleware('manager')->name('manager.create-club');
+    
+    Route::post('/manager/create-club', function () {
+        return redirect()->route('manager.dashboard');
+    })->middleware('manager')->name('manager.create-club.submit');
+
+    
+});
