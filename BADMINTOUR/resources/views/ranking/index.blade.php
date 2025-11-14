@@ -38,3 +38,12 @@
                 </button>
             </div>
         </div>
+
+         <!-- Category Tabs -->
+        <div class="bg-white border-2 border-[#D4A574] rounded-lg p-1 mb-6 inline-flex space-x-1">
+            <button class="bg-[#C85A54] text-white px-6 py-2 rounded font-semibold hover:bg-[#B54A44]">MEN'S SINGLES</button>
+            <button class="bg-white text-gray-700 px-6 py-2 rounded font-semibold hover:bg-gray-100">WOMEN'S SINGLES</button>
+            <button class="bg-white text-gray-700 px-6 py-2 rounded font-semibold hover:bg-gray-100">MEN'S DOUBLES</button>
+            <button class="bg-white text-gray-700 px-6 py-2 rounded font-semibold hover:bg-gray-100">WOMEN'S DOUBLES</button>
+            <button class="bg-white text-gray-700 px-6 py-2 rounded font-semibold hover:bg-gray-100">MIXED DOUBLES</button>
+        </div>
