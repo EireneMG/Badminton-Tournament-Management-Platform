@@ -26,3 +26,19 @@
         document.getElementById('logo-upload').value = '';
     }
 }">
+    <div class="min-h-screen flex items-center justify-center p-4 py-12">
+        <div class="w-full max-w-4xl">
+            <!-- Logo -->
+            <div class="flex justify-center mb-8">
+                <img src="{{ asset('images/badmintour-logo.png') }}" alt="BadminTour Logo" class="h-24">
+            </div>
+
+            <!-- Main Card -->
+            <div class="bg-white rounded-lg shadow-lg p-8 md:p-12">
+                <!-- Header -->
+                <div class="text-center mb-8">
+                    <h1 class="text-4xl font-bold text-[#2C5F4F] mb-3">Create Your Club</h1>
+                    <p class="text-gray-600 text-lg">Complete the details below to register your club in the BadminTour system.</p>
+                </div>
+
+               
