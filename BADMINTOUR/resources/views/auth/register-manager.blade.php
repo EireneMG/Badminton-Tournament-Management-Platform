@@ -168,6 +168,5 @@
     <style>
     [x-cloak] { display: none !important; }
     </style>
-    </div>
 </body>
 </html>
