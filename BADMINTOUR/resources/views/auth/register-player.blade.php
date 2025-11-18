@@ -159,7 +159,78 @@
                             </select>
                         </div>
 
-                        
+                        <!-- Next Button -->
+                        <div class="pt-4 flex justify-center">
+                            <button 
+                                type="button"
+                                onclick="showStep2()"
+                                class="bg-[#7B1F3C] text-white font-semibold py-2.5 px-16 rounded-md hover:bg-[#5D1730] transition duration-200"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div id="step2" class="space-y-4 hidden">
+                        <!-- Email Address -->
+                        <div>
+                            <input 
+                                type="email" 
+                                name="email" 
+                                placeholder="Email Address"
+                                value="{{ old('email') }}"
+                                class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
+                            >
+                        </div>
+
+                        <!-- Username -->
+                        <div>
+                            <input 
+                                type="text" 
+                                name="username" 
+                                placeholder="Create username"
+                                value="{{ old('username') }}"
+                                class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
+                            >
+                        </div>
+
+                        <!-- Password -->
+                        <div>
+                            <input 
+                                type="password" 
+                                name="password" 
+                                placeholder="Create password"
+                                class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
+                            >
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div>
+                            <input 
+                                type="password" 
+                                name="password_confirmation" 
+                                placeholder="Confirm password"
+                                class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
+                            >
+                        </div>
+
+                        <!-- Create Button -->
+                        <div class="pt-6 flex justify-center">
+                            <button 
+                                type="submit"
+                                class="bg-[#7B1F3C] text-white font-semibold py-2.5 px-16 rounded-md hover:bg-[#5D1730] transition duration-200"
+                            >
+                                Create
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    
     </div>
 </body>
 </html>
