@@ -97,3 +97,13 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Already have account -->
+            <div class="text-center mt-8">
+                <p class="text-white">
+                    Already have an account? 
+                    <a href="/login" class="text-[#D4A574] hover:text-white font-semibold transition">Login here</a>
+                </p>
+            </div>
+        </div>
+    </div>
