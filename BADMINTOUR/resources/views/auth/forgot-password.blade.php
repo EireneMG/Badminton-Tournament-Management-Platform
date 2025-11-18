@@ -29,3 +29,13 @@
                 <p class="text-gray-600 text-center mb-12 text-sm">
                     No problem. Enter your email address and we'll send you a password reset link.
                 </p>
+
+                <!-- Session Status -->
+                @if (session('status'))
+                    <div class="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg text-sm">
+                        {{ session('status') }}
+                    </div>
+                @endif
+                
+                <form method="POST" action="{{ route('password.email') }}" class="space-y-6">
+                    @csrf
