@@ -154,3 +154,28 @@
                             </div>
                         </div>
                     </div>
+
+                     <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 pt-6">
+                        <a href="{{ route('manager.verify-id') }}" 
+                           class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg font-semibold text-center transition duration-200">
+                            Back
+                        </a>
+                        <button type="submit" 
+                                class="flex-1 bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-6 py-3 rounded-lg font-semibold transition duration-200">
+                            Create Club
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Help Text -->
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-500">
+                        Questions? <a href="#" class="text-[#2C5F4F] hover:text-[#244D3E] font-semibold">View Club Guidelines</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
