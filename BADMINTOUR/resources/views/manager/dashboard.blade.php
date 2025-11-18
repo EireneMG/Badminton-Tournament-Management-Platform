@@ -58,7 +58,38 @@
                     </a>
                 </div>
 
-                
+                <!-- Dashboard Sections Grid -->
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <!-- Your Tournaments Section -->
+                    <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">Your Tournaments</h2>
+                        
+                        <!-- Ongoing -->
+                        <div class="mb-6">
+                            <h3 class="text-sm font-semibold text-gray-600 mb-2">Ongoing - 3 matches today</h3>
+                            <div class="bg-white rounded-md p-4 border border-gray-200">
+                                <p class="text-sm text-gray-500">No ongoing tournaments</p>
+                            </div>
+                        </div>
+
+                        <!-- Upcoming -->
+                        <div class="mb-6">
+                            <h3 class="text-sm font-semibold text-gray-600 mb-2">Upcoming</h3>
+                            <div class="bg-white rounded-md p-4 border border-gray-200">
+                                <p class="text-sm text-gray-500">No upcoming tournaments</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Players Section -->
+                    <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">Top Players</h2>
+                        <div class="bg-white rounded-md p-4 border border-gray-200">
+                            <p class="text-sm text-gray-500">No player data available</p>
+                        </div>
+                    </div>
+                </div>
+
 
 </body>
 </html>
