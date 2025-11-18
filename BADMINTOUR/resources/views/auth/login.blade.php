@@ -11,6 +11,7 @@
         <!-- Left Side - Black Background -->
         <div class="w-5/12 bg-black flex flex-col justify-between p-12">
             <div class="flex-1 flex items-center">
+                <img src="{{ asset('images/logo.jpg') }}" alt="Badminton Tournament Management Platform" class="w-48 h-48 mb-6 object-contain">
                 <h1 class="text-white text-4xl font-bold leading-tight">
                     Badminton Tournament<br>Management Platform
                 </h1>

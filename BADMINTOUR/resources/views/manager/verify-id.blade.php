@@ -26,7 +26,6 @@
         document.getElementById('id-upload').value = '';
     }
 }">
-
     <div class="min-h-screen flex items-center justify-center p-4">
         <div class="w-full max-w-2xl">
             <!-- Logo -->
@@ -42,7 +41,7 @@
                     <p class="text-gray-600 text-lg">Please upload a valid government ID to verify your identity.</p>
                 </div>
 
-            <!-- Form -->
+                <!-- Form -->
                 <form action="{{ route('manager.verify-id.submit') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                     @csrf
                     <!-- Upload Area -->
@@ -72,8 +71,74 @@
                                 <p class="text-xs text-gray-500">PNG, JPG, JPEG up to 10MB</p>
                             </div>
                         </div>
+
+                        <!-- Image Preview -->
+                        <div x-show="idImagePreview" 
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 transform scale-95"
+                             x-transition:enter-end="opacity-100 transform scale-100"
+                             class="relative">
+                            <div class="border-2 border-[#2C5F4F] rounded-lg p-4 bg-gray-50">
+                                <img :src="idImagePreview" 
+                                     alt="ID Preview" 
+                                     class="w-full h-64 object-contain rounded">
+                                <button type="button" 
+                                        @click="removeImage()"
+                                        class="absolute top-6 right-6 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition duration-200">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-2 flex items-center">
+                                <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                ID uploaded successfully
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Important Notice -->
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                        <div class="flex">
+                            <svg class="h-5 w-5 text-blue-500 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div class="text-sm text-blue-700">
+                                <p class="font-semibold mb-1">Important Information</p>
+                                <ul class="list-disc list-inside space-y-1 text-blue-600">
+                                    <li>Accepted documents: National ID, Driver's License, Passport</li>
+                                    <li>Ensure all details are clearly visible</li>
+                                    <li>Your information will be kept secure and confidential</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 pt-6">
+                        <a href="{{ route('manager.dashboard') }}" 
+                           class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg font-semibold text-center transition duration-200">
+                            Cancel
+                        </a>
+                        <button type="submit" 
+                                :disabled="!idImagePreview"
+                                :class="idImagePreview ? 'bg-[#2C5F4F] hover:bg-[#244D3E] cursor-pointer' : 'bg-gray-300 cursor-not-allowed'"
+                                class="flex-1 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 disabled:opacity-50">
+                            Submit ID
+                        </button>
+                    </div>
                 </form>
-                
+
+                <!-- Help Text -->
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-500">
+                        Need help? <a href="#" class="text-[#2C5F4F] hover:text-[#244D3E] font-semibold">Contact Support</a>
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>
