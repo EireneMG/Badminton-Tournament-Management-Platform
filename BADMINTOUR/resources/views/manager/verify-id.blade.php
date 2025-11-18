@@ -26,7 +26,6 @@
         document.getElementById('id-upload').value = '';
     }
 }">
-
     <div class="min-h-screen flex items-center justify-center p-4">
         <div class="w-full max-w-2xl">
             <!-- Logo -->
@@ -42,7 +41,7 @@
                     <p class="text-gray-600 text-lg">Please upload a valid government ID to verify your identity.</p>
                 </div>
 
-            <!-- Form -->
+                <!-- Form -->
                 <form action="{{ route('manager.verify-id.submit') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                     @csrf
                     <!-- Upload Area -->
@@ -117,8 +116,29 @@
                         </div>
                     </div>
 
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 pt-6">
+                        <a href="{{ route('manager.dashboard') }}" 
+                           class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg font-semibold text-center transition duration-200">
+                            Cancel
+                        </a>
+                        <button type="submit" 
+                                :disabled="!idImagePreview"
+                                :class="idImagePreview ? 'bg-[#2C5F4F] hover:bg-[#244D3E] cursor-pointer' : 'bg-gray-300 cursor-not-allowed'"
+                                class="flex-1 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 disabled:opacity-50">
+                            Submit ID
+                        </button>
+                    </div>
                 </form>
 
+                <!-- Help Text -->
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-500">
+                        Need help? <a href="#" class="text-[#2C5F4F] hover:text-[#244D3E] font-semibold">Contact Support</a>
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>
