@@ -78,3 +78,73 @@
                         </button>
                     </div>
                 </div>
+
+                 <!-- Tournament Cards -->
+                <div class="space-y-4">
+                    <!-- Ongoing Tournaments -->
+                    <div x-show="activeTab === 'ongoing'" x-cloak>
+                        <!-- Tournament Card 1 -->
+                        <div class="bg-white border-2 border-black rounded-lg p-6 hover:shadow-md transition duration-200">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="text-xl font-bold text-black mb-2">14th Alabang Badminton Invitational</h3>
+                                    <p class="text-gray-700">Alabang Smashers vs Bayanan Club</p>
+                                </div>
+                                <button class="bg-gray-200 hover:bg-gray-300 text-black px-6 py-2 rounded-md font-medium transition duration-200">
+                                    View tournament
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Tournaments -->
+                    <div x-show="activeTab === 'upcoming'" x-cloak>
+                        <!-- Tournament Card 1 -->
+                        <div class="bg-white border-2 border-black rounded-lg p-6 hover:shadow-md transition duration-200">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="text-xl font-bold text-black mb-2">Smash-it Tournament 2025</h3>
+                                </div>
+                                <button class="bg-gray-200 hover:bg-gray-300 text-black px-6 py-2 rounded-md font-medium transition duration-200">
+                                    Request to Join
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Completed Tournaments -->
+                    <div x-show="activeTab === 'completed'" x-cloak>
+                        <!-- Tournament Card 1 -->
+                        <div class="bg-white border-2 border-black rounded-lg p-6 hover:shadow-md transition duration-200">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="text-xl font-bold text-black mb-2">MYSB Tournament 2025</h3>
+                                </div>
+                                <button class="bg-gray-200 hover:bg-gray-300 text-black px-6 py-2 rounded-md font-medium transition duration-200">
+                                    View Tournament
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Your Tournaments -->
+                    <div x-show="activeTab === 'your'" x-cloak>
+                        <!-- Tournament Card 1 -->
+                        <div class="bg-white border-2 border-black rounded-lg p-6 hover:shadow-md transition duration-200">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="text-xl font-bold text-black mb-2">Smash For a Cause</h3>
+                                    <p class="text-gray-500 text-sm mt-2">Posted 3 hours ago</p>
+                                </div>
+                                <button class="bg-gray-200 hover:bg-gray-300 text-black px-6 py-2 rounded-md font-medium transition duration-200">
+                                    Invite a club
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>
