@@ -147,7 +147,50 @@
                         </div>
                     </div>
 
-                    
+                    <!-- Tournament Fee & Match Schedule Row -->
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-base font-semibold text-black mb-2">Tournament Fee</label>
+                            <input type="text" placeholder="Enter fee (₱)" class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                        </div>
+                        <div>
+                            <label class="block text-base font-semibold text-black mb-2">Match Schedule</label>
+                            <div class="flex items-center h-[52px]">
+                                <input type="checkbox" id="autoSchedule" x-model="autoSchedule" class="w-5 h-5 text-[#2C5F4F] border-gray-300 rounded focus:ring-[#2C5F4F]">
+                                <label for="autoSchedule" class="ml-3 text-gray-700">Auto-Schedule Matches</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="mb-6">
+                        <label class="block text-base font-semibold text-black mb-4">Contact Information</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="tel" placeholder="0917-123-4567" value="0917-123-4567" class="px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                            <input type="email" placeholder="manager.smashersclub@gmail.com" value="manager.smashersclub@gmail.com" class="px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                        </div>
+                    </div>
+
+                    <!-- Tournament Banner -->
+                    <div class="mb-8">
+                        <label class="block text-base font-semibold text-black mb-2">Tournament Banner / Logo</label>
+                        <div class="border border-gray-300 rounded-md p-4 bg-white">
+                            <input type="file" class="w-full">
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex justify-end gap-4">
+                        <button type="button" class="bg-white border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-md font-semibold hover:bg-gray-50 transition duration-200">
+                            Save Draft
+                        </button>
+                        <button type="submit" class="bg-[#1B4965] hover:bg-[#143850] text-white px-8 py-3 rounded-md font-semibold transition duration-200">
+                            Create & Post
+                        </button>
+                    </div>
+                </form>
+            </main>
+        </div>
     </div>
 </body>
 </html>
