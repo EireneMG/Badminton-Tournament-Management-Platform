@@ -107,3 +107,41 @@
             </div>
         </div>
     </div>
+
+     <!-- Manager Warning Modal -->
+    <div x-show="showManagerWarning" x-cloak class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+        <div @click.away="showManagerWarning = false" class="bg-white rounded-2xl max-w-md w-full p-8 transform transition-all">
+            <!-- Icon -->
+            <div class="mb-6 flex justify-center">
+                <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <svg class="w-8 h-8 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Title -->
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 text-center">Please Note</h3>
+
+            <!-- Message -->
+            <p class="text-gray-700 text-center mb-6 leading-relaxed">
+                You must have an <strong>established club</strong> to register as a manager or host tournaments.
+            </p>
+
+            <!-- Buttons -->
+            <div class="flex flex-col space-y-3">
+                <a href="/register/manager" class="w-full bg-[#7B1F3C] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#6B1A34] transition text-center">
+                    I Understand
+                </a>
+                <button @click="showManagerWarning = false" class="w-full bg-gray-200 text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition">
+                    Go Back
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    [x-cloak] { display: none !important; }
+    </style>
+</body>
+</html>
