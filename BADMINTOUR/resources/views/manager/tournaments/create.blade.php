@@ -61,6 +61,86 @@
                         <textarea rows="5" placeholder="Write a short overview of the tournament" class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]"></textarea>
                     </div>
 
+                    <!-- Category Section -->
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <label class="block text-base font-semibold text-black">Category</label>
+                            <span class="text-sm text-gray-500" x-text="categoryCount + ' added'"></span>
+                        </div>
+                        <div class="bg-white border border-gray-300 rounded-md p-4">
+                            <div class="grid grid-cols-4 gap-3 mb-4">
+                                <select class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                    <option selected>Men's singles</option>
+                                    <option>Women's singles</option>
+                                    <option>Men's doubles</option>
+                                    <option>Women's doubles</option>
+                                    <option>Mixed doubles</option>
+                                </select>
+                                <input type="text" placeholder="Slots" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                <select class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                    <option selected>Skill level</option>
+                                    <option>Level A</option>
+                                    <option>Level B</option>
+                                    <option>Level C</option>
+                                    <option>Level D</option>
+                                </select>
+                                <input type="text" placeholder="Age Requirement" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="button" @click="categoryCount++" class="bg-[#1B4965] hover:bg-[#143850] text-white px-6 py-2 rounded-md font-medium transition duration-200">
+                                    Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Match Schedules Section -->
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <label class="block text-base font-semibold text-black">Match Schedules</label>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-gray-500" x-text="scheduleCount + ' added'"></span>
+                                <button type="button" class="text-gray-600 hover:text-gray-800">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bg-white border border-gray-300 rounded-md p-4 space-y-4">
+                            <div class="grid grid-cols-3 gap-3">
+                                <select class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                    <option selected>Men's singles</option>
+                                    <option>Women's singles</option>
+                                    <option>Men's doubles</option>
+                                    <option>Women's doubles</option>
+                                    <option>Mixed doubles</option>
+                                </select>
+                                <select class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                    <option selected>First Round</option>
+                                    <option>Quarter Finals</option>
+                                    <option>Semi Finals</option>
+                                    <option>Finals</option>
+                                </select>
+                                <select class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                    <option selected>Court #</option>
+                                    <option>Court 1</option>
+                                    <option>Court 2</option>
+                                    <option>Court 3</option>
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <input type="date" placeholder="mm/dd/yy" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                <input type="time" placeholder="--:--:--" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="button" @click="scheduleCount++" class="bg-[#1B4965] hover:bg-[#143850] text-white px-6 py-2 rounded-md font-medium transition duration-200">
+                                    Add Match Schedule
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     
     </div>
 </body>
