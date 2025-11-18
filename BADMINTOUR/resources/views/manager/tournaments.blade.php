@@ -48,3 +48,33 @@
                         <input type="text" placeholder="Search for tournaments" class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
                     </div>
                 </div>
+
+                 <!-- Tabs -->
+                <div class="border-b border-gray-300 mb-6">
+                    <div class="flex space-x-8">
+                        <button 
+                            @click="activeTab = 'ongoing'" 
+                            :class="activeTab === 'ongoing' ? 'border-b-2 border-black text-black font-semibold' : 'text-gray-500'"
+                            class="pb-3 px-2 uppercase text-sm transition duration-200">
+                            Ongoing
+                        </button>
+                        <button 
+                            @click="activeTab = 'upcoming'" 
+                            :class="activeTab === 'upcoming' ? 'border-b-2 border-black text-black font-semibold' : 'text-gray-500'"
+                            class="pb-3 px-2 uppercase text-sm transition duration-200">
+                            Upcoming
+                        </button>
+                        <button 
+                            @click="activeTab = 'completed'" 
+                            :class="activeTab === 'completed' ? 'border-b-2 border-black text-black font-semibold' : 'text-gray-500'"
+                            class="pb-3 px-2 uppercase text-sm transition duration-200">
+                            Completed
+                        </button>
+                        <button 
+                            @click="activeTab = 'your'" 
+                            :class="activeTab === 'your' ? 'border-b-2 border-black text-black font-semibold' : 'text-gray-500'"
+                            class="pb-3 px-2 uppercase text-sm transition duration-200">
+                            Your Tournaments
+                        </button>
+                    </div>
+                </div>
