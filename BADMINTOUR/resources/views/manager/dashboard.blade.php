@@ -90,6 +90,33 @@
                     </div>
                 </div>
 
+                <!-- Top Players Section -->
+                    <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">Top Players</h2>
+                        <div class="bg-white rounded-md p-4 border border-gray-200">
+                            <p class="text-sm text-gray-500">No player data available</p>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Top Clubs Section -->
+                <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Top Clubs</h2>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="bg-white rounded-md p-4 border border-gray-200">
+                            <p class="text-sm text-gray-500">Club #1</p>
+                        </div>
+                        <div class="bg-white rounded-md p-4 border border-gray-200">
+                            <p class="text-sm text-gray-500">Club #2</p>
+                        </div>
+                        <div class="bg-white rounded-md p-4 border border-gray-200">
+                            <p class="text-sm text-gray-500">Club #3</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
 </body>
 </html>
