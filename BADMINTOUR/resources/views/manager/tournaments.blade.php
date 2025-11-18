@@ -26,3 +26,25 @@
                     </button>
                 </div>
             </header>
+
+            <!-- Main Content -->
+            <main class="flex-1 overflow-y-auto bg-gray-50 p-8">
+                <!-- Action Buttons -->
+                <div class="flex gap-4 mb-6">
+                    <a href="/manager/tournaments/create" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-8 py-3 rounded-md font-semibold transition duration-200 uppercase">
+                        Create Tournament
+                    </a>
+                    <a href="/manager/tournaments/generate" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-8 py-3 rounded-md font-semibold transition duration-200 uppercase">
+                        Generate Tournament
+                    </a>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="mb-6">
+                    <div class="relative">
+                        <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <input type="text" placeholder="Search for tournaments" class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                    </div>
+                </div>
