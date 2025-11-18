@@ -86,7 +86,88 @@
                             >
                         </div>
 
-                        
+                        <!-- Next Button -->
+                        <div class="pt-4 flex justify-end">
+                            <button 
+                                type="button"
+                                @click="currentStep = 2"
+                                class="bg-[#7B1F3C] text-white px-20 py-2.5 rounded-md hover:bg-[#6B1A34] transition font-semibold">
+                                Next
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Account Credentials -->
+                    <div x-show="currentStep === 2" x-cloak class="space-y-4">
+                        <!-- Email Address -->
+                        <div>
+                            <input 
+                                type="email" 
+                                name="email" 
+                                placeholder="Email Address"
+                                value="{{ old('email') }}"
+                                required
+                                class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
+                            >
+                        </div>
+
+                        <!-- Create Username -->
+                        <div>
+                            <input 
+                                type="text" 
+                                name="username" 
+                                placeholder="Create username"
+                                value="{{ old('username') }}"
+                                required
+                                class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
+                            >
+                        </div>
+
+                        <!-- Create Password -->
+                        <div>
+                            <input 
+                                type="password" 
+                                name="password" 
+                                placeholder="Create password"
+                                required
+                                class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
+                            >
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div>
+                            <input 
+                                type="password" 
+                                name="password_confirmation" 
+                                placeholder="Confirm password"
+                                required
+                                class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
+                            >
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="pt-4 flex justify-between items-center">
+                            <button 
+                                type="button"
+                                @click="currentStep = 1"
+                                class="text-gray-600 hover:text-gray-900 font-semibold">
+                                ← Back
+                            </button>
+                            <button 
+                                type="submit"
+                                class="bg-[#7B1F3C] text-white px-20 py-2.5 rounded-md hover:bg-[#6B1A34] transition font-semibold">
+                                Create
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    [x-cloak] { display: none !important; }
+    </style>
     </div>
 </body>
 </html>
