@@ -21,4 +21,11 @@
             </div>
         </div>
 
-        
+         <!-- Right Side - Beige Background with Form -->
+        <div class="w-7/12 bg-[#E8DCC4] flex items-center justify-center">
+            <div class="w-full max-w-md px-8">
+                <h2 class="text-[#2C5F4F] text-5xl font-bold mb-6 text-center">Forgot Password?</h2>
+                
+                <p class="text-gray-600 text-center mb-12 text-sm">
+                    No problem. Enter your email address and we'll send you a password reset link.
+                </p>
