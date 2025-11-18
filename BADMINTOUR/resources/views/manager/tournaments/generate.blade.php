@@ -60,6 +60,94 @@
                         <label class="block text-base font-semibold text-black mb-2">Description / Overview</label>
                         <textarea rows="5" placeholder="Write a short overview of the tournament" class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]"></textarea>
                     </div>
+
+                    <!-- Category (Auto-Generated) -->
+                    <div class="mb-6">
+                        <label class="block text-base font-semibold text-black mb-4">Category (Auto-Generated)</label>
+                        <div class="space-y-3">
+                            <!-- Men's Singles -->
+                            <div class="bg-white border border-gray-300 rounded-md p-4">
+                                <div class="grid grid-cols-4 gap-3">
+                                    <div class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-700">Men's singles</div>
+                                    <input type="text" placeholder="Slots" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                    <select class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                        <option selected>Open</option>
+                                        <option>Level A</option>
+                                        <option>Level B</option>
+                                        <option>Level C</option>
+                                        <option>Level D</option>
+                                    </select>
+                                    <input type="text" placeholder="16+" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                </div>
+                            </div>
+
+                            <!-- Women's Singles -->
+                            <div class="bg-white border border-gray-300 rounded-md p-4">
+                                <div class="grid grid-cols-4 gap-3">
+                                    <div class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-700">Women's singles</div>
+                                    <input type="text" placeholder="Slots" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                    <select class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                        <option selected>Open</option>
+                                        <option>Level A</option>
+                                        <option>Level B</option>
+                                        <option>Level C</option>
+                                        <option>Level D</option>
+                                    </select>
+                                    <input type="text" placeholder="16+" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                </div>
+                            </div>
+
+                            <!-- Men's Doubles -->
+                            <div class="bg-white border border-gray-300 rounded-md p-4">
+                                <div class="grid grid-cols-4 gap-3">
+                                    <div class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-700">Men's doubles</div>
+                                    <input type="text" placeholder="Slots" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                    <select class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                        <option selected>Open</option>
+                                        <option>Level A</option>
+                                        <option>Level B</option>
+                                        <option>Level C</option>
+                                        <option>Level D</option>
+                                    </select>
+                                    <input type="text" placeholder="16+" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                </div>
+                            </div>
+
+                            <!-- Women's Doubles -->
+                            <div class="bg-white border border-gray-300 rounded-md p-4">
+                                <div class="grid grid-cols-4 gap-3">
+                                    <div class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-700">Women's doubles</div>
+                                    <input type="text" placeholder="Slots" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                    <select class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                        <option selected>Open</option>
+                                        <option>Level A</option>
+                                        <option>Level B</option>
+                                        <option>Level C</option>
+                                        <option>Level D</option>
+                                    </select>
+                                    <input type="text" placeholder="16+" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                </div>
+                            </div>
+
+                            <!-- Mixed Doubles -->
+                            <div class="bg-white border border-gray-300 rounded-md p-4">
+                                <div class="grid grid-cols-4 gap-3">
+                                    <div class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-700">Mixed doubles</div>
+                                    <input type="text" placeholder="Slots" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                    <select class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                        <option selected>Open</option>
+                                        <option>Level A</option>
+                                        <option>Level B</option>
+                                        <option>Level C</option>
+                                        <option>Level D</option>
+                                    </select>
+                                    <input type="text" placeholder="16+" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    
     </div>
 </body>
 </html>

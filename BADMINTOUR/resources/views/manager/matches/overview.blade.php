@@ -36,4 +36,32 @@
             </div>
         </div>
     </div>
+    <!-- Upcoming Section -->
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-black mb-4">Upcoming</h2>
+        <div class="space-y-4">
+            <!-- Match Card 1 -->
+            <div class="bg-white border-2 border-[#D4A574] rounded-lg p-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-bold text-black mb-1">Player C vs Player D</h3>
+                        <p class="text-gray-600 text-sm">Laguna Invitation 2025</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-600 mb-1">Court 1</p>
+                        <p class="text-sm text-gray-600">2025-09-20 • 2 pm</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty Card -->
+            <div class="bg-white border-2 border-[#D4A574] rounded-lg p-6 h-24"></div>
+
+            <div class="flex justify-end">
+                <button class="bg-[#D4A574] hover:bg-[#C49564] text-white px-6 py-2 rounded-md font-medium transition duration-200">
+                    View all
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
