@@ -141,7 +141,41 @@
                         </div>
                     </div>
 
-                    
+                    <!-- Tournament Fee -->
+                    <div class="mb-6">
+                        <label class="block text-base font-semibold text-black mb-2">Tournament Fee</label>
+                        <input type="text" placeholder="Enter fee (₱)" class="w-full max-w-md px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="mb-6">
+                        <label class="block text-base font-semibold text-black mb-4">Contact Information</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="tel" placeholder="Phone" class="px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                            <input type="email" placeholder="Email" class="px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                        </div>
+                    </div>
+
+                    <!-- Tournament Banner -->
+                    <div class="mb-8">
+                        <label class="block text-base font-semibold text-black mb-2">Tournament Banner / Logo</label>
+                        <div class="border border-gray-300 rounded-md p-4 bg-white">
+                            <input type="file" class="w-full">
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex justify-end gap-4">
+                        <button type="button" class="bg-white border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-md font-semibold hover:bg-gray-50 transition duration-200">
+                            Save Draft
+                        </button>
+                        <button type="submit" class="bg-[#1B4965] hover:bg-[#143850] text-white px-8 py-3 rounded-md font-semibold transition duration-200">
+                            Create & Post
+                        </button>
+                    </div>
+                </form>
+            </main>
+        </div>
     </div>
 </body>
 </html>
