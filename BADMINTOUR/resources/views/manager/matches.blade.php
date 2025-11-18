@@ -67,3 +67,52 @@
                         Mixed Doubles
                     </button>
                 </div>
+
+                <!-- Tabs -->
+                 <div class="border-b border-gray-300 mb-6">
+                    <div class="flex space-x-8">
+                        <button 
+                            @click="activeTab = 'overview'" 
+                            :class="activeTab === 'overview' ? 'border-b-2 border-black text-black font-semibold' : 'text-gray-500'"
+                            class="pb-3 px-2 uppercase text-sm transition duration-200">
+                            Overview
+                        </button>
+                        <button 
+                            @click="activeTab = 'ongoing'" 
+                            :class="activeTab === 'ongoing' ? 'border-b-2 border-black text-black font-semibold' : 'text-gray-500'"
+                            class="pb-3 px-2 uppercase text-sm transition duration-200">
+                            Ongoing
+                        </button>
+                        <button 
+                            @click="activeTab = 'brackets'" 
+                            :class="activeTab === 'brackets' ? 'border-b-2 border-black text-black font-semibold' : 'text-gray-500'"
+                            class="pb-3 px-2 uppercase text-sm transition duration-200">
+                            Brackets
+                        </button>
+                        <button 
+                            @click="activeTab = 'schedule'" 
+                            :class="activeTab === 'schedule' ? 'border-b-2 border-black text-black font-semibold' : 'text-gray-500'"
+                            class="pb-3 px-2 uppercase text-sm transition duration-200">
+                            Schedule
+                        </button>
+                        <button 
+                            @click="activeTab = 'results'" 
+                            :class="activeTab === 'results' ? 'border-b-2 border-black text-black font-semibold' : 'text-gray-500'"
+                            class="pb-3 px-2 uppercase text-sm transition duration-200">
+                            Results
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab Content -->
+                @include('manager.matches.overview')
+                @include('manager.matches.ongoing')
+                @include('manager.matches.brackets')
+                @include('manager.matches.schedule')
+                @include('manager.matches.results')
+            </main>
+        </div>
+    </div>
+</body>
+</html>
+
