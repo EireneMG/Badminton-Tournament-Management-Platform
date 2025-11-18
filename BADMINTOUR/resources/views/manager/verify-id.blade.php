@@ -100,6 +100,23 @@
                         </div>
                     </div>
 
+                    <!-- Important Notice -->
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                        <div class="flex">
+                            <svg class="h-5 w-5 text-blue-500 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div class="text-sm text-blue-700">
+                                <p class="font-semibold mb-1">Important Information</p>
+                                <ul class="list-disc list-inside space-y-1 text-blue-600">
+                                    <li>Accepted documents: National ID, Driver's License, Passport</li>
+                                    <li>Ensure all details are clearly visible</li>
+                                    <li>Your information will be kept secure and confidential</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
                 </form>
 
     </div>
