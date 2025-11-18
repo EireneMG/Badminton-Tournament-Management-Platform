@@ -137,3 +137,45 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Additional Information -->
+                    <div class="bg-green-50 border-l-4 border-[#2C5F4F] p-4 rounded">
+                        <div class="flex">
+                            <svg class="h-5 w-5 text-[#2C5F4F] mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div class="text-sm text-green-800">
+                                <p class="font-semibold mb-1">What happens next?</p>
+                                <ul class="list-disc list-inside space-y-1 text-green-700">
+                                    <li>Your club will be reviewed by our admin team</li>
+                                    <li>You'll receive a notification once approved (usually within 24 hours)</li>
+                                    <li>You can then start inviting players and managing tournaments</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                     <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 pt-6">
+                        <a href="{{ route('manager.verify-id') }}" 
+                           class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg font-semibold text-center transition duration-200">
+                            Back
+                        </a>
+                        <button type="submit" 
+                                class="flex-1 bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-6 py-3 rounded-lg font-semibold transition duration-200">
+                            Create Club
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Help Text -->
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-500">
+                        Questions? <a href="#" class="text-[#2C5F4F] hover:text-[#244D3E] font-semibold">View Club Guidelines</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
