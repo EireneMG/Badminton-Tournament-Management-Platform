@@ -64,4 +64,32 @@
             </div>
         </div>
     </div>
+
+    <!-- Completed Section -->
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-black mb-4">Completed</h2>
+        <div class="space-y-4">
+            <!-- Match Card 1 -->
+            <div class="bg-white border-2 border-black rounded-lg p-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-bold text-black mb-1">Player A vs Player B</h3>
+                        <p class="text-gray-600 text-sm">MYSB Club Tournament 2025</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-lg font-bold text-black">Final: 21 - 18</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty Card -->
+            <div class="bg-white border-2 border-black rounded-lg p-6 h-24"></div>
+
+            <div class="flex justify-end">
+                <button class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-6 py-2 rounded-md font-medium transition duration-200">
+                    View all
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
