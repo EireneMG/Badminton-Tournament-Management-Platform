@@ -72,8 +72,36 @@
                                 <p class="text-xs text-gray-500">PNG, JPG, JPEG up to 10MB</p>
                             </div>
                         </div>
+
+                        <!-- Image Preview -->
+                        <div x-show="idImagePreview" 
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 transform scale-95"
+                             x-transition:enter-end="opacity-100 transform scale-100"
+                             class="relative">
+                            <div class="border-2 border-[#2C5F4F] rounded-lg p-4 bg-gray-50">
+                                <img :src="idImagePreview" 
+                                     alt="ID Preview" 
+                                     class="w-full h-64 object-contain rounded">
+                                <button type="button" 
+                                        @click="removeImage()"
+                                        class="absolute top-6 right-6 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition duration-200">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-2 flex items-center">
+                                <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                ID uploaded successfully
+                            </p>
+                        </div>
+                    </div>
+
                 </form>
-                
+
     </div>
 </body>
 </html>
