@@ -39,3 +39,36 @@
                 
                 <form method="POST" action="{{ route('password.email') }}" class="space-y-6">
                     @csrf
+
+                    <!-- Email Input -->
+                    <div>
+                        <input 
+                            id="email" 
+                            type="email" 
+                            name="email" 
+                            placeholder="Email Address"
+                            value="{{ old('email') }}"
+                            required 
+                            autofocus
+                            class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#2C5F4F] text-gray-700 placeholder-gray-400"
+                        >
+                        @error('email')
+                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-8">
+                        <button 
+                            type="submit"
+                            class="w-full bg-[#2C5F4F] text-white font-semibold py-3 px-6 rounded-lg hover:bg-[#234A3D] transition duration-200"
+                        >
+                            Send Reset Link
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
