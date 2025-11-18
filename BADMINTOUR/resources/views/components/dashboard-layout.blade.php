@@ -247,7 +247,6 @@
                                     </div>
                                 </div>
                                 
-
                                 <!-- Footer -->
                                 <div class="px-4 py-3 border-t border-gray-200 bg-gray-50 space-y-2">
                                     <button class="w-full text-sm text-[#1B4965] hover:text-[#2C5F4F] font-semibold text-center py-1 transition">
