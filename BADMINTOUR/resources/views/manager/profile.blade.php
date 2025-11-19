@@ -75,3 +75,16 @@
                             </button>
                         </div>
                     </div>
+
+                     <!-- Managers / Handlers -->
+                    <div class="bg-white rounded-lg border-2 border-black p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-2xl font-bold text-black">Managers / Handlers</h2>
+                            <button @click="showAddHandlerModal = true" class="bg-white hover:bg-gray-50 text-black px-6 py-2 rounded-lg border-2 border-black font-semibold transition duration-200">
+                                Add Handler
+                            </button>
+                        </div>
+                        <div class="min-h-[150px] flex items-center justify-center text-gray-400">
+                            <p>No handlers added yet</p>
+                        </div>
+                    </div>
