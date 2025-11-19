@@ -15,8 +15,16 @@
         </div>
     </div>
 
+    <!-- Tournament 2: BCBA Tournament 2025 -->
+    <div class="mb-6">
+        <div class="flex justify-between items-center border-b-2 border-gray-300 pb-3 mb-4">
+            <h2 class="text-2xl font-bold text-black">BCBA Tournament 2025</h2>
+            <button @click="bcbaBrackets = !bcbaBrackets" class="text-black font-medium underline">
+                <span x-text="bcbaBrackets ? 'Collapse' : 'Expand'"></span>
+            </button>
+        </div>
 
-<!-- Bracket View -->
+        <!-- Bracket View -->
         <div x-show="bcbaBrackets" x-cloak class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Round 1 Column -->
             <div>
@@ -71,8 +79,43 @@
                     </div>
                 </div>
             </div>
-
             
+            <!-- Upper Bracket Column -->
+            <div>
+                <h3 class="text-center font-semibold text-black bg-gray-200 py-2 rounded-t-lg uppercase">Upper Bracket</h3>
+                <div class="space-y-4 mt-4">
+                    <!-- Semi-Final 1 -->
+                    <div class="border-2 border-black rounded-lg overflow-hidden">
+                        <div class="flex justify-between items-center py-3 px-4 border-b border-gray-300">
+                            <span class="font-semibold">PLAYER A</span>
+                            <span class="font-bold text-lg">21</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 px-4 bg-gray-50">
+                            <span class="font-semibold">PLAYER C</span>
+                            <span class="font-bold text-lg">16</span>
+                        </div>
+                    </div>
+
+                    <!-- Semi-Final 2 -->
+                    <div class="border-2 border-black rounded-lg overflow-hidden">
+                        <div class="flex justify-between items-center py-3 px-4 border-b border-gray-300">
+                            <span class="font-semibold">PLAYER E</span>
+                            <span class="font-bold text-lg">21</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 px-4 bg-gray-50">
+                            <span class="font-semibold">PLAYER G</span>
+                            <span class="font-bold text-lg">16</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lower Bracket -->
+                <h3 class="text-center font-semibold text-black bg-gray-200 py-2 rounded-t-lg uppercase mt-8">Lower Bracket</h3>
+                <div class="space-y-4 mt-4">
+                    <!-- Empty Match -->
+                    <div class="border-2 border-black rounded-lg p-12"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

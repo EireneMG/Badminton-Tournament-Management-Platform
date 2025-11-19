@@ -110,9 +110,195 @@
                                     <th class="px-6 py-4 text-left font-semibold">Action</th>
                                 </tr>
                             </thead>
+                            <tbody>
+                                <!-- Rank 1 -->
+                                <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150">
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#D4A574] text-white font-bold">1</span>
+                                    </td>
+                                    <td class="px-6 py-4 font-semibold text-gray-900">John Doe</td>
+                                    <td class="px-6 py-4 text-gray-600">Manila Badminton Club</td>
+                                    <td class="px-6 py-4 text-gray-600">24</td>
+                                    <td class="px-6 py-4 text-green-600 font-semibold">20</td>
+                                    <td class="px-6 py-4 text-red-600 font-semibold">4</td>
+                                    <td class="px-6 py-4 font-bold text-gray-900">2850</td>
+                                    <td class="px-6 py-4">
+                                        <button @click="showPlayerModal = true; selectedPlayer = {
+                                            name: 'John Doe',
+                                            club: 'Manila Badminton Club',
+                                            rank: 1,
+                                            points: 2850,
+                                            matchesPlayed: 24,
+                                            wins: 20,
+                                            losses: 4,
+                                            winRate: 83.3
+                                        }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                            View Stats
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- Rank 2 -->
+                                <tr class="bg-gray-50 border-b border-gray-200 hover:bg-gray-100 transition duration-150">
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-400 text-white font-bold">2</span>
+                                    </td>
+                                    <td class="px-6 py-4 font-semibold text-gray-900">Maria Santos</td>
+                                    <td class="px-6 py-4 text-gray-600">BCBA</td>
+                                    <td class="px-6 py-4 text-gray-600">22</td>
+                                    <td class="px-6 py-4 text-green-600 font-semibold">18</td>
+                                    <td class="px-6 py-4 text-red-600 font-semibold">4</td>
+                                    <td class="px-6 py-4 font-bold text-gray-900">2720</td>
+                                    <td class="px-6 py-4">
+                                        <button @click="showPlayerModal = true; selectedPlayer = {
+                                            name: 'Maria Santos',
+                                            club: 'BCBA',
+                                            rank: 2,
+                                            points: 2720,
+                                            matchesPlayed: 22,
+                                            wins: 18,
+                                            losses: 4,
+                                            winRate: 81.8
+                                        }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                            View Stats
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- Rank 3 -->
+                                <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150">
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-400 text-white font-bold">3</span>
+                                    </td>
+                                    <td class="px-6 py-4 font-semibold text-gray-900">Robert Chen</td>
+                                    <td class="px-6 py-4 text-gray-600">Laguna Sports Club</td>
+                                    <td class="px-6 py-4 text-gray-600">26</td>
+                                    <td class="px-6 py-4 text-green-600 font-semibold">19</td>
+                                    <td class="px-6 py-4 text-red-600 font-semibold">7</td>
+                                    <td class="px-6 py-4 font-bold text-gray-900">2650</td>
+                                    <td class="px-6 py-4">
+                                        <button @click="showPlayerModal = true; selectedPlayer = {
+                                            name: 'Robert Chen',
+                                            club: 'Laguna Sports Club',
+                                            rank: 3,
+                                            points: 2650,
+                                            matchesPlayed: 26,
+                                            wins: 19,
+                                            losses: 7,
+                                            winRate: 73.1
+                                        }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                            View Stats
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- Rank 4 -->
+                                <tr class="bg-gray-50 border-b border-gray-200 hover:bg-gray-100 transition duration-150">
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 text-white font-bold">4</span>
+                                    </td>
+                                    <td class="px-6 py-4 font-semibold text-gray-900">Jennifer Lee</td>
+                                    <td class="px-6 py-4 text-gray-600">Quezon City BC</td>
+                                    <td class="px-6 py-4 text-gray-600">20</td>
+                                    <td class="px-6 py-4 text-green-600 font-semibold">15</td>
+                                    <td class="px-6 py-4 text-red-600 font-semibold">5</td>
+                                    <td class="px-6 py-4 font-bold text-gray-900">2580</td>
+                                    <td class="px-6 py-4">
+                                        <button @click="showPlayerModal = true; selectedPlayer = {
+                                            name: 'Jennifer Lee',
+                                            club: 'Quezon City BC',
+                                            rank: 4,
+                                            points: 2580,
+                                            matchesPlayed: 20,
+                                            wins: 15,
+                                            losses: 5,
+                                            winRate: 75.0
+                                        }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                            View Stats
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- Rank 5 -->
+                                <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150">
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 text-white font-bold">5</span>
+                                    </td>
+                                    <td class="px-6 py-4 font-semibold text-gray-900">Michael Tan</td>
+                                    <td class="px-6 py-4 text-gray-600">Manila Badminton Club</td>
+                                    <td class="px-6 py-4 text-gray-600">23</td>
+                                    <td class="px-6 py-4 text-green-600 font-semibold">16</td>
+                                    <td class="px-6 py-4 text-red-600 font-semibold">7</td>
+                                    <td class="px-6 py-4 font-bold text-gray-900">2520</td>
+                                    <td class="px-6 py-4">
+                                        <button @click="showPlayerModal = true; selectedPlayer = {
+                                            name: 'Michael Tan',
+                                            club: 'Manila Badminton Club',
+                                            rank: 5,
+                                            points: 2520,
+                                            matchesPlayed: 23,
+                                            wins: 16,
+                                            losses: 7,
+                                            winRate: 69.6
+                                        }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                            View Stats
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- Rank 6 -->
+                                <tr class="bg-gray-50 border-b border-gray-200 hover:bg-gray-100 transition duration-150">
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 text-white font-bold">6</span>
+                                    </td>
+                                    <td class="px-6 py-4 font-semibold text-gray-900">Sarah Johnson</td>
+                                    <td class="px-6 py-4 text-gray-600">BCBA</td>
+                                    <td class="px-6 py-4 text-gray-600">21</td>
+                                    <td class="px-6 py-4 text-green-600 font-semibold">14</td>
+                                    <td class="px-6 py-4 text-red-600 font-semibold">7</td>
+                                    <td class="px-6 py-4 font-bold text-gray-900">2450</td>
+                                    <td class="px-6 py-4">
+                                        <button @click="showPlayerModal = true; selectedPlayer = {
+                                            name: 'Sarah Johnson',
+                                            club: 'BCBA',
+                                            rank: 6,
+                                            points: 2450,
+                                            matchesPlayed: 21,
+                                            wins: 14,
+                                            losses: 7,
+                                            winRate: 66.7
+                                        }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                            View Stats
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player Stats Modal -->
+    <div x-show="showPlayerModal" 
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto">
+         <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="showPlayerModal = false"></div>
+
+        <!-- Modal Content -->
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="relative bg-white rounded-lg shadow-xl max-w-2xl w-full p-8" @click.stop>
+                <!-- Close Button -->
+                <button @click="showPlayerModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+
+                <!-- Modal Header -->
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold text-[#2C5F4F]">Player Statistics</h2>
+                </div>
+
+                
+            </div>
         </div>
     </div>
 </body>
