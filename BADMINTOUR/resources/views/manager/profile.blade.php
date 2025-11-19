@@ -312,3 +312,67 @@
             </div>
         </div>
     </div>
+
+     <!-- Add Handler Modal -->
+    <div x-show="showAddHandlerModal" 
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="showAddHandlerModal = false"></div>
+
+        <!-- Modal Content -->
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="relative bg-white rounded-lg shadow-xl max-w-2xl w-full p-8" @click.stop>
+                <!-- Close Button -->
+                <button @click="showAddHandlerModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+
+                <!-- Modal Header -->
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold text-[#2C5F4F]">Add Handler</h2>
+                </div>
+
+                <!-- Form -->
+                <form @submit.prevent="showAddHandlerModal = false; showSuccessToast = true" class="space-y-6">
+                    <!-- Handler Name -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Handler Name</label>
+                        <input type="text" 
+                               placeholder="Enter handler's full name"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                        <input type="email" 
+                               placeholder="handler@email.com"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
+                    </div>
+
+                    <!-- Contact Number -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Contact Number</label>
+                        <input type="text" 
+                               placeholder="0917-XXX-XXXX"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
+                    </div>
+
+                    <!-- Modal Actions -->
+                    <div class="flex flex-col sm:flex-row gap-4 justify-end pt-4">
+                        <button type="button" @click="showAddHandlerModal = false" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg font-semibold transition duration-200">
+                            Cancel
+                        </button>
+                        <button type="submit" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-6 py-3 rounded-lg font-semibold transition duration-200">
+                            Add Handler
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
