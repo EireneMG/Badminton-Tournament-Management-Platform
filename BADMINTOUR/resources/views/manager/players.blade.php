@@ -191,5 +191,114 @@
                                         </div>
                                     </td>
                                 </tr>
+                                <!-- Player 4 -->
+                                <tr class="bg-gray-50 border-b border-gray-200 hover:bg-gray-100 transition duration-150">
+                                    <td class="px-6 py-4 font-mono text-sm text-gray-600">PL004</td>
+                                    <td class="px-6 py-4 font-semibold text-gray-900">Jennifer Lee</td>
+                                    <td class="px-6 py-4 text-gray-600">Quezon City BC</td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#1B4965] text-white font-bold text-sm">B</span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">Active</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-600">Dec 28, 2024</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex gap-2">
+                                            <button @click="showViewPlayerModal = true; selectedPlayer = {
+                                                id: 'PL004',
+                                                name: 'Jennifer Lee',
+                                                email: 'jennifer.lee@email.com',
+                                                club: 'Quezon City BC',
+                                                skillLevel: 'B',
+                                                status: 'Active',
+                                                matchesPlayed: 20,
+                                                wins: 15,
+                                                losses: 5,
+                                                joinDate: 'December 28, 2024'
+                                            }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-3 py-1 rounded text-sm font-medium transition duration-200">
+                                                View Profile
+                                            </button>
+                                            <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-medium transition duration-200">
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Player 5 -->
+                                <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150">
+                                    <td class="px-6 py-4 font-mono text-sm text-gray-600">PL005</td>
+                                    <td class="px-6 py-4 font-semibold text-gray-900">Michael Tan</td>
+                                    <td class="px-6 py-4 text-gray-600">Manila Badminton Club</td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#1B4965] text-white font-bold text-sm">C</span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">Rejected</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-600">Jan 22, 2025</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex gap-2">
+                                            <button @click="showViewPlayerModal = true; selectedPlayer = {
+                                                id: 'PL005',
+                                                name: 'Michael Tan',
+                                                email: 'michael.tan@email.com',
+                                                club: 'Manila Badminton Club',
+                                                skillLevel: 'C',
+                                                status: 'Rejected',
+                                                matchesPlayed: 15,
+                                                wins: 8,
+                                                losses: 7,
+                                                joinDate: 'January 22, 2025'
+                                            }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-3 py-1 rounded text-sm font-medium transition duration-200">
+                                                View Profile
+                                            </button>
+                                            <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-medium transition duration-200">
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Player 6 -->
+                                <tr class="bg-gray-50 border-b border-gray-200 hover:bg-gray-100 transition duration-150">
+                                    <td class="px-6 py-4 font-mono text-sm text-gray-600">PL006</td>
+                                    <td class="px-6 py-4 font-semibold text-gray-900">Sarah Johnson</td>
+                                    <td class="px-6 py-4 text-gray-600">BCBA</td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#1B4965] text-white font-bold text-sm">D</span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">Pending</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-600">Jan 25, 2025</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex gap-2">
+                                            <button @click="showViewPlayerModal = true; selectedPlayer = {
+                                                id: 'PL006',
+                                                name: 'Sarah Johnson',
+                                                email: 'sarah.johnson@email.com',
+                                                club: 'BCBA',
+                                                skillLevel: 'D',
+                                                status: 'Pending',
+                                                matchesPlayed: 10,
+                                                wins: 5,
+                                                losses: 5,
+                                                joinDate: 'January 25, 2025'
+                                            }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-3 py-1 rounded text-sm font-medium transition duration-200">
+                                                View Profile
+                                            </button>
+                                            <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-medium transition duration-200">
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
                         
