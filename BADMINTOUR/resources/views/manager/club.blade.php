@@ -89,6 +89,74 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
+                                <!-- Player 1 -->
+                                <tr class="hover:bg-gray-50 transition duration-150">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10 bg-[#2C5F4F] rounded-full flex items-center justify-center text-white font-semibold">
+                                                JD
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">John Dela Cruz</div>
+                                                <div class="text-sm text-gray-500">john.dela@email.com</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <select class="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:border-[#2C5F4F]">
+                                            <option value="">Assign Level</option>
+                                            <option value="A" selected>Level A</option>
+                                            <option value="B">Level B</option>
+                                            <option value="C">Level C</option>
+                                            <option value="D">Level D</option>
+                                        </select>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            Active
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                                        <button class="text-[#2C5F4F] hover:text-[#244D3E] font-medium">View Profile</button>
+                                        <span class="text-gray-300">|</span>
+                                        <button class="text-red-600 hover:text-red-800 font-medium">Remove</button>
+                                    </td>
+                                </tr>
+
+                                <!-- Player 2 -->
+                                <tr class="hover:bg-gray-50 transition duration-150">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10 bg-[#2C5F4F] rounded-full flex items-center justify-center text-white font-semibold">
+                                                MS
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">Maria Santos</div>
+                                                <div class="text-sm text-gray-500">maria.santos@email.com</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <select class="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:border-[#2C5F4F]">
+                                            <option value="">Assign Level</option>
+                                            <option value="A">Level A</option>
+                                            <option value="B" selected>Level B</option>
+                                            <option value="C">Level C</option>
+                                            <option value="D">Level D</option>
+                                        </select>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            Active
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                                        <button class="text-[#2C5F4F] hover:text-[#244D3E] font-medium">View Profile</button>
+                                        <span class="text-gray-300">|</span>
+                                        <button class="text-red-600 hover:text-red-800 font-medium">Remove</button>
+                                    </td>
+                                </tr>
+
                                 
                             </tbody>
                         </table>
