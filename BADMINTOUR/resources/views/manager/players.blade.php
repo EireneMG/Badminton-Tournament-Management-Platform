@@ -41,3 +41,34 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto p-8">
+                <!-- Search and Filters -->
+                <div class="mb-6 bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                    <div class="flex flex-col lg:flex-row gap-4 items-center justify-between">
+                        <div class="flex-1 w-full lg:w-auto">
+                            <input type="text" 
+                                   placeholder="Search players by name or skill level" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                            <select class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
+                                <option value="">Filter by Skill Level</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                            </select>
+                            <select class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
+                                <option value="">Filter by Status</option>
+                                <option value="active">Active</option>
+                                <option value="pending">Pending</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                            <button @click="showAddPlayerModal = true" class="bg-[#D4A574] hover:bg-[#C4956A] text-white px-6 py-2 rounded-lg font-semibold transition duration-200 shadow-sm whitespace-nowrap">
+                                Add Player
+                            </button>
+                        </div>
+                    </div>
+                </div>
