@@ -88,3 +88,14 @@
                             <p>No handlers added yet</p>
                         </div>
                     </div>
+
+                     <!-- Change Password -->
+                    <div class="bg-white rounded-lg border-2 border-black p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-2xl font-bold text-black">Security</h2>
+                            <button @click="showChangePasswordModal = true" class="bg-[#D4A574] hover:bg-[#C4956A] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                Change Password
+                            </button>
+                        </div>
+                        <p class="text-gray-600">Last password change: <span class="text-black font-semibold">Never</span></p>
+                    </div>
