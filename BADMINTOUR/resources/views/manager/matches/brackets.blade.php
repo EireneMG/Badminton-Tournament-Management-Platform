@@ -16,4 +16,63 @@
     </div>
 
 
+<!-- Bracket View -->
+        <div x-show="bcbaBrackets" x-cloak class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Round 1 Column -->
+            <div>
+                <h3 class="text-center font-semibold text-black bg-gray-200 py-2 rounded-t-lg uppercase">Round 1</h3>
+                <div class="space-y-4 mt-4">
+                    <!-- Match 1 -->
+                    <div class="border-2 border-black rounded-lg overflow-hidden">
+                        <div class="flex justify-between items-center py-3 px-4 border-b border-gray-300">
+                            <span class="font-semibold">PLAYER A</span>
+                            <span class="font-bold text-lg">21</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 px-4 bg-gray-50">
+                            <span class="font-semibold">PLAYER B</span>
+                            <span class="font-bold text-lg">16</span>
+                        </div>
+                    </div>
+
+                    <!-- Match 2 -->
+                    <div class="border-2 border-black rounded-lg overflow-hidden">
+                        <div class="flex justify-between items-center py-3 px-4 border-b border-gray-300">
+                            <span class="font-semibold">PLAYER C</span>
+                            <span class="font-bold text-lg">21</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 px-4 bg-gray-50">
+                            <span class="font-semibold">PLAYER D</span>
+                            <span class="font-bold text-lg">16</span>
+                        </div>
+                    </div>
+
+                    <!-- Match 3 -->
+                    <div class="border-2 border-black rounded-lg overflow-hidden">
+                        <div class="flex justify-between items-center py-3 px-4 border-b border-gray-300">
+                            <span class="font-semibold">PLAYER E</span>
+                            <span class="font-bold text-lg">21</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 px-4 bg-gray-50">
+                            <span class="font-semibold">PLAYER F</span>
+                            <span class="font-bold text-lg">16</span>
+                        </div>
+                    </div>
+
+                    <!-- Match 4 -->
+                    <div class="border-2 border-black rounded-lg overflow-hidden">
+                        <div class="flex justify-between items-center py-3 px-4 border-b border-gray-300">
+                            <span class="font-semibold">PLAYER G</span>
+                            <span class="font-bold text-lg">21</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 px-4 bg-gray-50">
+                            <span class="font-semibold">PLAYER H</span>
+                            <span class="font-bold text-lg">16</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+        </div>
+    </div>
 </div>
