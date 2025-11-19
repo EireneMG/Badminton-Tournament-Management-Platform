@@ -40,7 +40,59 @@
                 </div>
             </div>
 
-            
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto bg-gray-50 p-8">
+                <!-- Category Tabs -->
+                <div class="mb-6 flex flex-wrap gap-3">
+                    <button @click="activeCategory = 'mens-singles'" 
+                            :class="activeCategory === 'mens-singles' ? 'bg-[#1B4965] text-white' : 'bg-white text-black border-2 border-black'"
+                            class="px-6 py-2 rounded-lg font-semibold transition duration-200 hover:opacity-90">
+                        MEN'S SINGLES
+                    </button>
+                    <button @click="activeCategory = 'womens-singles'" 
+                            :class="activeCategory === 'womens-singles' ? 'bg-[#1B4965] text-white' : 'bg-white text-black border-2 border-black'"
+                            class="px-6 py-2 rounded-lg font-semibold transition duration-200 hover:opacity-90">
+                        WOMEN'S SINGLES
+                    </button>
+                    <button @click="activeCategory = 'mens-doubles'" 
+                            :class="activeCategory === 'mens-doubles' ? 'bg-[#1B4965] text-white' : 'bg-white text-black border-2 border-black'"
+                            class="px-6 py-2 rounded-lg font-semibold transition duration-200 hover:opacity-90">
+                        MEN'S DOUBLES
+                    </button>
+                    <button @click="activeCategory = 'womens-doubles'" 
+                            :class="activeCategory === 'womens-doubles' ? 'bg-[#1B4965] text-white' : 'bg-white text-black border-2 border-black'"
+                            class="px-6 py-2 rounded-lg font-semibold transition duration-200 hover:opacity-90">
+                        WOMEN'S DOUBLES
+                    </button>
+                    <button @click="activeCategory = 'mixed-doubles'" 
+                            :class="activeCategory === 'mixed-doubles' ? 'bg-[#1B4965] text-white' : 'bg-white text-black border-2 border-black'"
+                            class="px-6 py-2 rounded-lg font-semibold transition duration-200 hover:opacity-90">
+                        MIXED DOUBLES
+                    </button>
+                </div>
+
+                <!-- Search + Filter Bar -->
+                <div class="mb-6 bg-white rounded-lg shadow-sm p-6">
+                    <div class="flex flex-col lg:flex-row gap-4 items-center justify-between">
+                        <div class="flex-1 w-full lg:w-auto">
+                            <input type="text" 
+                                   placeholder="Search player name or club" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                            <select class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
+                                <option value="">Filter by Club</option>
+                                <option value="manila">Manila Badminton Club</option>
+                                <option value="bcba">BCBA</option>
+                                <option value="laguna">Laguna Sports Club</option>
+                                <option value="quezon">Quezon City BC</option>
+                            </select>
+                            <button class="bg-[#D4A574] hover:bg-[#C4956A] text-white px-6 py-2 rounded-lg font-semibold transition duration-200 shadow-sm">
+                                Export Rankings
+                            </button>
+                        </div>
+                    </div>
+                </div>
         </div>
     </div>
 </body>
