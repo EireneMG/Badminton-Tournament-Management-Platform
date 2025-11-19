@@ -72,3 +72,19 @@
                         </div>
                     </div>
                 </div>
+
+                 <!-- Players Table -->
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-[#2C5F4F] text-white">
+                                <tr>
+                                    <th class="px-6 py-4 text-left font-semibold">Player ID</th>
+                                    <th class="px-6 py-4 text-left font-semibold">Full Name</th>
+                                    <th class="px-6 py-4 text-left font-semibold">Club</th>
+                                    <th class="px-6 py-4 text-left font-semibold">Skill Level</th>
+                                    <th class="px-6 py-4 text-left font-semibold">Status</th>
+                                    <th class="px-6 py-4 text-left font-semibold">Joined</th>
+                                    <th class="px-6 py-4 text-left font-semibold">Actions</th>
+                                </tr>
+                            </thead>
