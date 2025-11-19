@@ -123,3 +123,39 @@
                                         </div>
                                     </td>
                                 </tr>
+                                 <!-- Player 2 -->
+                                <tr class="bg-gray-50 border-b border-gray-200 hover:bg-gray-100 transition duration-150">
+                                    <td class="px-6 py-4 font-mono text-sm text-gray-600">PL002</td>
+                                    <td class="px-6 py-4 font-semibold text-gray-900">Maria Santos</td>
+                                    <td class="px-6 py-4 text-gray-600">BCBA</td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#1B4965] text-white font-bold text-sm">A</span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">Active</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-600">Jan 10, 2025</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex gap-2">
+                                            <button @click="showViewPlayerModal = true; selectedPlayer = {
+                                                id: 'PL002',
+                                                name: 'Maria Santos',
+                                                email: 'maria.santos@email.com',
+                                                club: 'BCBA',
+                                                skillLevel: 'A',
+                                                status: 'Active',
+                                                matchesPlayed: 22,
+                                                wins: 18,
+                                                losses: 4,
+                                                joinDate: 'January 10, 2025'
+                                            }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-3 py-1 rounded text-sm font-medium transition duration-200">
+                                                View Profile
+                                            </button>
+                                            <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-medium transition duration-200">
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                        
