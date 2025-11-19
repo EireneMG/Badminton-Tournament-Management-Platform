@@ -157,5 +157,39 @@
                                         </div>
                                     </td>
                                 </tr>
+                                <!-- Player 3 -->
+                                <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150">
+                                    <td class="px-6 py-4 font-mono text-sm text-gray-600">PL003</td>
+                                    <td class="px-6 py-4 font-semibold text-gray-900">Robert Chen</td>
+                                    <td class="px-6 py-4 text-gray-600">Laguna Sports Club</td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#1B4965] text-white font-bold text-sm">B</span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">Pending</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-600">Jan 20, 2025</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex gap-2">
+                                            <button @click="showViewPlayerModal = true; selectedPlayer = {
+                                                id: 'PL003',
+                                                name: 'Robert Chen',
+                                                email: 'robert.chen@email.com',
+                                                club: 'Laguna Sports Club',
+                                                skillLevel: 'B',
+                                                status: 'Pending',
+                                                matchesPlayed: 18,
+                                                wins: 12,
+                                                losses: 6,
+                                                joinDate: 'January 20, 2025'
+                                            }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-3 py-1 rounded text-sm font-medium transition duration-200">
+                                                View Profile
+                                            </button>
+                                            <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-medium transition duration-200">
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
 
                         
