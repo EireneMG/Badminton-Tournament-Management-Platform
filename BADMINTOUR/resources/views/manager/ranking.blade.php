@@ -275,6 +275,31 @@
         </div>
     </div>
 
+    <!-- Player Stats Modal -->
+    <div x-show="showPlayerModal" 
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto">
+         <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="showPlayerModal = false"></div>
 
+        <!-- Modal Content -->
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="relative bg-white rounded-lg shadow-xl max-w-2xl w-full p-8" @click.stop>
+                <!-- Close Button -->
+                <button @click="showPlayerModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+
+                <!-- Modal Header -->
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold text-[#2C5F4F]">Player Statistics</h2>
+                </div>
+
+                
+            </div>
+        </div>
+    </div>
 </body>
 </html>
