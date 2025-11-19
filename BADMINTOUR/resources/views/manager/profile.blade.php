@@ -99,3 +99,15 @@
                         </div>
                         <p class="text-gray-600">Last password change: <span class="text-black font-semibold">Never</span></p>
                     </div>
+
+                    <!-- Logins -->
+                    <div class="bg-white rounded-lg border-2 border-black p-6">
+                        <h2 class="text-2xl font-bold text-black mb-6">Logins</h2>
+                        <div class="min-h-[150px] flex items-center justify-center text-gray-400">
+                            <p>No login history available</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
