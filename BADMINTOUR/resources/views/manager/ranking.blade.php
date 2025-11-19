@@ -297,7 +297,60 @@
                     <h2 class="text-3xl font-bold text-[#2C5F4F]">Player Statistics</h2>
                 </div>
 
-                
+                <!-- Player Details -->
+                <div class="space-y-6">
+                    <!-- Player Info Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <p class="text-sm text-gray-500 mb-1">Player Name</p>
+                            <p class="text-xl font-bold text-gray-900" x-text="selectedPlayer.name"></p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <p class="text-sm text-gray-500 mb-1">Club</p>
+                            <p class="text-xl font-bold text-gray-900" x-text="selectedPlayer.club"></p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <p class="text-sm text-gray-500 mb-1">Current Rank</p>
+                            <p class="text-xl font-bold text-[#D4A574]" x-text="'#' + selectedPlayer.rank"></p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <p class="text-sm text-gray-500 mb-1">Total Points</p>
+                            <p class="text-xl font-bold text-gray-900" x-text="selectedPlayer.points"></p>
+                        </div>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-blue-50 rounded-lg p-4 text-center">
+                            <p class="text-sm text-gray-500 mb-1">Matches Played</p>
+                            <p class="text-2xl font-bold text-blue-600" x-text="selectedPlayer.matchesPlayed"></p>
+                        </div>
+                        <div class="bg-green-50 rounded-lg p-4 text-center">
+                            <p class="text-sm text-gray-500 mb-1">Wins</p>
+                            <p class="text-2xl font-bold text-green-600" x-text="selectedPlayer.wins"></p>
+                        </div>
+                        <div class="bg-red-50 rounded-lg p-4 text-center">
+                            <p class="text-sm text-gray-500 mb-1">Losses</p>
+                            <p class="text-2xl font-bold text-red-600" x-text="selectedPlayer.losses"></p>
+                        </div>
+                    </div>
+
+                    <!-- Win Rate -->
+                    <div class="bg-gradient-to-r from-[#2C5F4F] to-[#1B4965] rounded-lg p-6 text-center">
+                        <p class="text-white text-sm mb-2">Win Rate</p>
+                        <p class="text-4xl font-bold text-white" x-text="selectedPlayer.winRate + '%'"></p>
+                    </div>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-end">
+                    <button @click="showPlayerModal = false" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg font-semibold transition duration-200">
+                        Close
+                    </button>
+                    <button class="bg-[#D4A574] hover:bg-[#C4956A] text-white px-6 py-3 rounded-lg font-semibold transition duration-200">
+                        View Profile
+                    </button>
+                </div>
             </div>
         </div>
     </div>
