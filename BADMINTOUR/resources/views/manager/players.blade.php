@@ -88,3 +88,38 @@
                                     <th class="px-6 py-4 text-left font-semibold">Actions</th>
                                 </tr>
                             </thead>
+                            <tbody>
+                                <!-- Player 1 -->
+                                <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150">
+                                    <td class="px-6 py-4 font-mono text-sm text-gray-600">PL001</td>
+                                    <td class="px-6 py-4 font-semibold text-gray-900">John Doe</td>
+                                    <td class="px-6 py-4 text-gray-600">Manila Badminton Club</td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#1B4965] text-white font-bold text-sm">A</span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">Active</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-600">Jan 15, 2025</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex gap-2">
+                                            <button @click="showViewPlayerModal = true; selectedPlayer = {
+                                                id: 'PL001',
+                                                name: 'John Doe',
+                                                email: 'john.doe@email.com',
+                                                club: 'Manila Badminton Club',
+                                                skillLevel: 'A',
+                                                status: 'Active',
+                                                matchesPlayed: 24,
+                                                wins: 20,
+                                                losses: 4,
+                                                joinDate: 'January 15, 2025'
+                                            }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-3 py-1 rounded text-sm font-medium transition duration-200">
+                                                View Profile
+                                            </button>
+                                            <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-medium transition duration-200">
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
