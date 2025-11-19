@@ -93,6 +93,15 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Rankings Table -->
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+
+                        </table>
+                    </div>
+                </div>
         </div>
     </div>
 </body>
