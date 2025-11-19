@@ -34,3 +34,30 @@
                     </div>
                 </div>
             </div>
+
+             <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto bg-gray-50 p-8">
+                <div class="max-w-5xl mx-auto space-y-6">
+                    <!-- Personal Information -->
+                    <div class="bg-white rounded-lg border-2 border-black p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-2xl font-bold text-black">Personal Information</h2>
+                            <button @click="showEditProfileModal = true" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                Edit Profile
+                            </button>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-gray-600">Full Name: <span class="text-black font-semibold">Jake Peralta</span></p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600">Gender: <span class="text-black font-semibold">Male</span></p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600">Email: <span class="text-black font-semibold">JP.smashersclub@gmail.com</span></p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600">Contact No: <span class="text-black font-semibold">0917-123-4567</span></p>
+                            </div>
+                        </div>
+                    </div>
