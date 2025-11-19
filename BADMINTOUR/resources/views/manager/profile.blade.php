@@ -111,3 +111,22 @@
             </div>
         </div>
     </div>
+
+    <!-- Success Toast Notification -->
+    <div x-show="showSuccessToast" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform translate-y-2"
+         x-transition:enter-end="opacity-100 transform translate-y-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 transform translate-y-0"
+         x-transition:leave-end="opacity-0 transform translate-y-2"
+         @click="showSuccessToast = false"
+         x-init="$watch('showSuccessToast', value => { if(value) setTimeout(() => showSuccessToast = false, 3000) })"
+         class="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg cursor-pointer">
+        <div class="flex items-center gap-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span class="font-semibold">Profile updated successfully!</span>
+        </div>
+    </div>
