@@ -42,8 +42,29 @@
                         </td>
                     </tr>
                     
+                    <!-- Match 2 -->
+                    <tr class="border-b border-gray-200">
+                        <td class="py-4 px-4">#2</td>
+                        <td class="py-4 px-4">Court 2</td>
+                        <td class="py-4 px-4">Player G vs<br>Player H</td>
+                        <td class="py-4 px-4">18 - 14</td>
+                        <td class="py-4 px-4">
+                            <div class="flex items-center gap-2">
+                                <input type="text" placeholder="G" class="w-16 px-2 py-1 border border-gray-300 rounded text-center">
+                                <input type="text" placeholder="H" class="w-16 px-2 py-1 border border-gray-300 rounded text-center">
+                                <button class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-1 rounded text-sm font-medium transition duration-200">
+                                    Update
+                                </button>
+                                <button class="bg-[#C85A54] hover:bg-[#B54A44] text-white px-4 py-1 rounded text-sm font-medium transition duration-200">
+                                    End
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
+
+
 </div>
