@@ -61,3 +61,17 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Club Information -->
+                    <div class="bg-white rounded-lg border-2 border-black p-6">
+                        <h2 class="text-2xl font-bold text-black mb-6">Club Information</h2>
+                        <div class="flex items-center justify-between">
+                            <div class="space-y-2">
+                                <p class="text-black font-semibold text-lg">Smashers Club</p>
+                                <p class="text-gray-600">75 members</p>
+                            </div>
+                            <button class="bg-white hover:bg-gray-50 text-black px-6 py-2 rounded-lg border-2 border-black font-semibold transition duration-200">
+                                View Club
+                            </button>
+                        </div>
+                    </div>
