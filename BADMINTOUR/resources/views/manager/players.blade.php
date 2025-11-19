@@ -379,3 +379,97 @@
             </div>
         </div>
     </div>                    
+
+    <!-- View Player Modal -->
+    <div x-show="showViewPlayerModal" 
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="showViewPlayerModal = false"></div>
+
+        <!-- Modal Content -->
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="relative bg-white rounded-lg shadow-xl max-w-2xl w-full p-8" @click.stop>
+                <!-- Close Button -->
+                <button @click="showViewPlayerModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+
+                <!-- Modal Header -->
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold text-[#2C5F4F]">Player Profile</h2>
+                </div>
+
+                <!-- Player Details -->
+                <div class="space-y-6">
+                    <!-- Player Info Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <p class="text-sm text-gray-500 mb-1">Player ID</p>
+                            <p class="text-xl font-bold text-gray-900 font-mono" x-text="selectedPlayer.id"></p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <p class="text-sm text-gray-500 mb-1">Full Name</p>
+                            <p class="text-xl font-bold text-gray-900" x-text="selectedPlayer.name"></p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <p class="text-sm text-gray-500 mb-1">Email</p>
+                            <p class="text-xl font-bold text-gray-900" x-text="selectedPlayer.email"></p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <p class="text-sm text-gray-500 mb-1">Club</p>
+                            <p class="text-xl font-bold text-gray-900" x-text="selectedPlayer.club"></p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <p class="text-sm text-gray-500 mb-1">Skill Level</p>
+                            <p class="text-xl font-bold text-[#1B4965]" x-text="selectedPlayer.skillLevel"></p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <p class="text-sm text-gray-500 mb-1">Status</p>
+                            <p class="text-xl font-bold" :class="{
+                                'text-green-600': selectedPlayer.status === 'Active',
+                                'text-yellow-600': selectedPlayer.status === 'Pending',
+                                'text-red-600': selectedPlayer.status === 'Rejected'
+                            }" x-text="selectedPlayer.status"></p>
+                        </div>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-blue-50 rounded-lg p-4 text-center">
+                            <p class="text-sm text-gray-500 mb-1">Matches Played</p>
+                            <p class="text-2xl font-bold text-blue-600" x-text="selectedPlayer.matchesPlayed"></p>
+                        </div>
+                        <div class="bg-green-50 rounded-lg p-4 text-center">
+                            <p class="text-sm text-gray-500 mb-1">Wins</p>
+                            <p class="text-2xl font-bold text-green-600" x-text="selectedPlayer.wins"></p>
+                        </div>
+                        <div class="bg-red-50 rounded-lg p-4 text-center">
+                            <p class="text-sm text-gray-500 mb-1">Losses</p>
+                            <p class="text-2xl font-bold text-red-600" x-text="selectedPlayer.losses"></p>
+                        </div>
+                    </div>
+
+                    <!-- Join Date -->
+                    <div class="bg-gradient-to-r from-[#2C5F4F] to-[#1B4965] rounded-lg p-6 text-center">
+                        <p class="text-white text-sm mb-2">Joined</p>
+                        <p class="text-2xl font-bold text-white" x-text="selectedPlayer.joinDate"></p>
+                    </div>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-end">
+                    <button @click="showViewPlayerModal = false" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg font-semibold transition duration-200">
+                        Close
+                    </button>
+                    <button class="bg-[#D4A574] hover:bg-[#C4956A] text-white px-6 py-3 rounded-lg font-semibold transition duration-200">
+                        View Stats
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
