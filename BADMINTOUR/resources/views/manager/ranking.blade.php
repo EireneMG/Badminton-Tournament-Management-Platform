@@ -98,7 +98,18 @@
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full">
-
+                            <thead class="bg-[#2C5F4F] text-white">
+                                <tr>
+                                    <th class="px-6 py-4 text-left font-semibold">Rank</th>
+                                    <th class="px-6 py-4 text-left font-semibold">Player Name</th>
+                                    <th class="px-6 py-4 text-left font-semibold">Club</th>
+                                    <th class="px-6 py-4 text-left font-semibold">Matches Played</th>
+                                    <th class="px-6 py-4 text-left font-semibold">Wins</th>
+                                    <th class="px-6 py-4 text-left font-semibold">Losses</th>
+                                    <th class="px-6 py-4 text-left font-semibold">Points</th>
+                                    <th class="px-6 py-4 text-left font-semibold">Action</th>
+                                </tr>
+                            </thead>
                         </table>
                     </div>
                 </div>
