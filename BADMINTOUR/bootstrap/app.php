@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'player' => \App\Http\Middleware\EnsureUserIsPlayer::class,
             'manager' => \App\Http\Middleware\EnsureUserIsManager::class,
+            'verifiedId' => \App\Http\Middleware\EnsureManagerHasVerifiedId::class,
+            'hasClub' => \App\Http\Middleware\EnsureManagerHasClub::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
