@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tournaments', function (Blueprint $table) {
-            //
+            $table->string('facebook_link')->nullable()->after('contact_phone');
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('tournaments', function (Blueprint $table) {
-            //
+            $table->dropColumn('facebook_link');
         });
     }
 };
