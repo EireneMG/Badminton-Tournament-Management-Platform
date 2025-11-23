@@ -13,7 +13,14 @@ return new class extends Migration
     {
         Schema::create('elo_ratings', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('player_id')->constrained('users')->onDelete('cascade');
+            $table->string('category');
+            $table->integer('current_rating')->default(1200);
+            $table->integer('peak_rating')->default(1200);
+            $table->integer('matches_played')->default(0);
             $table->timestamps();
+            
+            $table->unique(['player_id', 'category']);
         });
     }
 
