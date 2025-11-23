@@ -13,6 +13,16 @@ return new class extends Migration
     {
         Schema::create('match_results', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('match_id')->constrained()->onDelete('cascade');
+            $table->foreignId('winner_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->integer('player1_set1_score')->nullable();
+            $table->integer('player2_set1_score')->nullable();
+            $table->integer('player1_set2_score')->nullable();
+            $table->integer('player2_set2_score')->nullable();
+            $table->integer('player1_set3_score')->nullable();
+            $table->integer('player2_set3_score')->nullable();
+            $table->enum('score_inputted_by', ['manager', 'assistant', 'referee'])->default('manager');
+            $table->foreignId('inputted_by_user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
         });
     }
