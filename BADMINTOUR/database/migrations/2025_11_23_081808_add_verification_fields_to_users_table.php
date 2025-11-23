@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            $table->string('id_document')->nullable()->after('contact_number');
+            $table->enum('verification_status', ['pending', 'verified', 'rejected'])->default('pending')->after('id_document');
         });
     }
 
@@ -22,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            $table->dropColumn(['id_document', 'verification_status']);
         });
     }
 };
