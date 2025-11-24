@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('manager_id_verifications', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('manager_id')->constrained('users')->onDelete('cascade');
+            $table->enum('id_type', ['national_id', 'drivers_license', 'passport']);
+            $table->string('id_file_path');
+            $table->enum('status', ['pending', 'submitted', 'verified', 'rejected'])->default('pending');
+            $table->timestamp('submitted_at')->nullable();
             $table->timestamps();
         });
     }
