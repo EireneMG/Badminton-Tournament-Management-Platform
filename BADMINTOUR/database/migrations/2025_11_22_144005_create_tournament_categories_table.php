@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('tournament_categories', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tournament_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->integer('min_age')->nullable();
+            $table->integer('max_age')->nullable();
+            $table->enum('gender', ['male', 'female', 'mixed'])->nullable();
+            $table->string('skill_level')->nullable();
+            $table->integer('max_participants')->nullable();
             $table->timestamps();
         });
     }
