@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -25,6 +25,21 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'first_name',
+        'middle_name',
+        'last_name',
+        'contact_number',
+        'id_document',
+        'verification_status',
+        'birth_month',
+        'birth_day',
+        'birth_year',
+        'gender',
+        'height',
+        'weight',
+        'region',
+        'province',
+        'city',
     ];
 
     /**
