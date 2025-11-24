@@ -3,8 +3,20 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EloRating extends Model
 {
-    //
+    protected $fillable = [
+        'player_id',
+        'category',
+        'current_rating',
+        'peak_rating',
+        'matches_played',
+    ];
+
+    public function player(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'player_id');
+    }
 }
