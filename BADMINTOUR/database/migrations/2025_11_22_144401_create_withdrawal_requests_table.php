@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('withdrawal_requests', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tournament_registration_id')->constrained()->onDelete('cascade');
+            $table->text('reason');
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->enum('refund_status', ['none', 'partial', 'full', 'pending'])->default('none');
+            $table->text('manager_response')->nullable();
+            $table->timestamp('processed_at')->nullable();
+            $table->foreignId('processed_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
         });
     }
