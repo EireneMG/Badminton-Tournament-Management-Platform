@@ -23,4 +23,17 @@ class TournamentController extends Controller
     {
         $this->matchGenerationService = $matchGenerationService;
     }
+
+    public function index(): View
+    {
+        $club = Club::where('manager_id', auth()->id())->first();
+        
+        $tournaments = Tournament::where('club_id', $club->id)
+            ->with('categories')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('manager.tournaments', compact('tournaments', 'club'));
+    }
+
 }
