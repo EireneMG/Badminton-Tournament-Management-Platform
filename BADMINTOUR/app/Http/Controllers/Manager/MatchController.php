@@ -48,5 +48,97 @@ class MatchController extends Controller
         return view('manager.matches', compact('tournaments', 'categories', 'club'));
     }
 
-    
+    public function updateScore(TournamentMatch $match, Request $request): RedirectResponse
+    {
+        if ($match->tournament->club->manager_id !== auth()->id()) {
+            abort(403, 'Unauthorized access.');
+        }
+        
+        $request->validate([
+            'player1_score' => ['required', 'integer', 'min:0'],
+            'player2_score' => ['required', 'integer', 'min:0'],
+            'set1_player1' => ['nullable', 'integer', 'min:0'],
+            'set1_player2' => ['nullable', 'integer', 'min:0'],
+            'set2_player1' => ['nullable', 'integer', 'min:0'],
+            'set2_player2' => ['nullable', 'integer', 'min:0'],
+            'set3_player1' => ['nullable', 'integer', 'min:0'],
+            'set3_player2' => ['nullable', 'integer', 'min:0'],
+        ]);
+        
+        $winnerId = $request->player1_score > $request->player2_score 
+            ? $match->player1_id 
+            : $match->player2_id;
+        
+        $winnerPartnerId = $winnerId === $match->player1_id 
+            ? $match->player1_partner_id 
+            : $match->player2_partner_id;
+        
+        MatchResult::updateOrCreate(
+            ['match_id' => $match->id],
+            [
+                'player1_score' => $request->player1_score,
+                'player2_score' => $request->player2_score,
+                'set1_player1' => $request->set1_player1,
+                'set1_player2' => $request->set1_player2,
+                'set2_player1' => $request->set2_player1,
+                'set2_player2' => $request->set2_player2,
+                'set3_player1' => $request->set3_player1,
+                'set3_player2' => $request->set3_player2,
+                'winner_id' => $winnerId,
+            ]
+        );
+        
+        $match->update([
+            'status' => 'completed',
+            'winner_id' => $winnerId,
+            'winner_partner_id' => $winnerPartnerId,
+        ]);
+        
+        $category = $match->category;
+        $player1 = $match->player1;
+        $player2 = $match->player2;
+        
+        if (in_array($category->type, ['MD', 'WD', 'XD']) && $match->player1_partner_id && $match->player2_partner_id) {
+            $player1Partner = $match->player1Partner;
+            $player2Partner = $match->player2Partner;
+            
+            $this->eloRatingService->calculateDoublesMatchRatings(
+                $player1, 
+                $player1Partner, 
+                $player2, 
+                $player2Partner,
+                $winnerId === $player1->id,
+                $category->type
+            );
+        } else {
+            $this->eloRatingService->calculateMatchRatings(
+                $player1,
+                $player2,
+                $winnerId === $player1->id,
+                $category->type
+            );
+        }
+        
+        $this->matchGenerationService->advanceWinner($match);
+        
+        Notification::create([
+            'user_id' => $player1->id,
+            'type' => 'match_result_posted',
+            'title' => 'Match Result Posted',
+            'message' => "The result for your match in {$match->tournament->name} has been posted.",
+            'data' => ['match_id' => $match->id],
+            'action_url' => route('player.matches.show', $match->id),
+        ]);
+        
+        Notification::create([
+            'user_id' => $player2->id,
+            'type' => 'match_result_posted',
+            'title' => 'Match Result Posted',
+            'message' => "The result for your match in {$match->tournament->name} has been posted.",
+            'data' => ['match_id' => $match->id],
+            'action_url' => route('player.matches.show', $match->id),
+        ]);
+        
+        return back()->with('success', 'Match score updated and winner advanced successfully!');
+    }
 }
