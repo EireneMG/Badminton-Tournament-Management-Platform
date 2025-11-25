@@ -92,4 +92,19 @@ class TournamentRegistrationController extends Controller
             return back()->with('error', 'Failed to register: ' . $e->getMessage());
         }
     }
+
+    public function cancel(TournamentRegistration $registration): RedirectResponse
+    {
+        if ($registration->player_id !== auth()->id()) {
+            abort(403, 'Unauthorized access.');
+        }
+        
+        if (!in_array($registration->status, ['pending'])) {
+            return back()->with('error', 'Cannot cancel registration at this stage.');
+        }
+        
+        $registration->delete();
+        
+        return back()->with('success', 'Registration cancelled successfully.');
+    }
 }
