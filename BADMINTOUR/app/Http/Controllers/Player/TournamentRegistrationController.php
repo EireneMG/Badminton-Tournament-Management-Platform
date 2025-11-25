@@ -107,4 +107,39 @@ class TournamentRegistrationController extends Controller
         
         return back()->with('success', 'Registration cancelled successfully.');
     }
+
+    public function withdraw(TournamentRegistration $registration): RedirectResponse
+    {
+        if ($registration->player_id !== auth()->id()) {
+            abort(403, 'Unauthorized access.');
+        }
+        
+        if (!in_array($registration->status, ['approved'])) {
+            return back()->with('error', 'You can only withdraw from approved registrations.');
+        }
+        
+        $tournament = $registration->tournament;
+        $withdrawalDeadline = Carbon::parse($tournament->start_date)->subDays(3);
+        
+        if (Carbon::now()->isAfter($withdrawalDeadline)) {
+            return back()->with('error', 'Withdrawal deadline has passed. You cannot withdraw within 3 days of the tournament start.');
+        }
+        
+        $registration->update(['status' => 'withdrawn']);
+        
+        $manager = $tournament->club->manager;
+        Notification::create([
+            'user_id' => $manager->id,
+            'type' => 'withdrawal_requested',
+            'title' => 'Player Withdrawal',
+            'message' => auth()->user()->first_name . ' ' . auth()->user()->last_name . " has withdrawn from {$tournament->name}.",
+            'data' => [
+                'tournament_id' => $tournament->id,
+                'registration_id' => $registration->id,
+            ],
+            'action_url' => route('manager.tournaments.show', $tournament->id),
+        ]);
+        
+        return back()->with('success', 'You have successfully withdrawn from the tournament.');
+    }
 }
