@@ -47,4 +47,44 @@ class ClubController extends Controller
 
         return view('manager.create-club');
     }
+
+    /**
+     * Handle the club creation.
+     */
+    public function store(StoreClubRequest $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        // Check if manager is verified
+        if ($user->verification_status !== 'verified') {
+            return redirect()->route('manager.dashboard')
+                ->with('error', 'Your account must be verified before you can create a club. Please wait for verification or contact support if you have questions.');
+        }
+
+        // Check if manager already has a club
+        if ($user->managedClub) {
+            return back()->with('error', 'You have already created a club.');
+        }
+
+        $clubData = [
+            'manager_id' => $user->id,
+            'name' => $request->name,
+            'description' => $request->description,
+            'province' => $request->province,
+            'city' => $request->city,
+            'contact_email' => $request->contact_email,
+            'contact_phone' => $request->contact_phone,
+            'active' => true,
+        ];
+
+        // Handle logo upload if provided
+        if ($request->hasFile('logo')) {
+            $clubData['logo'] = $request->file('logo')->store('club-logos', 'public');
+        }
+
+        Club::create($clubData);
+
+        return redirect()->route('manager.dashboard')
+            ->with('success', 'Club created successfully! Welcome to BadminTour.');
+    }
 }
