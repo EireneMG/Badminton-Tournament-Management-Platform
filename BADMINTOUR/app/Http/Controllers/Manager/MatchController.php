@@ -141,4 +141,52 @@ class MatchController extends Controller
         
         return back()->with('success', 'Match score updated and winner advanced successfully!');
     }
+
+    public function reschedule(TournamentMatch $match, Request $request): RedirectResponse
+    {
+        if ($match->tournament->club->manager_id !== auth()->id()) {
+            abort(403, 'Unauthorized access.');
+        }
+        
+        if ($match->reschedule_count >= 1) {
+            return back()->with('error', 'This match has already been rescheduled once. No further rescheduling allowed.');
+        }
+        
+        $request->validate([
+            'scheduled_date' => ['required', 'date'],
+            'scheduled_time' => ['required'],
+            'court_number' => ['required', 'integer', 'min:1'],
+        ]);
+        
+        $match->update([
+            'scheduled_date' => $request->scheduled_date,
+            'scheduled_time' => $request->scheduled_time,
+            'court_number' => $request->court_number,
+            'reschedule_count' => $match->reschedule_count + 1,
+        ]);
+        
+        if ($match->player1_id) {
+            Notification::create([
+                'user_id' => $match->player1_id,
+                'type' => 'match_rescheduled',
+                'title' => 'Match Rescheduled',
+                'message' => "Your match in {$match->tournament->name} has been rescheduled.",
+                'data' => ['match_id' => $match->id],
+                'action_url' => route('player.matches.show', $match->id),
+            ]);
+        }
+        
+        if ($match->player2_id) {
+            Notification::create([
+                'user_id' => $match->player2_id,
+                'type' => 'match_rescheduled',
+                'title' => 'Match Rescheduled',
+                'message' => "Your match in {$match->tournament->name} has been rescheduled.",
+                'data' => ['match_id' => $match->id],
+                'action_url' => route('player.matches.show', $match->id),
+            ]);
+        }
+        
+        return back()->with('success', 'Match rescheduled successfully!');
+    }
 }
