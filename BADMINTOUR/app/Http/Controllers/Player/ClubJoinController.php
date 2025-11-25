@@ -58,4 +58,45 @@ class ClubJoinController extends Controller
 
         return back()->with('success', 'Club join request submitted successfully!');
     }
+
+    /**
+     * Approve a club join request (Manager only).
+     */
+    public function approve($clubPlayerId): RedirectResponse
+    {
+        $clubPlayer = ClubPlayer::with('club')->findOrFail($clubPlayerId);
+        
+        // Authorization: Verify the manager owns this club
+        if ($clubPlayer->club->manager_id !== request()->user()->id) {
+            abort(403, 'Unauthorized. You can only approve requests for your own club.');
+        }
+        
+        // Business Rule: Check if player already has an approved club membership
+        $existingApprovedMembership = ClubPlayer::where('player_id', $clubPlayer->player_id)
+            ->where('status', 'approved')
+            ->where('id', '!=', $clubPlayer->id)
+            ->exists();
+        
+        if ($existingApprovedMembership) {
+            return back()->with('error', 'This player is already a member of another club. They must leave their current club before joining yours.');
+        }
+        
+        $clubPlayer->update([
+            'status' => 'approved',
+            'provisional_elo' => request('provisional_elo', 1200),
+            'skill_level' => request('skill_level'),
+        ]);
+
+        // Notify player
+        Notification::create([
+            'user_id' => $clubPlayer->player_id,
+            'type' => 'club_join_approved',
+            'title' => 'Club Join Request Approved',
+            'message' => "Your request to join {$clubPlayer->club->name} has been approved!",
+            'data' => ['club_id' => $clubPlayer->club_id],
+            'action_url' => route('clubs.show', $clubPlayer->club_id),
+        ]);
+
+        return back()->with('success', 'Player approved successfully!');
+    }
 }
