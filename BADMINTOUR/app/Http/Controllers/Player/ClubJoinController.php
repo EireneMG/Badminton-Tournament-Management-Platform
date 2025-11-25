@@ -99,4 +99,30 @@ class ClubJoinController extends Controller
 
         return back()->with('success', 'Player approved successfully!');
     }
+
+    /**
+     * Reject a club join request (Manager only).
+     */
+    public function reject($clubPlayerId): RedirectResponse
+    {
+        $clubPlayer = ClubPlayer::with('club')->findOrFail($clubPlayerId);
+        
+        // Authorization: Verify the manager owns this club
+        if ($clubPlayer->club->manager_id !== request()->user()->id) {
+            abort(403, 'Unauthorized. You can only reject requests for your own club.');
+        }
+        
+        $clubPlayer->update(['status' => 'rejected']);
+
+        // Notify player
+        Notification::create([
+            'user_id' => $clubPlayer->player_id,
+            'type' => 'club_join_rejected',
+            'title' => 'Club Join Request Rejected',
+            'message' => "Your request to join {$clubPlayer->club->name} was not approved.",
+            'data' => ['club_id' => $clubPlayer->club_id],
+        ]);
+
+        return back()->with('success', 'Player request rejected.');
+    }
 }
