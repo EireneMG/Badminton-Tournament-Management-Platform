@@ -54,4 +54,41 @@ class ClubController extends Controller
         
         return view('clubs.show', compact('club', 'memberCount', 'canJoin', 'isPending', 'isApproved'));
     }
+    
+    public function join(Request $request, Club $club): RedirectResponse
+    {
+        $player = auth()->user();
+        
+        $existingMembership = ClubPlayer::where('club_id', $club->id)
+            ->where('player_id', $player->id)
+            ->first();
+        
+        if ($existingMembership) {
+            return back()->with('error', 'You have already requested to join this club.');
+        }
+        
+        if ($player->approvedClubMembership) {
+            return back()->with('error', 'You are already a member of another club. You can only be in one club at a time.');
+        }
+        
+        ClubPlayer::create([
+            'club_id' => $club->id,
+            'player_id' => $player->id,
+            'status' => 'pending',
+        ]);
+        
+        Notification::create([
+            'user_id' => $club->manager_id,
+            'type' => 'club_join_request',
+            'title' => 'New Club Join Request',
+            'message' => $player->first_name . ' ' . $player->last_name . ' has requested to join ' . $club->name,
+            'data' => [
+                'club_id' => $club->id,
+                'player_id' => $player->id,
+            ],
+            'action_url' => route('manager.club'),
+        ]);
+        
+        return back()->with('success', 'Join request sent successfully! The club manager will review your request.');
+    }
 }
