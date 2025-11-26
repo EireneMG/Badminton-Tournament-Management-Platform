@@ -11,7 +11,7 @@ class JoinClubRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return $this->user() && $this->user()->isPlayer();
     }
 
     /**
@@ -22,7 +22,7 @@ class JoinClubRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'club_id' => ['required', 'exists:clubs,id'],
         ];
     }
 }
