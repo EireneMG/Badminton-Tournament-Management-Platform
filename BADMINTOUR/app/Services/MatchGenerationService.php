@@ -124,4 +124,81 @@ class MatchGenerationService
         
         return sprintf('%02d:%02d:00', $hours, $minutes);
     }
+
+    public function advanceWinner(TournamentMatch $match): void
+    {
+        if (!$match->winner_id || $match->status !== 'completed') {
+            return;
+        }
+
+        $currentRoundMatchCount = TournamentMatch::where('tournament_id', $match->tournament_id)
+            ->where('tournament_category_id', $match->tournament_category_id)
+            ->where('round', $match->round)
+            ->count();
+        
+        if ($currentRoundMatchCount === 1) {
+            return;
+        }
+
+        $nextRound = $match->round + 1;
+        $nextMatchNumber = ceil($match->match_number / 2);
+
+        $nextMatch = TournamentMatch::where('tournament_id', $match->tournament_id)
+            ->where('tournament_category_id', $match->tournament_category_id)
+            ->where('round', $nextRound)
+            ->where('match_number', $nextMatchNumber)
+            ->first();
+
+        if (!$nextMatch) {
+            $nextMatch = TournamentMatch::create([
+                'tournament_id' => $match->tournament_id,
+                'tournament_category_id' => $match->tournament_category_id,
+                'round' => $nextRound,
+                'match_number' => $nextMatchNumber,
+                'scheduled_date' => Carbon::parse($match->scheduled_date)->addDays(1),
+                'scheduled_time' => $this->calculateMatchTime($nextRound, $nextMatchNumber),
+                'court_number' => (($nextMatchNumber - 1) % $match->tournament->number_of_courts) + 1,
+                'status' => 'scheduled',
+            ]);
+        }
+
+        if ($match->match_number % 2 == 1) {
+            $nextMatch->update([
+                'player1_id' => $match->winner_id,
+                'player1_partner_id' => $match->winner_partner_id,
+            ]);
+        } else {
+            $nextMatch->update([
+                'player2_id' => $match->winner_id,
+                'player2_partner_id' => $match->winner_partner_id,
+            ]);
+        }
+        
+        $nextMatch->refresh();
+        
+        $previousRoundMatchesComplete = TournamentMatch::where('tournament_id', $match->tournament_id)
+            ->where('tournament_category_id', $match->tournament_category_id)
+            ->where('round', $match->round)
+            ->whereIn('match_number', [($nextMatchNumber - 1) * 2 + 1, ($nextMatchNumber - 1) * 2 + 2])
+            ->where('status', '!=', 'completed')
+            ->doesntExist();
+        
+        if ($previousRoundMatchesComplete) {
+            if ($nextMatch->player1_id && !$nextMatch->player2_id) {
+                $nextMatch->update([
+                    'status' => 'completed',
+                    'winner_id' => $nextMatch->player1_id,
+                    'winner_partner_id' => $nextMatch->player1_partner_id,
+                ]);
+                $this->advanceWinner($nextMatch);
+            } elseif ($nextMatch->player2_id && !$nextMatch->player1_id) {
+                $nextMatch->update([
+                    'status' => 'completed',
+                    'winner_id' => $nextMatch->player2_id,
+                    'winner_partner_id' => $nextMatch->player2_partner_id,
+                ]);
+                $this->advanceWinner($nextMatch);
+            }
+        }
+    }
 }
