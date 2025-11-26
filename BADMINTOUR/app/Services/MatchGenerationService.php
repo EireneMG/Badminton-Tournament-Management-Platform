@@ -29,4 +29,87 @@ class MatchGenerationService
             };
         }
     }
+
+    protected function generateSingleEliminationBracket($category, $registrations, $tournament): void
+    {
+        $participants = $registrations->shuffle();
+        $totalParticipants = $participants->count();
+        
+        $nextPowerOfTwo = pow(2, ceil(log($totalParticipants, 2)));
+        $byes = $nextPowerOfTwo - $totalParticipants;
+
+        $round = 1;
+        $matchNumber = 1;
+        $courts = range(1, $tournament->number_of_courts);
+        $courtIndex = 0;
+
+        foreach ($participants->chunk(2) as $pair) {
+            if ($pair->count() == 2) {
+                TournamentMatch::create([
+                    'tournament_id' => $tournament->id,
+                    'tournament_category_id' => $category->id,
+                    'round' => $round,
+                    'match_number' => $matchNumber++,
+                    'player1_id' => $pair[0]->player_id,
+                    'player2_id' => $pair[1]->player_id,
+                    'player1_partner_id' => $pair[0]->partner_id,
+                    'player2_partner_id' => $pair[1]->partner_id,
+                    'scheduled_date' => $tournament->start_date,
+                    'scheduled_time' => $this->calculateMatchTime($round, $matchNumber),
+                    'court_number' => $courts[$courtIndex % count($courts)],
+                    'status' => 'scheduled',
+                ]);
+                $courtIndex++;
+            } else {
+                $byeMatch = TournamentMatch::create([
+                    'tournament_id' => $tournament->id,
+                    'tournament_category_id' => $category->id,
+                    'round' => $round,
+                    'match_number' => $matchNumber++,
+                    'player1_id' => $pair[0]->player_id,
+                    'player1_partner_id' => $pair[0]->partner_id,
+                    'scheduled_date' => $tournament->start_date,
+                    'status' => 'completed',
+                    'winner_id' => $pair[0]->player_id,
+                    'winner_partner_id' => $pair[0]->partner_id,
+                ]);
+                
+                $this->advanceWinner($byeMatch);
+            }
+        }
+    }
+
+    protected function generateDoubleEliminationBracket($category, $registrations, $tournament): void
+    {
+        $this->generateSingleEliminationBracket($category, $registrations, $tournament);
+    }
+
+    protected function generateRoundRobinBracket($category, $registrations, $tournament): void
+    {
+        $participants = $registrations->toArray();
+        $totalParticipants = count($participants);
+        
+        $round = 1;
+        $matchNumber = 1;
+
+        for ($i = 0; $i < $totalParticipants - 1; $i++) {
+            for ($j = $i + 1; $j < $totalParticipants; $j++) {
+                TournamentMatch::create([
+                    'tournament_id' => $tournament->id,
+                    'tournament_category_id' => $category->id,
+                    'round' => $round,
+                    'match_number' => $matchNumber++,
+                    'player1_id' => $participants[$i]['player_id'],
+                    'player2_id' => $participants[$j]['player_id'],
+                    'player1_partner_id' => $participants[$i]['partner_id'] ?? null,
+                    'player2_partner_id' => $participants[$j]['partner_id'] ?? null,
+                    'scheduled_date' => Carbon::parse($tournament->start_date)->addDays($round - 1),
+                    'scheduled_time' => $this->calculateMatchTime($round, $matchNumber),
+                    'court_number' => (($matchNumber - 1) % $tournament->number_of_courts) + 1,
+                    'status' => 'scheduled',
+                ]);
+            }
+            $round++;
+        }
+    }
 }
