@@ -61,13 +61,43 @@ class RegisterTournamentRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            //
+            'category_id' => ['required', 'exists:tournament_categories,id'],
+            'partner_id' => ['nullable', 'exists:users,id'],
         ];
+    }
+
+    protected function checkAgeRequirement($user, $category): bool
+    {
+        if (!$category->age_requirement) {
+            return true;
+        }
+        
+        $birthDate = Carbon::parse($user->birth_date);
+        $age = $birthDate->age;
+        
+        if (str_contains($category->age_requirement, '-')) {
+            [$min, $max] = explode('-', $category->age_requirement);
+            return $age >= (int)$min && $age <= (int)$max;
+        }
+        
+        if (str_contains($category->age_requirement, '+')) {
+            $min = (int)str_replace('+', '', $category->age_requirement);
+            return $age >= $min;
+        }
+        
+        return true;
+    }
+
+    protected function checkSkillRequirement($user, $category): bool
+    {
+        if (!$category->skill_level_requirements) {
+            return true;
+        }
+        
+        return true;
     }
 }
