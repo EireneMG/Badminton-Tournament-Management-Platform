@@ -112,4 +112,16 @@ class MatchGenerationService
             $round++;
         }
     }
+
+    protected function calculateMatchTime(int $round, int $matchNumber): string
+    {
+        $baseHour = 8;
+        $matchDurationMinutes = 45;
+        
+        $totalMinutes = ($matchNumber - 1) * $matchDurationMinutes;
+        $hours = $baseHour + floor($totalMinutes / 60);
+        $minutes = $totalMinutes % 60;
+        
+        return sprintf('%02d:%02d:00', $hours, $minutes);
+    }
 }
