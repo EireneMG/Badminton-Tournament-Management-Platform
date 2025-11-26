@@ -66,4 +66,50 @@ class EloRatingService
         $this->saveRankingHistory($team2Player1, $categoryType, $team2Player1OldRating, $team2Player1NewRating);
         $this->saveRankingHistory($team2Player2, $categoryType, $team2Player2OldRating, $team2Player2NewRating);
     }
+
+    protected function calculateExpectedScore(float $playerRating, float $opponentRating): float
+    {
+        return 1 / (1 + pow(10, ($opponentRating - $playerRating) / 400));
+    }
+
+    protected function getCurrentRating(User $player, string $categoryType): float
+    {
+        $eloRating = EloRating::where('player_id', $player->id)
+            ->where('category_type', $categoryType)
+            ->first();
+
+        return $eloRating ? $eloRating->current_rating : 1200;
+    }
+
+    protected function updateRating(User $player, string $categoryType, float $newRating): void
+    {
+        $rating = EloRating::firstOrNew([
+            'player_id' => $player->id,
+            'category_type' => $categoryType,
+        ]);
+        
+        if ($rating->exists) {
+            $rating->current_rating = $newRating;
+            $rating->peak_rating = max($rating->peak_rating ?? $newRating, $newRating);
+            $rating->matches_played = ($rating->matches_played ?? 0) + 1;
+        } else {
+            $rating->current_rating = $newRating;
+            $rating->peak_rating = $newRating;
+            $rating->matches_played = 1;
+        }
+        
+        $rating->save();
+    }
+
+    protected function saveRankingHistory(User $player, string $categoryType, float $oldRating, float $newRating): void
+    {
+        RankingHistory::create([
+            'player_id' => $player->id,
+            'category_type' => $categoryType,
+            'rating' => $newRating,
+            'previous_rating' => $oldRating,
+            'change' => $newRating - $oldRating,
+            'recorded_at' => Carbon::now(),
+        ]);
+    }
 }
