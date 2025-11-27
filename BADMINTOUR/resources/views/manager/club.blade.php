@@ -158,79 +158,41 @@
                     <h2 class="text-xl font-semibold text-[#2C5F4F] mb-4">Pending Join Requests</h2>
                     
                     <div class="space-y-4">
-                        <!-- Request 1 -->
+                        @forelse($joinRequests as $joinRequest)
                         <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition duration-150">
                             <div class="flex justify-between items-center">
                                 <div class="flex items-center space-x-4">
                                     <div class="flex-shrink-0 h-12 w-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 font-semibold">
-                                        CB
+                                        {{ strtoupper(substr($joinRequest->player->first_name, 0, 1) . substr($joinRequest->player->last_name, 0, 1)) }}
                                     </div>
                                     <div>
-                                        <h3 class="text-sm font-semibold text-gray-900">Carlos Bautista</h3>
-                                        <p class="text-sm text-gray-500">Requested to join: Elite Badminton Club</p>
-                                        <p class="text-xs text-gray-400 mt-1">November 8, 2025</p>
+                                        <h3 class="text-sm font-semibold text-gray-900">{{ $joinRequest->player->first_name }} {{ $joinRequest->player->last_name }}</h3>
+                                        <p class="text-sm text-gray-500">Requested to join: {{ $club->name }}</p>
+                                        <p class="text-xs text-gray-400 mt-1">{{ $joinRequest->created_at->format('F d, Y') }}</p>
                                     </div>
                                 </div>
                                 <div class="flex space-x-3">
-                                    <button class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200">
-                                        Approve
-                                    </button>
-                                    <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200">
-                                        Reject
-                                    </button>
+                                    <form action="{{ route('manager.club.approve', $joinRequest->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200">
+                                            Approve
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('manager.club.reject', $joinRequest->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200">
+                                            Reject
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Request 2 -->
-                        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition duration-150">
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center space-x-4">
-                                    <div class="flex-shrink-0 h-12 w-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 font-semibold">
-                                        LR
-                                    </div>
-                                    <div>
-                                        <h3 class="text-sm font-semibold text-gray-900">Linda Reyes</h3>
-                                        <p class="text-sm text-gray-500">Requested to join: Elite Badminton Club</p>
-                                        <p class="text-xs text-gray-400 mt-1">November 9, 2025</p>
-                                    </div>
-                                </div>
-                                <div class="flex space-x-3">
-                                    <button class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200">
-                                        Approve
-                                    </button>
-                                    <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200">
-                                        Reject
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Request 3 -->
-                        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition duration-150">
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center space-x-4">
-                                    <div class="flex-shrink-0 h-12 w-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 font-semibold">
-                                        MT
-                                    </div>
-                                    <div>
-                                        <h3 class="text-sm font-semibold text-gray-900">Michael Tan</h3>
-                                        <p class="text-sm text-gray-500">Requested to join: Elite Badminton Club</p>
-                                        <p class="text-xs text-gray-400 mt-1">November 10, 2025</p>
-                                    </div>
-                                </div>
-                                <div class="flex space-x-3">
-                                    <button class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200">
-                                        Approve
-                                    </button>
-                                    <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200">
-                                        Reject
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        @empty
+                        <p class="text-gray-500 text-center py-8">No pending join requests.</p>
+                        @endforelse
                     </div>
                 </div>
+                @endif
             </main>
         </div>
     </div>
