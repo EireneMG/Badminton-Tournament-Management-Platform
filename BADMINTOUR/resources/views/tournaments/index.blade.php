@@ -58,5 +58,55 @@
             </div>
         </div>
 
-    </div>
-</x-dashboard-layout>
+        <!-- Ongoing Tournaments -->
+        <div x-show="activeTab === 'ongoing'" class="space-y-4">
+            @forelse($ongoingTournaments as $tournament)
+            <div class="bg-white border-2 border-[#D4A574] rounded-lg p-6">
+                <h3 class="text-xl font-bold mb-3">{{ $tournament->name }}</h3>
+                
+                <div class="space-y-2 mb-4">
+                    <div class="flex items-center text-gray-700">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <span>{{ \Carbon\Carbon::parse($tournament->start_date)->format('M d, Y') }} - {{ \Carbon\Carbon::parse($tournament->end_date)->format('M d, Y') }}</span>
+                    </div>
+                    <div class="flex items-center text-gray-700">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <span>{{ $tournament->venue_name }}</span>
+                    </div>
+                    <div class="flex items-center text-gray-700">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        <span>Organized by {{ $tournament->club->name }}</span>
+                    </div>
+                    @if($tournament->categories->count() > 0)
+                    <div class="flex items-center text-gray-700">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                        </svg>
+                        <span>Categories: {{ $tournament->categories->pluck('name')->join(', ') }}</span>
+                    </div>
+                    @endif
+                </div>
+                
+                <div class="flex justify-end">
+                    <a href="{{ route('player.tournaments.show', $tournament->id) }}" class="bg-[#C85A54] text-white px-6 py-2 rounded-md hover:bg-[#B54A44] transition font-semibold">
+                        View Tournament
+                    </a>
+                </div>
+            </div>
+            @empty
+            <div class="bg-white border-2 border-gray-200 rounded-lg p-12 text-center">
+                <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3z"/>
+                </svg>
+                <p class="text-gray-600 font-semibold text-lg">No ongoing tournaments</p>
+                <p class="text-gray-500 text-sm mt-2">Check back later for upcoming events</p>
+            </div>
+            @endforelse
+        </div>
