@@ -28,32 +28,50 @@
 
             <!-- Main Content -->
             <main class="flex-1 overflow-y-auto bg-gray-50 p-8">
+                @if(!$club)
+                    <!-- No Club Created Yet -->
+                    <div class="bg-white rounded-lg shadow-sm p-12 border border-gray-200 text-center">
+                        <div class="max-w-md mx-auto">
+                            <svg class="w-20 h-20 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                            <h2 class="text-2xl font-semibold text-[#2C5F4F] mb-2">No Club Created Yet</h2>
+                            <p class="text-gray-600 mb-6">You haven't created a club yet. Create one to start managing tournaments and players.</p>
+                            <a href="{{ route('manager.create-club') }}" class="inline-flex items-center px-6 py-3 bg-[#2C5F4F] hover:bg-[#244D3E] text-white font-semibold rounded-lg transition duration-200">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Create Your Club
+                            </a>
+                        </div>
+                    </div>
+                @else
                 <!-- Club Overview & Player List Grid -->
                 <div class="grid lg:grid-cols-2 gap-6 mb-8">
                     <!-- Club Overview Card -->
                     <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
                     <div class="flex justify-between items-start mb-6">
                         <div>
-                            <h2 class="text-2xl font-semibold text-[#2C5F4F] mb-2">Elite Badminton Club</h2>
+                            <h2 class="text-2xl font-semibold text-[#2C5F4F] mb-2">{{ $club->name }}</h2>
                             <div class="space-y-2 text-gray-600">
                                 <p class="flex items-center">
                                     <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                     </svg>
-                                    <span>Manila, Philippines</span>
+                                    <span>{{ $club->city }}, {{ $club->province }}</span>
                                 </p>
                                 <p class="flex items-center">
                                     <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                     </svg>
-                                    <span><strong>24</strong> Members</span>
+                                    <span><strong>{{ $approvedPlayers->count() }}</strong> Members</span>
                                 </p>
                                 <p class="flex items-center">
                                     <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                     </svg>
-                                    <span>Created: January 15, 2024</span>
+                                    <span>Created: {{ $club->created_at->format('F d, Y') }}</span>
                                 </p>
                             </div>
                         </div>
