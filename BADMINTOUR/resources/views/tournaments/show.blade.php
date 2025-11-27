@@ -137,5 +137,88 @@
                 </div>
                 @endif
             </div>
+
+            <!-- Categories Sidebar -->
+            <div class="col-span-1">
+                <div class="bg-white rounded-lg p-6 sticky top-6">
+                    <h3 class="text-xl font-bold mb-4">Categories</h3>
+                    
+                    @if(!$isEligible)
+                    <div class="mb-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                        <p class="text-sm text-yellow-800">
+                            <strong>Note:</strong> You must be an approved member of a club to register for tournaments.
+                        </p>
+                        <a href="{{ route('clubs.index') }}" class="text-sm text-yellow-900 font-semibold underline mt-2 inline-block">
+                            Find a Club
+                        </a>
+                    </div>
+                    @endif
+
+                    <div class="space-y-3">
+                        @forelse($tournament->categories as $category)
+                        @php
+                            $categoryRegistration = $playerRegistration && $playerRegistration->category_id === $category->id ? $playerRegistration : null;
+                            $canRegisterCategory = $canRegister && !$categoryRegistration;
+                            $canWithdrawCategory = $categoryRegistration && $canWithdraw;
+                            
+                            $statusColors = [
+                                'pending' => 'bg-gray-100 text-gray-700',
+                                'eligible' => 'bg-blue-100 text-blue-700',
+                                'awaiting_payment' => 'bg-yellow-100 text-yellow-700',
+                                'paid' => 'bg-green-100 text-green-700',
+                                'approved' => 'bg-[#2C5F4F] text-white',
+                                'rejected' => 'bg-red-100 text-red-700'
+                            ];
+                        @endphp
+                        
+                        <div class="border-2 border-[#D4A574] rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-semibold">{{ $category->name }}</span>
+                                <span class="text-sm text-[#2C5F4F] font-semibold">{{ $category->match_type }}</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mb-3">{{ $category->approved_count ?? 0 }} Registered</p>
+                            
+                            @if($categoryRegistration)
+                            <div class="mb-3 p-3 rounded {{ $statusColors[$categoryRegistration->status] ?? 'bg-gray-100 text-gray-700' }}">
+                                <span class="text-xs font-semibold">Status: {{ ucfirst(str_replace('_', ' ', $categoryRegistration->status)) }}</span>
+                            </div>
+                            @endif
+
+                            <div class="space-y-2">
+                                @if($canRegisterCategory)
+                                <form action="{{ route('player.tournaments.register') }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="tournament_id" value="{{ $tournament->id }}">
+                                    <input type="hidden" name="category_id" value="{{ $category->id }}">
+                                    <button type="submit" class="w-full bg-[#C85A54] text-white px-4 py-2 rounded text-sm hover:bg-[#B54A44] transition font-semibold">
+                                        Register for {{ $category->name }}
+                                    </button>
+                                </form>
+                                @endif
+
+                                @if($canWithdrawCategory)
+                                <form action="{{ route('player.registrations.withdraw', $categoryRegistration->id) }}" method="POST" 
+                                    onsubmit="return confirm('Are you sure you want to withdraw from this tournament?');">
+                                    @csrf
+                                    <button type="submit" class="w-full bg-gray-600 text-white px-4 py-2 rounded text-sm hover:bg-gray-700 transition font-semibold">
+                                        Request Withdrawal
+                                    </button>
+                                </form>
+                                @endif
+                            </div>
+                        </div>
+                        @empty
+                        <p class="text-sm text-gray-500 text-center py-4">No categories available</p>
+                        @endforelse
+                    </div>
+
+                    @if(!$canRegister && $isEligible)
+                    <div class="mt-4 p-3 bg-gray-50 border border-gray-200 rounded text-sm text-gray-600">
+                        Registration deadline has passed or tournament has started.
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
     </div>
 </x-dashboard-layout>
