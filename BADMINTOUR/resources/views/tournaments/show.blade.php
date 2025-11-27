@@ -71,6 +71,71 @@
                     </div>
                     @endif
                 </div>
-        </div>
+
+                <!-- Payment Information (Manual Payment System) -->
+                @if($playerRegistration && in_array($playerRegistration->status, ['eligible', 'awaiting_payment']))
+                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-6 mb-6">
+                    <div class="flex items-start">
+                        <svg class="w-6 h-6 text-blue-600 mr-3 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-blue-900 text-lg mb-2">Payment Instructions</h3>
+                            <p class="text-blue-800 mb-4">Please pay the tournament fee of ₱{{ number_format($tournament->tournament_fee, 2) }} and contact the manager using the information below:</p>
+                            
+                            <div class="bg-white rounded-lg p-4 border-2 border-[#D4A574]">
+                                <h4 class="font-semibold text-gray-900 mb-3 text-sm">Manager Contact Information</h4>
+                                <div class="space-y-3">
+                                    @if($tournament->contact_phone)
+                                    <div class="flex items-center">
+                                        <svg class="w-5 h-5 text-gray-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                                        </svg>
+                                        <div>
+                                            <span class="text-xs font-semibold text-gray-600">Contact Number</span>
+                                            <p class="text-gray-900 font-medium">{{ $tournament->contact_phone }}</p>
+                                        </div>
+                                    </div>
+                                    @endif
+                                    
+                                    @if($tournament->contact_email)
+                                    <div class="flex items-center">
+                                        <svg class="w-5 h-5 text-gray-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                                        </svg>
+                                        <div>
+                                            <span class="text-xs font-semibold text-gray-600">Email Address</span>
+                                            <p class="text-gray-900 font-medium break-all">{{ $tournament->contact_email }}</p>
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    @if($tournament->facebook_link)
+                                    <div class="flex items-center">
+                                        <svg class="w-5 h-5 text-gray-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                        </svg>
+                                        <div class="flex-1 min-w-0">
+                                            <span class="text-xs font-semibold text-gray-600">Messenger / Facebook</span>
+                                            <p class="text-gray-900 font-medium truncate">
+                                                <a href="{{ $tournament->facebook_link }}" target="_blank" class="text-[#C85A54] hover:text-[#B54A44] hover:underline">
+                                                    {{ $tournament->facebook_link }}
+                                                </a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <p class="text-blue-700 text-sm mt-4">
+                                <strong>Note:</strong> After making your payment, contact the tournament manager using the information above to confirm your payment. The manager will update your registration status once payment is verified.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                @endif
+            </div>
     </div>
 </x-dashboard-layout>
