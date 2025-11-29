@@ -28,6 +28,11 @@ class TournamentController extends Controller
     {
         $club = Club::where('manager_id', auth()->id())->first();
         
+        // If manager doesn't have a club yet, redirect to create club page
+        if (!$club) {
+            return view('manager.tournaments', ['tournaments' => collect([]), 'club' => null]);
+        }
+        
         $tournaments = Tournament::where('club_id', $club->id)
             ->with('categories')
             ->orderBy('created_at', 'desc')
