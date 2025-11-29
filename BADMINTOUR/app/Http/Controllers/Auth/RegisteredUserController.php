@@ -65,6 +65,53 @@ class RegisteredUserController extends Controller
 
         $request->validate($rules);
 
-        
+        // Build full name from parts
+        $fullName = trim($request->first_name . ' ' . ($request->middle_name ?? '') . ' ' . $request->last_name);
+
+        // Prepare user data
+        $userData = [
+            'name' => $fullName,
+            'first_name' => $request->first_name,
+            'middle_name' => $request->middle_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => $request->role,
+            'contact_number' => $request->contact_number,
+        ];
+
+        // Add player-specific fields
+        if ($request->role === 'player') {
+            $userData = array_merge($userData, [
+                'birth_month' => $request->birth_month,
+                'birth_day' => $request->birth_day,
+                'birth_year' => $request->birth_year,
+                'gender' => $request->gender,
+                'height' => $request->height,
+                'weight' => $request->weight,
+                'region' => $request->region,
+                'province' => ($request->province === 'N/A' || empty($request->province)) ? null : $request->province,
+                'city' => $request->city,
+            ]);
+        } elseif ($request->role === 'manager') {
+            // Handle manager ID document upload - store in PRIVATE storage for security
+            if ($request->hasFile('id_document')) {
+                $file = $request->file('id_document');
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                // Store in private disk (storage/app/manager_ids) - NOT publicly accessible
+                $filePath = $file->storeAs('manager_ids', $fileName);
+                $userData['id_document'] = $filePath;
+                // Auto-approve managers immediately (can add third-party verification later)
+                $userData['verification_status'] = 'verified';
+            }
+        }
+
+        $user = User::create($userData);
+
+        event(new Registered($user));
+
+        Auth::login($user);
+
+        return redirect()->route('verification.notice');
     }
 }
