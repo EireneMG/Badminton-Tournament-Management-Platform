@@ -16,10 +16,18 @@ class ClubController extends Controller
     public function index(): View
     {
         $club = Club::where('manager_id', auth()->id())
-            ->with(['players.player', 'players' => function($query) {
-                $query->where('status', 'pending');
+            ->with(['clubPlayers' => function ($query) {
+                $query->with('player');
             }])
             ->first();
+        
+        if (!$club) {
+            return view('manager.club', [
+                'club' => null,
+                'joinRequests' => collect([]),
+                'approvedPlayers' => collect([])
+            ]);
+        }
         
         $joinRequests = \App\Models\ClubPlayer::where('club_id', $club->id)
             ->where('status', 'pending')
