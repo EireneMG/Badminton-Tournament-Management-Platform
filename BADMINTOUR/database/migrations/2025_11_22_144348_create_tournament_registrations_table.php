@@ -22,7 +22,10 @@ return new class extends Migration
             $table->timestamp('payment_verified_at')->nullable();
             $table->timestamps();
             
-            $table->unique(['tournament_id', 'player_id', 'category_id']);
+            $table->unique(
+                ['tournament_id', 'player_id', 'category_id'],
+                'trn_reg_tid_pid_cid_unique'
+            );
         });
     }
 
