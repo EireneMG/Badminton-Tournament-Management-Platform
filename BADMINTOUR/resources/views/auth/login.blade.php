@@ -8,15 +8,15 @@
 </head>
 <body class="h-screen overflow-hidden">
     <div class="flex h-full">
-        <!-- Left Side - Black Background -->
-        <div class="w-5/12 bg-black flex flex-col justify-between p-12">
-            <div class="flex-1 flex items-center">
+        <!-- Left Side - White Background -->
+        <div class="w-5/12 bg-white flex flex-col justify-between p-12">
+            <div class="flex-1 flex flex-col items-center justify-center">
                 <img src="{{ asset('images/logo.jpg') }}" alt="Badminton Tournament Management Platform" class="w-48 h-48 mb-6 object-contain">
-                <h1 class="text-white text-4xl font-bold leading-tight">
+                <h1 class="text-black text-2xl font-bold text-center leading-tight">
                     Badminton Tournament<br>Management Platform
                 </h1>
             </div>
-            <div class="text-white text-sm">
+            <div class="text-black text-sm">
                 Don't have an account yet? 
                 <a href="{{ route('register') }}" class="text-[#7B1F3C] hover:text-[#5D1730] font-semibold">Register</a>
             </div>
@@ -25,18 +25,25 @@
         <!-- Right Side - Beige Background with Form -->
         <div class="w-7/12 bg-[#E8DCC4] flex items-center justify-center">
             <div class="w-full max-w-md px-8">
-                <h2 class="text-[#2C5F4F] text-5xl font-bold mb-16 text-center">Hello, Player!</h2>
+                <h2 class="text-[#2C5F4F] text-5xl font-bold mb-8 text-center">Hello, Player!</h2>
+                
+                <!-- Success Message -->
+                @if (session('success'))
+                    <div class="bg-green-50 border border-green-400 text-green-800 px-4 py-3 rounded-md mb-6">
+                        <p class="text-sm">{{ session('success') }}</p>
+                    </div>
+                @endif
                 
                 <form method="POST" action="{{ route('login') }}" class="space-y-6">
                     @csrf
 
-                    <!-- Username/Email Input -->
+                    <!-- Email Input -->
                     <div>
                         <input 
                             id="email" 
                             type="email" 
                             name="email" 
-                            placeholder="Username"
+                            placeholder="Email"
                             value="{{ old('email') }}"
                             required 
                             autofocus
