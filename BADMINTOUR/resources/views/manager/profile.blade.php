@@ -35,7 +35,7 @@
                 </div>
             </div>
 
-             <!-- Content Area -->
+            <!-- Content Area -->
             <div class="flex-1 overflow-y-auto bg-gray-50 p-8">
                 <div class="max-w-5xl mx-auto space-y-6">
                     <!-- Personal Information -->
@@ -48,16 +48,16 @@
                         </div>
                         <div class="space-y-4">
                             <div>
-                                <p class="text-gray-600">Full Name: <span class="text-black font-semibold">Jake Peralta</span></p>
+                                <p class="text-gray-600">Full Name: <span class="text-black font-semibold">{{ $user->first_name }} {{ $user->last_name }}</span></p>
                             </div>
                             <div>
-                                <p class="text-gray-600">Gender: <span class="text-black font-semibold">Male</span></p>
+                                <p class="text-gray-600">Gender: <span class="text-black font-semibold">{{ $user->gender ?? 'Not specified' }}</span></p>
                             </div>
                             <div>
-                                <p class="text-gray-600">Email: <span class="text-black font-semibold">JP.smashersclub@gmail.com</span></p>
+                                <p class="text-gray-600">Email: <span class="text-black font-semibold">{{ $user->email }}</span></p>
                             </div>
                             <div>
-                                <p class="text-gray-600">Contact No: <span class="text-black font-semibold">0917-123-4567</span></p>
+                                <p class="text-gray-600">Contact No: <span class="text-black font-semibold">{{ $user->contact_number ?? 'Not specified' }}</span></p>
                             </div>
                         </div>
                     </div>
@@ -65,18 +65,30 @@
                     <!-- Club Information -->
                     <div class="bg-white rounded-lg border-2 border-black p-6">
                         <h2 class="text-2xl font-bold text-black mb-6">Club Information</h2>
+                        @if($club)
                         <div class="flex items-center justify-between">
                             <div class="space-y-2">
-                                <p class="text-black font-semibold text-lg">Smashers Club</p>
-                                <p class="text-gray-600">75 members</p>
+                                <p class="text-black font-semibold text-lg">{{ $club->name }}</p>
+                                <p class="text-gray-600">{{ $clubMemberCount }} {{ $clubMemberCount === 1 ? 'member' : 'members' }}</p>
                             </div>
-                            <button class="bg-white hover:bg-gray-50 text-black px-6 py-2 rounded-lg border-2 border-black font-semibold transition duration-200">
+                            <a href="{{ route('manager.club') }}" class="bg-white hover:bg-gray-50 text-black px-6 py-2 rounded-lg border-2 border-black font-semibold transition duration-200">
                                 View Club
-                            </button>
+                            </a>
                         </div>
+                        @else
+                        <div class="text-center py-8">
+                            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                            <p class="text-gray-500 mb-4">No club created yet</p>
+                            <a href="{{ route('manager.create-club') }}" class="inline-block bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-6 py-2 rounded-lg font-semibold transition duration-200">
+                                Create Your Club
+                            </a>
+                        </div>
+                        @endif
                     </div>
 
-                     <!-- Managers / Handlers -->
+                    <!-- Managers / Handlers -->
                     <div class="bg-white rounded-lg border-2 border-black p-6">
                         <div class="flex items-center justify-between mb-6">
                             <h2 class="text-2xl font-bold text-black">Managers / Handlers</h2>
@@ -89,7 +101,7 @@
                         </div>
                     </div>
 
-                     <!-- Change Password -->
+                    <!-- Change Password -->
                     <div class="bg-white rounded-lg border-2 border-black p-6">
                         <div class="flex items-center justify-between mb-6">
                             <h2 class="text-2xl font-bold text-black">Security</h2>
@@ -131,7 +143,7 @@
         </div>
     </div>
 
-     <!-- Edit Profile Modal -->
+    <!-- Edit Profile Modal -->
     <div x-show="showEditProfileModal" 
          x-cloak
          class="fixed inset-0 z-50 overflow-y-auto">
@@ -154,13 +166,25 @@
                 </div>
 
                 <!-- Form -->
-                <form @submit.prevent="showEditProfileModal = false; showSuccessToast = true" class="space-y-6">
+                <form action="{{ route('profile.update') }}" method="POST" class="space-y-6">
+                    @csrf
+                    @method('PATCH')
                     <!-- Full Name -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
-                        <input type="text" 
-                               value="Jake Peralta"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">First Name</label>
+                            <input type="text" 
+                                   name="first_name"
+                                   value="{{ $user->first_name }}"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Last Name</label>
+                            <input type="text" 
+                                   name="last_name"
+                                   value="{{ $user->last_name }}"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
+                        </div>
                     </div>
 
                     <!-- Email and Contact Number Row -->
@@ -169,7 +193,8 @@
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
                             <input type="email" 
-                                   value="JP.smashersclub@gmail.com"
+                                   name="email"
+                                   value="{{ $user->email }}"
                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
                         </div>
 
@@ -177,30 +202,20 @@
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Contact Number</label>
                             <input type="text" 
-                                   value="0917-123-4567"
+                                   name="contact_number"
+                                   value="{{ $user->contact_number }}"
                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
                         </div>
                     </div>
 
-                    <!-- Gender and Club Name Row -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Gender -->
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Gender</label>
-                            <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
-                                <option value="male" selected>Male</option>
-                                <option value="female">Female</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-
-                        <!-- Club Name -->
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Club Name</label>
-                            <input type="text" 
-                                   value="Smashers Club"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
-                        </div>
+                    <!-- Gender -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Gender</label>
+                        <select name="gender" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
+                            <option value="Male" {{ $user->gender === 'Male' ? 'selected' : '' }}>Male</option>
+                            <option value="Female" {{ $user->gender === 'Female' ? 'selected' : '' }}>Female</option>
+                            <option value="Other" {{ $user->gender === 'Other' ? 'selected' : '' }}>Other</option>
+                        </select>
                     </div>
 
                     <!-- Modal Actions -->
@@ -241,12 +256,15 @@
                 </div>
 
                 <!-- Form -->
-                <form @submit.prevent="showChangePasswordModal = false; showSuccessToast = true" class="space-y-6">
+                <form action="{{ route('password.update') }}" method="POST" class="space-y-6">
+                    @csrf
+                    @method('PUT')
                     <!-- Current Password -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Current Password</label>
                         <div class="relative">
                             <input :type="showPassword ? 'text' : 'password'" 
+                                   name="current_password"
                                    placeholder="Enter current password"
                                    class="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4A574] focus:border-transparent">
                             <button type="button" @click="showPassword = !showPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
@@ -266,6 +284,7 @@
                         <label class="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
                         <div class="relative">
                             <input :type="showNewPassword ? 'text' : 'password'" 
+                                   name="password"
                                    placeholder="Enter new password"
                                    class="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4A574] focus:border-transparent">
                             <button type="button" @click="showNewPassword = !showNewPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
@@ -285,6 +304,7 @@
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password</label>
                         <div class="relative">
                             <input :type="showConfirmPassword ? 'text' : 'password'" 
+                                   name="password_confirmation"
                                    placeholder="Re-enter new password"
                                    class="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4A574] focus:border-transparent">
                             <button type="button" @click="showConfirmPassword = !showConfirmPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
@@ -313,7 +333,7 @@
         </div>
     </div>
 
-     <!-- Add Handler Modal -->
+    <!-- Add Handler Modal -->
     <div x-show="showAddHandlerModal" 
          x-cloak
          class="fixed inset-0 z-50 overflow-y-auto">
@@ -333,10 +353,11 @@
                 <!-- Modal Header -->
                 <div class="mb-6">
                     <h2 class="text-3xl font-bold text-[#2C5F4F]">Add Handler</h2>
+                    <p class="text-gray-500 mt-2">This feature is coming soon</p>
                 </div>
 
                 <!-- Form -->
-                <form @submit.prevent="showAddHandlerModal = false; showSuccessToast = true" class="space-y-6">
+                <form @submit.prevent="showAddHandlerModal = false" class="space-y-6">
                     <!-- Handler Name -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Handler Name</label>
@@ -366,7 +387,7 @@
                         <button type="button" @click="showAddHandlerModal = false" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg font-semibold transition duration-200">
                             Cancel
                         </button>
-                        <button type="submit" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-6 py-3 rounded-lg font-semibold transition duration-200">
+                        <button type="button" @click="showAddHandlerModal = false" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-6 py-3 rounded-lg font-semibold transition duration-200">
                             Add Handler
                         </button>
                     </div>
