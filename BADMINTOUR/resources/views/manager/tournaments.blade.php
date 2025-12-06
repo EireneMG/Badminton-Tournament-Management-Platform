@@ -29,14 +29,74 @@
 
             <!-- Main Content -->
             <main class="flex-1 overflow-y-auto bg-gray-50 p-8">
+                <!-- Success/Error Messages -->
+                @if(session('success'))
+                    <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                        <span class="block sm:inline">{{ session('success') }}</span>
+                    </div>
+                @endif
+                
+                @if(session('error'))
+                    <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                        <span class="block sm:inline">{{ session('error') }}</span>
+                    </div>
+                @endif
+                
+                @if($errors->any())
+                    <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                        <ul class="list-disc list-inside">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+                
                 <!-- Action Buttons -->
                 <div class="flex gap-4 mb-6">
                     <a href="/manager/tournaments/create" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-8 py-3 rounded-md font-semibold transition duration-200 uppercase">
                         Create Tournament
                     </a>
-                    <a href="/manager/tournaments/generate" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-8 py-3 rounded-md font-semibold transition duration-200 uppercase">
-                        Generate Tournament
+                    <a href="{{ route('manager.tournaments.generate') }}" 
+                       onclick="showGenerateLoading()"
+                       class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-8 py-3 rounded-md font-semibold transition duration-200 uppercase relative">
+                        <span id="generate-btn-text">Generate Tournament</span>
+                        <span id="generate-btn-spinner" class="hidden">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Generating...
+                        </span>
                     </a>
+                    
+                    <!-- Loading Overlay -->
+                    <div id="generate-loading-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+                        <div class="bg-white p-8 rounded-lg shadow-xl max-w-md w-full mx-4">
+                            <div class="flex flex-col items-center">
+                                <svg class="animate-spin h-16 w-16 text-[#2C5F4F] mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <h3 class="text-xl font-semibold text-gray-900 mb-2">Generating Tournament...</h3>
+                                <p class="text-gray-600 text-center">Analyzing past tournaments and creating your tournament template. Please wait...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <script>
+                        function showGenerateLoading() {
+                            const overlay = document.getElementById('generate-loading-overlay');
+                            const btnText = document.getElementById('generate-btn-text');
+                            const btnSpinner = document.getElementById('generate-btn-spinner');
+                            
+                            if (overlay && btnText && btnSpinner) {
+                                overlay.classList.remove('hidden');
+                                btnText.classList.add('hidden');
+                                btnSpinner.classList.remove('hidden');
+                            }
+                        }
+                    </script>
                 </div>
 
                 <!-- Search Bar -->
@@ -49,7 +109,7 @@
                     </div>
                 </div>
 
-                 <!-- Tabs -->
+                <!-- Tabs -->
                 <div class="border-b border-gray-300 mb-6">
                     <div class="flex space-x-8">
                         <button 
@@ -79,69 +139,233 @@
                     </div>
                 </div>
 
-                 <!-- Tournament Cards -->
-                <div class="space-y-4">
-                    <!-- Ongoing Tournaments -->
-                    <div x-show="activeTab === 'ongoing'" x-cloak>
-                        <!-- Tournament Card 1 -->
-                        <div class="bg-white border-2 border-black rounded-lg p-6 hover:shadow-md transition duration-200">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="text-xl font-bold text-black mb-2">14th Alabang Badminton Invitational</h3>
-                                    <p class="text-gray-700">Alabang Smashers vs Bayanan Club</p>
-                                </div>
-                                <button class="bg-gray-200 hover:bg-gray-300 text-black px-6 py-2 rounded-md font-medium transition duration-200">
-                                    View tournament
-                                </button>
+                <!-- Tournament Tables -->
+                <!-- Ongoing Tournaments -->
+                <div x-show="activeTab === 'ongoing'" x-cloak>
+                    @php
+                        $ongoingTournaments = $allTournaments->where('status', 'ongoing');
+                    @endphp
+                    @if($ongoingTournaments->count() > 0)
+                        <div class="bg-white rounded-lg shadow overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tournament Name</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dates</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organizer</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        @foreach($ongoingTournaments as $tournament)
+                                            <tr class="hover:bg-gray-50 transition duration-150">
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <div class="text-sm font-medium text-gray-900">{{ $tournament->name }}</div>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <div class="text-sm text-gray-500 max-w-md truncate">{{ $tournament->description ?? 'N/A' }}</div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <div class="text-sm text-gray-900">{{ $tournament->start_date->format('M d, Y') }}</div>
+                                                    <div class="text-sm text-gray-500">{{ $tournament->end_date->format('M d, Y') }}</div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <div class="text-sm text-gray-900">{{ $tournament->club->name ?? 'N/A' }}</div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    @if($tournament->is_dual_meet)
+                                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full uppercase">Dual Meet</span>
+                                                    @else
+                                                        <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full uppercase">Standard</span>
+                                                    @endif
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                    <a href="{{ route('manager.tournaments.show', $tournament->id) }}" class="text-[#2C5F4F] hover:text-[#244D3E]">View Details</a>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                    </div>
+                    @else
+                        <div class="bg-white rounded-lg shadow p-12 text-center">
+                            <p class="text-gray-500">No ongoing tournaments found.</p>
+                        </div>
+                    @endif
+                </div>
 
-                    <!-- Upcoming Tournaments -->
-                    <div x-show="activeTab === 'upcoming'" x-cloak>
-                        <!-- Tournament Card 1 -->
-                        <div class="bg-white border-2 border-black rounded-lg p-6 hover:shadow-md transition duration-200">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="text-xl font-bold text-black mb-2">Smash-it Tournament 2025</h3>
-                                </div>
-                                <button class="bg-gray-200 hover:bg-gray-300 text-black px-6 py-2 rounded-md font-medium transition duration-200">
-                                    Request to Join
-                                </button>
+                <!-- Upcoming Tournaments -->
+                <div x-show="activeTab === 'upcoming'" x-cloak>
+                    @php
+                        $upcomingTournaments = $allTournaments->where('status', 'upcoming');
+                    @endphp
+                    @if($upcomingTournaments->count() > 0)
+                        <div class="bg-white rounded-lg shadow overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tournament Name</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dates</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organizer</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        @foreach($upcomingTournaments as $tournament)
+                                            <tr class="hover:bg-gray-50 transition duration-150">
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <div class="text-sm font-medium text-gray-900">{{ $tournament->name }}</div>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <div class="text-sm text-gray-500 max-w-md truncate">{{ $tournament->description ?? 'N/A' }}</div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <div class="text-sm text-gray-900">{{ $tournament->start_date->format('M d, Y') }}</div>
+                                                    <div class="text-sm text-gray-500">{{ $tournament->end_date->format('M d, Y') }}</div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <div class="text-sm text-gray-900">{{ $tournament->club->name ?? 'N/A' }}</div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    @if($tournament->is_dual_meet)
+                                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full uppercase">Dual Meet</span>
+                                                    @else
+                                                        <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full uppercase">Standard</span>
+                                                    @endif
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                    <a href="{{ route('manager.tournaments.show', $tournament->id) }}" class="text-[#2C5F4F] hover:text-[#244D3E]">View Details</a>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                    </div>
+                    @else
+                        <div class="bg-white rounded-lg shadow p-12 text-center">
+                            <p class="text-gray-500">No upcoming tournaments found.</p>
+                        </div>
+                    @endif
+                </div>
 
-                    <!-- Completed Tournaments -->
-                    <div x-show="activeTab === 'completed'" x-cloak>
-                        <!-- Tournament Card 1 -->
-                        <div class="bg-white border-2 border-black rounded-lg p-6 hover:shadow-md transition duration-200">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="text-xl font-bold text-black mb-2">MYSB Tournament 2025</h3>
-                                </div>
-                                <button class="bg-gray-200 hover:bg-gray-300 text-black px-6 py-2 rounded-md font-medium transition duration-200">
-                                    View Tournament
-                                </button>
+                <!-- Completed Tournaments -->
+                <div x-show="activeTab === 'completed'" x-cloak>
+                    @php
+                        $completedTournaments = $allTournaments->where('status', 'completed');
+                    @endphp
+                    @if($completedTournaments->count() > 0)
+                        <div class="bg-white rounded-lg shadow overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tournament Name</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dates</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organizer</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        @foreach($completedTournaments as $tournament)
+                                            <tr class="hover:bg-gray-50 transition duration-150 opacity-75">
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <div class="text-sm font-medium text-gray-900">{{ $tournament->name }}</div>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <div class="text-sm text-gray-500 max-w-md truncate">{{ $tournament->description ?? 'N/A' }}</div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <div class="text-sm text-gray-900">{{ $tournament->start_date->format('M d, Y') }}</div>
+                                                    <div class="text-sm text-gray-500">{{ $tournament->end_date->format('M d, Y') }}</div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <div class="text-sm text-gray-900">{{ $tournament->club->name ?? 'N/A' }}</div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    @if($tournament->is_dual_meet)
+                                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full uppercase">Dual Meet</span>
+                                                    @else
+                                                        <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full uppercase">Standard</span>
+                                                    @endif
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                    <a href="{{ route('manager.tournaments.show', $tournament->id) }}" class="text-[#2C5F4F] hover:text-[#244D3E]">View Details</a>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                    </div>
+                    @else
+                        <div class="bg-white rounded-lg shadow p-12 text-center">
+                            <p class="text-gray-500">No completed tournaments found.</p>
+                        </div>
+                    @endif
+                </div>
 
-                    <!-- Your Tournaments -->
-                    <div x-show="activeTab === 'your'" x-cloak>
-                        <!-- Tournament Card 1 -->
-                        <div class="bg-white border-2 border-black rounded-lg p-6 hover:shadow-md transition duration-200">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="text-xl font-bold text-black mb-2">Smash For a Cause</h3>
-                                    <p class="text-gray-500 text-sm mt-2">Posted 3 hours ago</p>
-                                </div>
-                                <button class="bg-gray-200 hover:bg-gray-300 text-black px-6 py-2 rounded-md font-medium transition duration-200">
-                                    Invite a club
-                                </button>
+                <!-- Your Tournaments -->
+                <div x-show="activeTab === 'your'" x-cloak>
+                    @if($myTournaments->count() > 0)
+                        <div class="bg-white rounded-lg shadow overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tournament Name</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        @foreach($myTournaments as $tournament)
+                                            <tr class="hover:bg-gray-50 transition duration-150">
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <div class="text-sm font-medium text-gray-900">{{ $tournament->name }}</div>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <div class="text-sm text-gray-500 max-w-md truncate">{{ $tournament->description ?? 'N/A' }}</div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                                        @if($tournament->status === 'draft') bg-gray-100 text-gray-700
+                                                        @elseif($tournament->status === 'published') bg-blue-100 text-blue-700
+                                                        @elseif($tournament->status === 'ongoing') bg-green-100 text-green-700
+                                                        @elseif($tournament->status === 'completed') bg-purple-100 text-purple-700
+                                                        @else bg-red-100 text-red-700
+                                                        @endif">
+                                                        {{ ucfirst($tournament->status) }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <div class="text-sm text-gray-500">{{ $tournament->created_at->diffForHumans() }}</div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                    <a href="{{ route('manager.tournaments.show', $tournament->id) }}" class="text-[#2C5F4F] hover:text-[#244D3E]">View Details</a>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                    </div>
+                    @else
+                        <div class="bg-white rounded-lg shadow p-12 text-center">
+                            <p class="text-gray-500">You haven't created any tournaments yet.</p>
+                        </div>
+                    @endif
                 </div>
             </main>
         </div>
