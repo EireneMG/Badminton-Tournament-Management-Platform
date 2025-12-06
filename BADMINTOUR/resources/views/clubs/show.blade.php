@@ -104,6 +104,22 @@
             
             <div class="space-y-3">
                 @forelse($club->approvedPlayers as $member)
+                    @php
+                        // Get player's ELO rating for display
+                        $playerElo = \App\Models\EloRating::where('player_id', $member->id)
+                            ->where('category', $member->gender === 'Female' ? 'WS' : 'MS')
+                            ->first();
+                        $clubMembership = \App\Models\ClubPlayer::where('player_id', $member->id)
+                            ->where('club_id', $club->id)
+                            ->where('status', 'approved')
+                            ->first();
+                        $displayElo = $playerElo ? $playerElo->current_rating : ($clubMembership->provisional_elo ?? 'N/A');
+                        
+                        // Calculate ranking position
+                        $rankingService = app(\App\Services\RankingService::class);
+                        $category = $member->gender === 'Female' ? 'WS' : 'MS';
+                        $playerRanking = $rankingService->getPlayerRanking($member, $category);
+                    @endphp
                     <div class="border-2 border-[#D4A574] rounded-lg p-4 flex items-center justify-between hover:bg-gray-50 transition">
                         <div class="flex items-center">
                             <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mr-4">
@@ -112,6 +128,12 @@
                             <div>
                                 <p class="font-semibold">{{ $member->first_name }} {{ $member->last_name }}</p>
                                 <p class="text-sm text-gray-600">{{ $member->gender }}</p>
+                                @if($displayElo !== 'N/A')
+                                    <p class="text-xs text-gray-500">ELO: {{ $displayElo }}</p>
+                                @endif
+                                @if($playerRanking)
+                                    <p class="text-xs font-semibold text-[#2C5F4F]">Rank: #{{ $playerRanking }}</p>
+                                @endif
                             </div>
                         </div>
                         <div class="text-right text-sm text-gray-600">
