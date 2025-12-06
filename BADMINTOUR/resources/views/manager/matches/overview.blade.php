@@ -36,6 +36,7 @@
             </div>
         </div>
     </div>
+
     <!-- Upcoming Section -->
     <div class="mb-8">
         <h2 class="text-xl font-bold text-black mb-4">Upcoming</h2>
