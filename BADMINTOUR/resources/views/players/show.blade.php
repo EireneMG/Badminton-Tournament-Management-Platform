@@ -99,7 +99,71 @@
                     </div>
                 </div>
             </div>
-            
+
+            <!-- ELO Ratings by Category -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold mb-3">ELO RATINGS</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        @forelse($eloRatings as $rating)
+                            <div class="border-2 border-[#D4A574] rounded-lg p-4">
+                                <p class="text-sm text-gray-600 mb-1">{{ strtoupper($rating->category) }}</p>
+                                <p class="text-2xl font-bold text-[#C85A54]">{{ number_format($rating->current_rating) }}</p>
+                                <p class="text-xs text-gray-500">Peak: {{ number_format($rating->peak_rating) }}</p>
+                            </div>
+                        @empty
+                            <div class="col-span-2 text-center text-gray-500 py-4">
+                                <p>No ELO ratings yet. Join tournaments to get rated!</p>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+            <!-- Biodata Tab (Only visible to the player themselves) -->
+            @if(auth()->check() && auth()->id() === $player->id)
+            <div x-show="activeTab === 'biodata'" x-cloak>
+                <div class="space-y-6">
+                    <!-- Personal Information -->
+                    <div class="bg-white rounded-lg p-6 border-2 border-[#D4A574]">
+                        <h3 class="text-lg font-bold mb-4 text-[#2C5F4F]">Personal Information</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Full Name</p>
+                                <p class="font-semibold">{{ $player->first_name }} {{ $player->middle_name }} {{ $player->last_name }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Email</p>
+                                <p class="font-semibold">{{ $player->email }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Contact Number</p>
+                                <p class="font-semibold">{{ $player->contact_number ?? 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Gender</p>
+                                <p class="font-semibold">{{ ucfirst($player->gender ?? 'N/A') }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Date of Birth</p>
+                                <p class="font-semibold">
+                                    @if($player->birth_month && $player->birth_day && $player->birth_year)
+                                        {{ \Carbon\Carbon::createFromDate($player->birth_year, $player->birth_month, $player->birth_day)->format('F d, Y') }}
+                                    @else
+                                        N/A
+                                    @endif
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Age</p>
+                                <p class="font-semibold">{{ $age ?? 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Location</p>
+                                <p class="font-semibold">{{ $player->city ?? 'N/A' }}, {{ $player->province ?? 'N/A' }}, {{ $player->region ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
         </div>
     </div>
 </x-dashboard-layout>
