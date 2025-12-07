@@ -52,6 +52,8 @@ class StoreTournamentRequest extends FormRequest
             'number_of_courts' => ['required', 'integer', 'min:1', 'max:50'],
             'start_date' => ['required', 'date', 'after_or_equal:' . $minStartDate],
             'end_date' => ['required', 'date', 'after:start_date'],
+            'registration_deadline' => ['required', 'date', 'before_or_equal:start_date'],
+            'withdrawal_deadline' => ['required', 'date', 'before_or_equal:start_date', 'after_or_equal:registration_deadline'],
             'contact_email' => ['required', 'email', 'max:255'],
             'contact_phone' => ['required', 'string', 'max:20'],
             'facebook_link' => ['nullable', 'url', 'max:255'],
@@ -60,9 +62,16 @@ class StoreTournamentRequest extends FormRequest
             
             'categories' => ['required', 'array', 'min:1'],
             'categories.*.type' => ['required', 'string', 'in:MS,WS,MD,WD,XD'],
-            'categories.*.slots' => ['required', 'integer', 'min:2', 'max:128'],
-            'categories.*.skill_level_requirements' => ['nullable', 'string', 'max:255'],
-            'categories.*.age_requirement' => ['nullable', 'string', 'max:255'],
+            'categories.*.slots' => ['required', 'integer', 'min:12', 'max:128'],
+            'categories.*.skill_level_requirements' => ['required', 'string', 'in:A,B,C,D,Open'],
+            'categories.*.age_requirement' => ['required', 'string'],
+            'schedules' => ['nullable', 'array'],
+            'schedules.*.category_id' => ['nullable', 'integer', 'min:0'],
+            'schedules.*.court' => ['nullable', 'integer', 'min:1'],
+            'schedules.*.date' => ['nullable', 'date'],
+            'schedules.*.time' => ['nullable', 'date_format:H:i'],
+            'is_dual_meet' => ['nullable', 'boolean'],
+            'bracket_type' => ['required', 'string', 'in:single_elimination,round_robin'],
         ];
     }
 
@@ -75,7 +84,8 @@ class StoreTournamentRequest extends FormRequest
             'start_date.after_or_equal' => 'The tournament must start at least 7 days from today.',
             'categories.required' => 'At least one tournament category is required.',
             'categories.*.type.in' => 'Category type must be one of: MS (Men Singles), WS (Women Singles), MD (Men Doubles), WD (Women Doubles), XD (Mixed Doubles).',
+            'categories.*.slots.min' => 'Each category must have at least 12 participant slots.',
+            'categories.*.slots.max' => 'Each category cannot have more than 128 participant slots.',
         ];
     }
 }
-
