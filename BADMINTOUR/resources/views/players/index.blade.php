@@ -87,6 +87,47 @@
                                 @endif
                             </div>
                         </div>
+                        
+                        <!-- Actions -->
+                        <div class="flex items-center gap-3">
+                            <a href="{{ route('players.show', $player) }}" class="inline-flex items-center text-[#2C5F4F] hover:text-[#244D3E] font-semibold">
+                                View Profile
+                                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="bg-white border-2 border-[#D4A574] rounded-lg p-12 text-center">
+                    <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <h3 class="text-xl font-bold text-gray-700 mb-2">No Players Found</h3>
+                    <p class="text-gray-500">There are no registered players in the system yet.</p>
+                </div>
+            @endforelse
+        </div>
+    </div>
 
+    <script>
+        function filterPlayers() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const cards = document.querySelectorAll('.player-card');
+            
+            cards.forEach(card => {
+                const name = card.getAttribute('data-name');
+                const email = card.getAttribute('data-email');
+                const club = card.getAttribute('data-club');
+                
+                if (name.includes(filter) || email.includes(filter) || club.includes(filter)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
     </script>
 </x-dashboard-layout>
