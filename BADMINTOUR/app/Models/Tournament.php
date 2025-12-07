@@ -17,6 +17,12 @@ class Tournament extends Model
         'organizer_id',
         'club_id',
         'type',
+        'venue_name',
+        'number_of_courts',
+        'contact_email',
+        'contact_phone',
+        'tournament_fee',
+        'banner_path',
         'start_date',
         'end_date',
         'registration_deadline',
@@ -25,6 +31,7 @@ class Tournament extends Model
         'registration_fee',
         'status',
         'is_dual_meet',
+        'bracket_type',
         'archived',
         'facebook_link',
     ];
@@ -33,7 +40,7 @@ class Tournament extends Model
         'start_date' => 'date',
         'end_date' => 'date',
         'registration_deadline' => 'date',
-        'withdrawal_deadline' => 'date',
+        'withdrawal_deadline' => 'datetime',
         'registration_fee' => 'decimal:2',
         'is_dual_meet' => 'boolean',
         'archived' => 'boolean',
@@ -62,5 +69,10 @@ class Tournament extends Model
     public function matches(): HasMany
     {
         return $this->hasMany(TournamentMatch::class);
+    }
+
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(PartnerInvitation::class);
     }
 }
