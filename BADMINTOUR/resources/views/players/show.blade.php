@@ -60,6 +60,46 @@
                         <p class="text-lg font-bold">{{ $player->region ?? 'N/A' }}</p>
                     </div>
                 </div>
+
+                <!-- Player Statistics -->
+                <div class="grid grid-cols-4 gap-4 mb-6">
+                    <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center">
+                        <p class="text-xs text-gray-600 mb-1">MATCHES PLAYED</p>
+                        <p class="text-2xl font-bold">{{ $totalMatches }}</p>
+                    </div>
+                    <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center">
+                        <p class="text-xs text-gray-600 mb-1">WINS</p>
+                        <p class="text-2xl font-bold text-green-600">{{ $wins }}</p>
+                    </div>
+                    <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center">
+                        <p class="text-xs text-gray-600 mb-1">LOSSES</p>
+                        <p class="text-2xl font-bold text-red-600">{{ $losses }}</p>
+                    </div>
+                    <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center">
+                        <p class="text-xs text-gray-600 mb-1">WIN RATE</p>
+                        <p class="text-2xl font-bold text-[#2C5F4F]">{{ $winRate }}%</p>
+                    </div>
+                </div>
+
+                <!-- ELO Ratings by Category -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold mb-3">ELO RATINGS</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        @forelse($eloRatings as $rating)
+                            <div class="border-2 border-[#D4A574] rounded-lg p-4">
+                                <p class="text-sm text-gray-600 mb-1">{{ strtoupper($rating->category) }}</p>
+                                <p class="text-2xl font-bold text-[#C85A54]">{{ number_format($rating->current_rating) }}</p>
+                                <p class="text-xs text-gray-500">Peak: {{ number_format($rating->peak_rating) }}</p>
+                            </div>
+                        @empty
+                            <div class="col-span-2 text-center text-gray-500 py-4">
+                                <p>No ELO ratings yet. Join tournaments to get rated!</p>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+            
         </div>
     </div>
 </x-dashboard-layout>
