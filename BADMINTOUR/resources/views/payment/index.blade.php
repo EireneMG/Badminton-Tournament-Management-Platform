@@ -69,60 +69,39 @@
                         <p><strong>Payment Reference:</strong> Your Full Name + Tournament Name</p>
                     </div>
                     <p class="text-xs text-gray-600 mt-3">
-                        ⚠️ After making the payment, please upload the proof of payment below and submit this form.
+                        ⚠️ After making the payment, contact the tournament manager directly to confirm your payment and send your proof of payment.
                     </p>
                 </div>
             </div>
 
-            <!-- Upload Payment Proof -->
+            <!-- Payment Confirmation Note -->
             <div class="mb-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b-2 border-[#D4A574]">Upload Payment Proof</h2>
-                <div class="border-2 border-dashed border-[#D4A574] rounded-lg p-6 text-center">
-                    <input 
-                        type="file" 
-                        id="payment-proof" 
-                        @change="handleFileUpload($event)"
-                        accept="image/*,.pdf"
-                        class="hidden">
-                    
-                    <div x-show="!uploadedFile">
-                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                <div class="bg-[#E8DCC4] border-l-4 border-[#D4A574] rounded-lg p-5">
+                    <h3 class="font-semibold text-gray-900 mb-2 flex items-center">
+                        <svg class="w-5 h-5 text-[#C85A54] mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                         </svg>
-                        <label for="payment-proof" class="cursor-pointer">
-                            <span class="px-6 py-2.5 bg-[#C85A54] text-white rounded-lg font-semibold hover:bg-[#B54A44] transition inline-block">
-                                Choose File
-                            </span>
-                        </label>
-                        <p class="text-xs text-gray-500 mt-2">Upload screenshot, photo, or PDF of payment receipt</p>
-                        <p class="text-xs text-gray-500">Maximum file size: 5MB</p>
-                    </div>
-
-                     <div x-show="uploadedFile" class="flex items-center justify-center space-x-3">
-                        <svg class="h-8 w-8 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        <div class="text-left">
-                            <p class="font-semibold text-gray-900" x-text="uploadedFile?.name"></p>
-                            <p class="text-xs text-gray-600" x-text="uploadedFile?.size"></p>
-                        </div>
-                        <button 
-                            @click="removeFile()"
-                            class="text-[#C85A54] hover:text-[#B54A44] font-semibold text-sm">
-                            Remove
-                        </button>
-                    </div>
+                        How to Complete Payment
+                    </h3>
+                    <ol class="text-sm text-gray-800 space-y-2 ml-7">
+                        <li class="flex items-start">
+                            <span class="font-semibold mr-2">1.</span>
+                            <span>Transfer the payment to the account details shown above.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="font-semibold mr-2">2.</span>
+                            <span>Contact the tournament manager directly using the provided contact information.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="font-semibold mr-2">3.</span>
+                            <span>Send your payment proof (screenshot or receipt) to the manager.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="font-semibold mr-2">4.</span>
+                            <span>The manager will verify your payment and update your registration status.</span>
+                        </li>
+                    </ol>
                 </div>
-            </div>
-
-            <!-- Additional Notes -->
-            <div class="mb-6">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Additional Notes (Optional)</label>
-                <textarea 
-                    x-model="notes"
-                    rows="3"
-                    placeholder="Any additional information or payment reference notes..."
-                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C85A54] focus:border-[#C85A54] resize-none"></textarea>
             </div>
 
             <!-- Payment Deadline Warning -->
@@ -141,86 +120,26 @@
                 </div>
             </div>
 
-            <!-- Action Buttons -->
+            <!-- Action Button -->
             <div class="flex items-center justify-between">
                 <a href="/tournaments" class="text-gray-600 hover:text-gray-900 font-semibold">
                     ← Back to Tournaments
                 </a>
-                <div class="flex space-x-3">
-                    <button 
-                        @click="resetForm()"
-                        class="px-6 py-2.5 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition">
-                        Reset
-                    </button>
-                    <button 
-                        @click="submitPayment()"
-                        :disabled="!uploadedFile"
-                        :class="!uploadedFile ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#C85A54] hover:bg-[#B54A44]'"
-                        class="px-6 py-2.5 text-white rounded-lg font-semibold transition">
-                        Confirm Payment
-                    </button>
-                </div>
+                <a 
+                    href="/tournaments"
+                    class="px-6 py-2.5 bg-[#C85A54] hover:bg-[#B54A44] text-white rounded-lg font-semibold transition">
+                    I Understand
+                </a>
             </div>
         </div>
 
-        <!-- Success Message (Hidden by default) -->
-        <div x-show="showSuccess" x-cloak class="mt-6 bg-green-50 border-2 border-green-400 rounded-lg p-6 text-center">
-            <div class="mb-4">
-                <svg class="mx-auto h-12 w-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-            </div>
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Payment Submitted Successfully!</h3>
-            <p class="text-gray-700 mb-4">Your payment proof has been uploaded. The tournament manager will review and verify your payment within 24-48 hours. You will receive a notification once your payment is confirmed.</p>
-            <div class="flex justify-center space-x-3">
-                <a href="/tournaments" class="px-6 py-2.5 bg-[#C85A54] text-white rounded-lg font-semibold hover:bg-[#B54A44] transition">
-                    Back to Tournaments
-                </a>
-                <a href="/player/dashboard" class="px-6 py-2.5 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition">
-                    Go to Dashboard
-                </a>
-            </div>
-        </div>
     </div>
 </div>
 
 <script>
 function paymentData() {
     return {
-        uploadedFile: null,
-        notes: '',
-        showSuccess: false,
-        
-        handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
-                this.uploadedFile = {
-                    name: file.name,
-                    size: `${fileSizeMB} MB`
-                };
-            }
-        },
-        
-        removeFile() {
-            this.uploadedFile = null;
-            document.getElementById('payment-proof').value = '';
-        },
-        
-        resetForm() {
-            this.uploadedFile = null;
-            this.notes = '';
-            this.showSuccess = false;
-            document.getElementById('payment-proof').value = '';
-        },
-        
-        submitPayment() {
-            if (this.uploadedFile) {
-                // UI-only: Simulate submission
-                this.showSuccess = true;
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        }
+        showSuccess: false
     }
 }
 </script>
@@ -229,6 +148,3 @@ function paymentData() {
 [x-cloak] { display: none !important; }
 </style>
 @endsection
-
-
-
