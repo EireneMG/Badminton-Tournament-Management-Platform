@@ -23,7 +23,7 @@ class EnsureManagerHasClub
         $hasClub = Club::where('manager_id', $user->id)->exists();
         
         if (!$hasClub) {
-            return redirect()->route('manager.clubs.create')
+            return redirect()->route('manager.create-club')
                 ->with('error', 'Please create a club before managing tournaments.');
         }
         

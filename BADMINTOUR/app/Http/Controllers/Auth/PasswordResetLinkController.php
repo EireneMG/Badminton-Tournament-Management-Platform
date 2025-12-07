@@ -3,13 +3,24 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Services\EmailService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
 
 class PasswordResetLinkController extends Controller
 {
+    protected $emailService;
+
+    public function __construct(EmailService $emailService)
+    {
+        $this->emailService = $emailService;
+    }
+
     /**
      * Display the password reset link request view.
      */
@@ -29,16 +40,43 @@ class PasswordResetLinkController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        // We will send the password reset link to this user. Once we have attempted
-        // to send the link, we will examine the response then see the message we
-        // need to show to the user. Finally, we'll send out a proper response.
+        // Find user first
+        $user = User::where('email', $request->email)->first();
+        
+        if (!$user) {
+            return back()->withInput($request->only('email'))
+                ->withErrors(['email' => 'We can\'t find a user with that email address.']);
+        }
+        
+        // If email is disabled, handle token creation manually for testing
+        if (!config('mail.enabled', false)) {
+            // Create token manually
+            $token = Password::getRepository()->create($user);
+            $resetUrl = route('password.reset', ['token' => $token, 'email' => $user->email]);
+            
+            // Log to email simulation
+            Log::channel('email-simulation')->info('Password Reset Link', [
+                'email' => $user->email,
+                'reset_url' => $resetUrl,
+                'timestamp' => now(),
+            ]);
+            
+            // Store reset link in session for testing display
+            session()->flash('reset_link', $resetUrl);
+            
+            return back()->with('status', 'Password reset link has been generated. Check the message below for the reset link.');
+        }
+        
+        // Email is enabled - use Laravel's default behavior
         $status = Password::sendResetLink(
             $request->only('email')
         );
 
-        return $status == Password::RESET_LINK_SENT
-                    ? back()->with('status', __($status))
-                    : back()->withInput($request->only('email'))
-                        ->withErrors(['email' => __($status)]);
+        if ($status == Password::RESET_LINK_SENT) {
+            return back()->with('status', 'We have emailed your password reset link.');
+        }
+
+        return back()->withInput($request->only('email'))
+            ->withErrors(['email' => 'We can\'t find a user with that email address.']);
     }
 }

@@ -73,9 +73,21 @@ class TournamentController extends Controller
             && Carbon::now()->isBefore($tournament->registration_deadline)
             && Carbon::now()->isBefore($tournament->start_date);
         
-        $canWithdraw = $playerRegistration 
-            && $playerRegistration->status === 'approved'
-            && Carbon::now()->isBefore(Carbon::parse($tournament->start_date)->subDays(3));
+        // Check if player can withdraw (before withdrawal deadline and tournament hasn't started)
+        $canWithdraw = false;
+        if ($playerRegistration && in_array($playerRegistration->status, ['approved', 'paid', 'awaiting_payment'])) {
+            // Check if withdrawal deadline has passed
+            if ($tournament->withdrawal_deadline && Carbon::now()->isBefore($tournament->withdrawal_deadline)) {
+                // Check if tournament hasn't started
+                if (Carbon::now()->isBefore($tournament->start_date)) {
+                    // Check if there's no pending withdrawal request
+                    $hasPendingWithdrawal = \App\Models\WithdrawalRequest::where('tournament_registration_id', $playerRegistration->id)
+                        ->where('status', 'pending')
+                        ->exists();
+                    $canWithdraw = !$hasPendingWithdrawal;
+                }
+            }
+        }
         
         return view('tournaments.show', compact(
             'tournament',

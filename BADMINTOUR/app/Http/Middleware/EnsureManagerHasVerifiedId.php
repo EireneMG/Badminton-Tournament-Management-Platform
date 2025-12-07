@@ -20,12 +20,12 @@ class EnsureManagerHasVerifiedId
             abort(403, 'Unauthorized access.');
         }
         
-        $hasVerifiedId = ManagerIdVerification::where('user_id', $user->id)
+        $hasVerifiedId = ManagerIdVerification::where('manager_id', $user->id)
             ->where('status', 'verified')
             ->exists();
         
         if (!$hasVerifiedId) {
-            return redirect()->route('manager.verify-id.create')
+            return redirect()->route('manager.verify-id')
                 ->with('error', 'Please verify your ID before creating tournaments. Your verification is pending approval.');
         }
         

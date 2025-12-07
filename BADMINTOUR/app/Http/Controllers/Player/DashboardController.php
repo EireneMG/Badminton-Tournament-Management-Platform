@@ -8,14 +8,22 @@ use App\Models\TournamentRegistration;
 use App\Models\EloRating;
 use App\Models\TournamentMatch;
 use App\Models\Club;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index(): View
+    public function index(): View|RedirectResponse
     {
         $player = auth()->user();
+        
+        // Redirect to profile completion if biodata is not completed
+        // Note: This is a backup check - middleware should handle this, but this ensures it
+        if (!$player->biodata_completed) {
+            return redirect()->route('profile.edit')
+                ->with('warning', 'Please complete your profile before accessing the dashboard.');
+        }
         
         $upcomingTournaments = Tournament::where('start_date', '>', Carbon::now())
             ->where('registration_deadline', '>', Carbon::now())
