@@ -44,6 +44,49 @@
                                     {{ strtoupper(substr($player->first_name, 0, 1) . substr($player->last_name, 0, 1)) }}
                                 </div>
                             @endif
-        }
+                            
+                            <!-- Player Info -->
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3">
+                                    <h3 class="text-lg font-bold text-gray-900">{{ strtoupper($player->last_name) }}</h3>
+                                    <span class="text-lg text-gray-700">{{ $player->first_name }}</span>
+                                </div>
+                                <div class="mt-1 flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                                    <span class="flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                        </svg>
+                                        {{ $player->email }}
+                                    </span>
+                                    @if($club)
+                                        <span class="flex items-center gap-1">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                            </svg>
+                                            {{ $club->name }}
+                                        </span>
+                                    @endif
+                                    @if($player->gender)
+                                        <span class="flex items-center gap-1">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                            </svg>
+                                            {{ ucfirst($player->gender) }}
+                                        </span>
+                                    @endif
+                                </div>
+                                @if($displayElo !== 'N/A' || $rankingPosition)
+                                    <div class="mt-2 flex items-center gap-3 text-sm">
+                                        @if($displayElo !== 'N/A')
+                                            <span class="text-gray-700 font-semibold">ELO: {{ $displayElo }}</span>
+                                        @endif
+                                        @if($rankingPosition)
+                                            <span class="text-[#2C5F4F] font-semibold">Rank: #{{ $rankingPosition }}</span>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
     </script>
 </x-dashboard-layout>
