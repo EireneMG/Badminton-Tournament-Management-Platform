@@ -31,7 +31,8 @@ class RegisteredUserController extends Controller
     {
         $rules = [
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'confirmed', 'string', 'min:8'],
+            'password_confirmation' => ['required', 'string'],
             'role' => ['required', 'string', 'in:player,manager'],
         ];
 
@@ -92,6 +93,7 @@ class RegisteredUserController extends Controller
                 'region' => $request->region,
                 'province' => ($request->province === 'N/A' || empty($request->province)) ? null : $request->province,
                 'city' => $request->city,
+                'biodata_completed' => false, // New players must complete biodata
             ]);
         } elseif ($request->role === 'manager') {
             // Handle manager ID document upload - store in PRIVATE storage for security
