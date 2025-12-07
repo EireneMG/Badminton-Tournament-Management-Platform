@@ -25,6 +25,20 @@ class TournamentRegistrationController extends Controller
         $oldStatus = $registration->status;
         $newStatus = $request->status;
         
+        // If approving, check eligibility first
+        if ($newStatus === 'approved' || $newStatus === 'eligible' || $newStatus === 'awaiting_payment') {
+            $eligibilityService = app(\App\Services\EligibilityService::class);
+            $eligibility = $eligibilityService->checkEligibility(
+                $registration->player,
+                $registration->category,
+                $registration->partner
+            );
+            
+            if (!$eligibility['eligible']) {
+                return back()->with('error', 'Cannot approve registration: ' . implode(' ', $eligibility['reasons']));
+            }
+        }
+        
         $registration->update(['status' => $newStatus]);
         
         $notificationMessages = [
@@ -57,7 +71,7 @@ class TournamentRegistrationController extends Controller
         
         if (isset($notificationMessages[$newStatus])) {
             $notif = $notificationMessages[$newStatus];
-            Notification::create([
+            $notification = Notification::create([
                 'user_id' => $registration->player_id,
                 'type' => $notif['type'],
                 'title' => $notif['title'],
@@ -68,9 +82,41 @@ class TournamentRegistrationController extends Controller
                 ],
                 'action_url' => route('player.tournaments.show', $tournament->id),
             ]);
+
+            // Send email notification
+            app(\App\Services\EmailService::class)->sendNotificationEmail($notification);
         }
         
         return back()->with('success', 'Registration status updated successfully!');
+    }
+
+    public function markPaid(TournamentRegistration $registration): RedirectResponse
+    {
+        $tournament = $registration->tournament;
+        
+        if ($tournament->club->manager_id !== auth()->id()) {
+            abort(403, 'Unauthorized access.');
+        }
+        
+        // Update status to 'paid' (not a separate payment_status field)
+        $registration->update([
+            'status' => 'paid',
+            'payment_verified_at' => now(),
+        ]);
+        
+        Notification::create([
+            'user_id' => $registration->player_id,
+            'type' => 'payment_confirmed',
+            'title' => 'Payment Confirmed',
+            'message' => "Your payment for {$tournament->name} has been confirmed by the manager. Please wait for approval.",
+            'data' => [
+                'tournament_id' => $tournament->id,
+                'registration_id' => $registration->id,
+            ],
+            'action_url' => route('player.tournaments.show', $tournament->id),
+        ]);
+        
+        return back()->with('success', 'Payment marked as confirmed! You can now approve the registration.');
     }
 
     public function bulkUpdateStatus(Request $request): RedirectResponse
@@ -121,7 +167,7 @@ class TournamentRegistrationController extends Controller
             
             if (isset($notificationMessages[$request->status])) {
                 $notif = $notificationMessages[$request->status];
-                Notification::create([
+                $notification = Notification::create([
                     'user_id' => $registration->player_id,
                     'type' => $notif['type'],
                     'title' => $notif['title'],
@@ -132,6 +178,9 @@ class TournamentRegistrationController extends Controller
                     ],
                     'action_url' => route('player.tournaments.show', $tournament->id),
                 ]);
+
+                // Send email notification
+                app(\App\Services\EmailService::class)->sendNotificationEmail($notification);
             }
         }
         

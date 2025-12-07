@@ -8,6 +8,7 @@ use App\Models\MatchResult;
 use App\Models\Notification;
 use App\Services\EloRatingService;
 use App\Services\MatchGenerationService;
+use App\Services\MatchStatusService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -16,14 +17,16 @@ class MatchController extends Controller
 {
     protected $eloRatingService;
     protected $matchGenerationService;
+    protected $matchStatusService;
 
-    public function __construct(EloRatingService $eloRatingService, MatchGenerationService $matchGenerationService)
+    public function __construct(EloRatingService $eloRatingService, MatchGenerationService $matchGenerationService, MatchStatusService $matchStatusService)
     {
         $this->eloRatingService = $eloRatingService;
         $this->matchGenerationService = $matchGenerationService;
+        $this->matchStatusService = $matchStatusService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $club = \App\Models\Club::where('manager_id', auth()->id())->first();
         
@@ -31,21 +34,246 @@ class MatchController extends Controller
         if (!$club) {
             return view('manager.matches', [
                 'tournaments' => collect([]), 
+                'selectedTournament' => null,
                 'categories' => collect([]), 
                 'club' => null
             ]);
         }
         
+        // Get all tournaments for the club (including dual meet tournaments where this club participates)
+        // For dual meet tournaments, we need to check if players from this club are registered
         $tournaments = \App\Models\Tournament::where('club_id', $club->id)
-            ->with(['categories', 'matches.player1', 'matches.player2', 'matches.category'])
+            ->with(['categories'])
+            ->orderBy('created_at', 'desc')
             ->get();
         
-        $categories = \App\Models\TournamentCategory::whereIn(
-            'tournament_id', 
-            $tournaments->pluck('id')
-        )->get();
+        // Also include dual meet tournaments where this club's players are registered
+        // (Dual meet tournaments may be hosted by another club but this club participates)
+        $dualMeetTournaments = \App\Models\Tournament::where('is_dual_meet', true)
+            ->whereHas('registrations', function($query) use ($club) {
+                $query->whereHas('player', function($q) use ($club) {
+                    $q->whereHas('clubMemberships', function($clubQuery) use ($club) {
+                        $clubQuery->where('club_id', $club->id)->where('status', 'approved');
+                    });
+                });
+            })
+            ->with(['categories'])
+            ->orderBy('created_at', 'desc')
+            ->get();
         
-        return view('manager.matches', compact('tournaments', 'categories', 'club'));
+        // Merge and remove duplicates
+        $allTournaments = $tournaments->merge($dualMeetTournaments)->unique('id');
+        
+        // Get selected tournament (from query parameter or first tournament)
+        $selectedTournamentId = $request->query('tournament');
+        $selectedTournament = null;
+        
+        if ($selectedTournamentId) {
+            // Find tournament in either list
+            $selectedTournament = $allTournaments->firstWhere('id', $selectedTournamentId);
+            if ($selectedTournament) {
+                // Reload with full relationships
+                $selectedTournament = \App\Models\Tournament::where('id', $selectedTournamentId)
+                    ->with(['categories', 'matches.player1', 'matches.player2', 'matches.player1Partner', 'matches.player2Partner', 'matches.category', 'matches.result', 'matches.winner', 'matches.winnerPartner', 'club'])
+                    ->first();
+            }
+        } elseif ($allTournaments->count() > 0) {
+            // Default to first tournament if none selected
+            $firstTournamentId = $allTournaments->first()->id;
+            $selectedTournament = \App\Models\Tournament::where('id', $firstTournamentId)
+                ->with(['categories', 'matches.player1', 'matches.player2', 'matches.player1Partner', 'matches.player2Partner', 'matches.category', 'matches.result', 'matches.winner', 'matches.winnerPartner', 'club'])
+                ->first();
+        }
+        
+        // Auto-generate brackets if matches don't exist and tournament has approved registrations
+        if ($selectedTournament) {
+            $hasRegistrations = $selectedTournament->registrations()->where('status', 'approved')->count() > 0;
+            $hasNoMatches = $selectedTournament->matches()->count() === 0;
+            
+            // For upcoming tournaments: generate if registration deadline passed OR if tournament is published
+            // For ongoing tournaments: always generate if no matches exist
+            $shouldGenerate = false;
+            if ($selectedTournament->status === 'upcoming' || $selectedTournament->status === 'published') {
+                $registrationDeadline = \Carbon\Carbon::parse($selectedTournament->registration_deadline);
+                // Generate if deadline passed OR if tournament is published (regardless of deadline)
+                $shouldGenerate = ($registrationDeadline->isPast() || $selectedTournament->status === 'published') && $hasRegistrations && $hasNoMatches;
+            } elseif ($selectedTournament->status === 'ongoing') {
+                $shouldGenerate = $hasRegistrations && $hasNoMatches;
+            }
+            
+            if ($shouldGenerate) {
+                try {
+                    $matchGenerationService = app(\App\Services\MatchGenerationService::class);
+                    $bracketType = $selectedTournament->bracket_type ?? 'single_elimination';
+                    $matchGenerationService->generateMatches($selectedTournament, $bracketType);
+                    // Reload tournament to get new matches
+                    $selectedTournament->refresh();
+                    $selectedTournament->load(['categories', 'matches.player1', 'matches.player2', 'matches.player1Partner', 'matches.player2Partner', 'matches.category', 'matches.result', 'matches.winner', 'matches.winnerPartner', 'club']);
+                } catch (\Exception $e) {
+                    // Log error but don't fail silently - show in view if needed
+                    \Log::error('Failed to auto-generate matches: ' . $e->getMessage());
+                    \Log::error('Stack trace: ' . $e->getTraceAsString());
+                }
+            }
+        }
+        
+        $categories = collect([]);
+        $totalRegistrations = 0;
+        $approvedRegistrations = 0;
+        
+        if ($selectedTournament) {
+            $categories = $selectedTournament->categories;
+            $totalRegistrations = $selectedTournament->registrations()->count();
+            $approvedRegistrations = $selectedTournament->registrations()->where('status', 'approved')->count();
+        }
+        
+        // For dual meet tournaments, get participating clubs
+        $participatingClubs = collect([]);
+        if ($selectedTournament && $selectedTournament->is_dual_meet) {
+            // Get unique club IDs from registrations
+            $clubIds = \App\Models\TournamentRegistration::where('tournament_id', $selectedTournament->id)
+                ->where('status', 'approved')
+                ->get()
+                ->map(function($registration) {
+                    $player = $registration->player;
+                    if ($player) {
+                        $membership = $player->clubMemberships()->where('status', 'approved')->first();
+                        return $membership ? $membership->club_id : null;
+                    }
+                    return null;
+                })
+                ->filter()
+                ->unique()
+                ->toArray();
+            
+            // Add the hosting club if not already included
+            if ($selectedTournament->club_id && !in_array($selectedTournament->club_id, $clubIds)) {
+                $clubIds[] = $selectedTournament->club_id;
+            }
+            
+            $participatingClubs = \App\Models\Club::whereIn('id', $clubIds)->get();
+        }
+        
+        // Get matches grouped by status (scheduled, ongoing, completed)
+        $matchesByStatus = [
+            'scheduled' => collect([]),
+            'ongoing' => collect([]),
+            'completed' => collect([]),
+        ];
+        
+        // Ensure matches are loaded on the tournament model for brackets tab
+        if ($selectedTournament) {
+            // For completed tournaments, ensure ALL matches are loaded (including completed ones)
+            // For other tournaments, update statuses dynamically
+            if ($selectedTournament->status === 'completed') {
+                // For completed tournaments, load all matches without status updates
+                // Sort by date and time chronologically
+                $allMatches = TournamentMatch::where('tournament_id', $selectedTournament->id)
+                    ->with(['player1', 'player2', 'player1Partner', 'player2Partner', 'category', 'result', 'winner', 'winnerPartner'])
+                    ->get()
+                    ->sortBy(function($match) {
+                        if (!$match->scheduled_date || !$match->scheduled_time) {
+                            return '9999-12-31 23:59:59'; // Put unscheduled matches at the end
+                        }
+                        $date = \Carbon\Carbon::parse($match->scheduled_date)->format('Y-m-d');
+                        $time = \Carbon\Carbon::parse($match->scheduled_time)->format('H:i:s');
+                        return $date . ' ' . $time;
+                    })
+                    ->values();
+                
+                // Group by status (completed tournaments should have mostly completed matches)
+                $matchesByStatus = [
+                    'scheduled' => $allMatches->where('status', 'scheduled'),
+                    'ongoing' => $allMatches->where('status', 'ongoing'),
+                    'completed' => $allMatches->where('status', 'completed'),
+                ];
+                
+                // Reload tournament with all matches for brackets display
+                $selectedTournament->load(['matches.player1', 'matches.player2', 'matches.player1Partner', 'matches.player2Partner', 'matches.category', 'matches.result', 'matches.winner', 'matches.winnerPartner']);
+            } else {
+                // For ongoing/upcoming tournaments, update statuses dynamically
+                // Reload matches relationship to ensure it's available
+                $selectedTournament->load(['matches.player1', 'matches.player2', 'matches.player1Partner', 'matches.player2Partner', 'matches.category', 'matches.result', 'matches.winner', 'matches.winnerPartner']);
+                
+                // Get matches grouped by status (with dynamic status updates)
+                $matchesByStatus = $this->matchStatusService->getMatchesByStatus($selectedTournament->id);
+            }
+            
+            // Debug: Log if matches exist but matchesByStatus is empty
+            $totalMatchesInDb = TournamentMatch::where('tournament_id', $selectedTournament->id)->count();
+            $totalInStatus = $matchesByStatus['scheduled']->count() + $matchesByStatus['ongoing']->count() + $matchesByStatus['completed']->count();
+            if ($totalMatchesInDb > 0 && $totalInStatus === 0) {
+                \Log::warning("Matches exist in DB ({$totalMatchesInDb}) but matchesByStatus is empty for tournament {$selectedTournament->id}");
+            }
+        }
+        
+        // Check if manager owns the tournament
+        $isOwner = $selectedTournament && $selectedTournament->club->manager_id === auth()->id();
+        
+        // Check for matches needing results and send reminder notifications
+        if ($selectedTournament && $isOwner) {
+            $this->checkMatchesNeedingResults($selectedTournament);
+        }
+        
+        return view('manager.matches', compact('tournaments', 'allTournaments', 'selectedTournament', 'categories', 'club', 'totalRegistrations', 'approvedRegistrations', 'participatingClubs', 'matchesByStatus', 'isOwner'));
+    }
+
+    /**
+     * Check for matches that need results and send reminder notifications
+     */
+    protected function checkMatchesNeedingResults($tournament): void
+    {
+        $now = Carbon::now();
+        $matchesNeedingResults = TournamentMatch::where('tournament_id', $tournament->id)
+            ->whereIn('status', ['scheduled', 'ongoing'])
+            ->whereNotNull('scheduled_date')
+            ->whereNotNull('scheduled_time')
+            ->whereNotNull('player1_id')
+            ->whereNotNull('player2_id')
+            ->with(['category', 'result'])
+            ->get()
+            ->filter(function($match) use ($now) {
+                // Match must not have a result
+                if ($match->result) {
+                    return false;
+                }
+                
+                if (!$match->scheduled_date || !$match->scheduled_time) {
+                    return false;
+                }
+                
+                $matchDateTime = Carbon::parse($match->scheduled_date)
+                    ->setTimeFromTimeString($match->scheduled_time);
+                $category = $match->category;
+                $matchDuration = $category ? ($category->match_duration_minutes ?? 45) : 45;
+                $matchEndTime = $matchDateTime->copy()->addMinutes($matchDuration);
+                
+                // Send reminder if match ended more than 1 hour ago and no result entered
+                return $now->isAfter($matchEndTime->copy()->addHour());
+            });
+
+        // Send notification for matches needing results (once per day per tournament)
+        if ($matchesNeedingResults->count() > 0) {
+            $lastNotification = \App\Models\Notification::where('user_id', auth()->id())
+                ->where('type', 'matches_need_results')
+                ->where('data->tournament_id', $tournament->id)
+                ->whereDate('created_at', Carbon::today())
+                ->first();
+
+            if (!$lastNotification) {
+                Notification::create([
+                    'user_id' => auth()->id(),
+                    'type' => 'matches_need_results',
+                    'title' => 'Matches Need Results',
+                    'message' => "You have {$matchesNeedingResults->count()} match(es) in {$tournament->name} that need results entered. Please input the results to update brackets and rankings.",
+                    'data' => [
+                        'tournament_id' => $tournament->id,
+                        'match_count' => $matchesNeedingResults->count(),
+                    ],
+                    'action_url' => route('manager.matches', ['tournament' => $tournament->id]),
+                ]);
+            }
+        }
     }
 
     public function updateScore(TournamentMatch $match, Request $request): RedirectResponse
@@ -98,9 +326,19 @@ class MatchController extends Controller
         $player1 = $match->player1;
         $player2 = $match->player2;
         
+        // Validate players exist before processing
+        if (!$player1 || !$player2) {
+            return back()->with('error', 'Cannot process result: One or more players not found.');
+        }
+        
         if (in_array($category->type, ['MD', 'WD', 'XD']) && $match->player1_partner_id && $match->player2_partner_id) {
             $player1Partner = $match->player1Partner;
             $player2Partner = $match->player2Partner;
+            
+            // Validate partners exist for doubles
+            if (!$player1Partner || !$player2Partner) {
+                return back()->with('error', 'Cannot process doubles result: One or more partners not found.');
+            }
             
             $this->eloRatingService->calculateDoublesMatchRatings(
                 $player1, 
@@ -121,31 +359,199 @@ class MatchController extends Controller
         
         $this->matchGenerationService->advanceWinner($match);
         
-        Notification::create([
-            'user_id' => $player1->id,
-            'type' => 'match_result_posted',
-            'title' => 'Match Result Posted',
-            'message' => "The result for your match in {$match->tournament->name} has been posted.",
-            'data' => ['match_id' => $match->id],
-            'action_url' => route('player.matches.show', $match->id),
-        ]);
+        // Send notifications to all players (including partners for doubles)
+        $playersToNotify = [];
         
-        Notification::create([
-            'user_id' => $player2->id,
-            'type' => 'match_result_posted',
-            'title' => 'Match Result Posted',
-            'message' => "The result for your match in {$match->tournament->name} has been posted.",
-            'data' => ['match_id' => $match->id],
-            'action_url' => route('player.matches.show', $match->id),
-        ]);
+        if ($player1) {
+            $playersToNotify[] = $player1->id;
+        }
+        if ($player2) {
+            $playersToNotify[] = $player2->id;
+        }
         
-        return back()->with('success', 'Match score updated and winner advanced successfully!');
+        // Add partners for doubles/mixed doubles matches
+        if ($match->player1_partner_id) {
+            $playersToNotify[] = $match->player1_partner_id;
+        }
+        if ($match->player2_partner_id) {
+            $playersToNotify[] = $match->player2_partner_id;
+        }
+        
+        // Remove duplicates and send notifications
+        $playersToNotify = array_unique(array_filter($playersToNotify));
+        foreach ($playersToNotify as $playerId) {
+            try {
+                Notification::create([
+                    'user_id' => $playerId,
+                    'type' => 'match_result_posted',
+                    'title' => 'Match Result Posted',
+                    'message' => "The result for your match in {$match->tournament->name} has been posted.",
+                    'data' => ['match_id' => $match->id],
+                    'action_url' => route('player.matches.show', $match->id),
+                ]);
+            } catch (\Exception $e) {
+                // Log error but don't fail the entire operation
+                \Log::warning("Failed to send notification to player {$playerId}: " . $e->getMessage());
+            }
+        }
+        
+        // Check if this is a late result input
+        $isLateInput = false;
+        $lateWarning = '';
+        
+        if ($match->scheduled_date && $match->scheduled_time) {
+            $matchDateTime = \Carbon\Carbon::parse($match->scheduled_date)
+                ->setTimeFromTimeString($match->scheduled_time);
+            $category = $match->category;
+            $matchDuration = $category ? ($category->match_duration_minutes ?? 45) : 45;
+            $matchEndTime = $matchDateTime->copy()->addMinutes($matchDuration);
+            
+            if (\Carbon\Carbon::now()->isAfter($matchEndTime)) {
+                $isLateInput = true;
+                $hoursLate = (int)\Carbon\Carbon::now()->diffInHours($matchEndTime);
+                $daysLate = (int)\Carbon\Carbon::now()->diffInDays($matchEndTime);
+                if ($daysLate > 0) {
+                    $lateWarning = "This result is being entered {$daysLate} day(s) after the match was scheduled to end.";
+                } else {
+                    $lateWarning = "This result is being entered {$hoursLate} hour(s) after the match was scheduled to end.";
+                }
+            }
+        }
+
+        // Check if next round match has already started/completed
+        $nextMatchWarning = '';
+        $category = $match->category;
+        $slots = $category->max_participants ?? 16;
+        $rounds = app(\App\Services\CategoryScheduleService::class)->calculateRoundsForBracket($slots, $match->tournament->bracket_type ?? 'single_elimination');
+        
+        $currentRoundIndex = -1;
+        foreach ($rounds as $index => $roundInfo) {
+            if ($roundInfo['name'] === $match->round) {
+                $currentRoundIndex = $index;
+                break;
+            }
+        }
+        
+        if ($currentRoundIndex >= 0 && $currentRoundIndex < count($rounds) - 1) {
+            $nextRoundName = $rounds[$currentRoundIndex + 1]['name'];
+            $nextMatch = TournamentMatch::where('tournament_id', $match->tournament_id)
+                ->where('tournament_category_id', $match->tournament_category_id)
+                ->where('round', $nextRoundName)
+                ->where(function($query) use ($match) {
+                    $query->where('player1_id', $match->player1_id)
+                          ->orWhere('player2_id', $match->player1_id)
+                          ->orWhere('player1_id', $match->player2_id)
+                          ->orWhere('player2_id', $match->player2_id);
+                })
+                ->first();
+            
+            if ($nextMatch && $nextMatch->status === 'completed') {
+                $nextMatchWarning = "Note: The next round match has already been completed. This result will still update brackets and ELO ratings.";
+            } elseif ($nextMatch && $nextMatch->status === 'ongoing') {
+                $nextMatchWarning = "Note: The next round match has already started. This result will still update brackets and ELO ratings.";
+            }
+        }
+
+        // Build success message with warnings if any
+        $successMessage = 'Match score updated and winner advanced successfully!';
+        if ($isLateInput || $nextMatchWarning) {
+            $warnings = array_filter([$lateWarning, $nextMatchWarning]);
+            if (!empty($warnings)) {
+                $successMessage .= ' ' . implode(' ', $warnings);
+            }
+        }
+
+        return back()->with('success', $successMessage);
+    }
+
+    public function markWalkover(TournamentMatch $match, Request $request): RedirectResponse
+    {
+        if ($match->tournament->club->manager_id !== auth()->id()) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        $request->validate([
+            'winner_id' => ['required', 'exists:users,id'],
+        ]);
+
+        $winnerId = $request->winner_id;
+        $winnerPartnerId = null;
+        
+        if ($match->player1_id == $winnerId) {
+            $winnerPartnerId = $match->player1_partner_id;
+        } elseif ($match->player2_id == $winnerId) {
+            $winnerPartnerId = $match->player2_partner_id;
+        }
+
+        // Mark match as completed with walkover
+        $match->update([
+            'status' => 'completed',
+            'winner_id' => $winnerId,
+            'winner_partner_id' => $winnerPartnerId,
+        ]);
+
+        // Create a minimal match result record for walkover (no scores, just winner)
+        MatchResult::updateOrCreate(
+            ['match_id' => $match->id],
+            [
+                'player1_set1_score' => 0,
+                'player2_set1_score' => 0,
+                'winner_id' => $winnerId,
+                'score_inputted_by' => 'manager',
+                'inputted_by_user_id' => auth()->id(),
+            ]
+        );
+
+        // Advance winner to next round (no ELO update for walkovers)
+        $this->matchGenerationService->advanceWinner($match);
+
+        // Send notifications to all players (including partners for doubles)
+        $player1 = $match->player1;
+        $player2 = $match->player2;
+        
+        $playersToNotify = [];
+        
+        if ($player1) {
+            $playersToNotify[] = $player1->id;
+        }
+        if ($player2) {
+            $playersToNotify[] = $player2->id;
+        }
+        
+        // Add partners for doubles/mixed doubles matches
+        if ($match->player1_partner_id) {
+            $playersToNotify[] = $match->player1_partner_id;
+        }
+        if ($match->player2_partner_id) {
+            $playersToNotify[] = $match->player2_partner_id;
+        }
+        
+        // Remove duplicates and send notifications
+        $playersToNotify = array_unique(array_filter($playersToNotify));
+        foreach ($playersToNotify as $playerId) {
+            try {
+                Notification::create([
+                    'user_id' => $playerId,
+                    'type' => 'match_walkover',
+                    'title' => 'Match Walkover',
+                    'message' => "Your match in {$match->tournament->name} has been marked as a walkover.",
+                    'data' => ['match_id' => $match->id],
+                    'action_url' => route('player.matches.show', $match->id),
+                ]);
+            } catch (\Exception $e) {
+                // Log error but don't fail the entire operation
+                \Log::warning("Failed to send notification to player {$playerId}: " . $e->getMessage());
+            }
+        }
+
+        return back()->with('success', 'Match marked as walkover. Winner advanced to next round. (No ELO rating changes)');
     }
 
     public function reschedule(TournamentMatch $match, Request $request): RedirectResponse
     {
+        // Only tournament owner can reschedule
         if ($match->tournament->club->manager_id !== auth()->id()) {
-            abort(403, 'Unauthorized access.');
+            abort(403, 'Unauthorized access. Only the tournament owner can reschedule matches.');
         }
         
         if ($match->reschedule_count >= 1) {
@@ -163,28 +569,49 @@ class MatchController extends Controller
             'scheduled_time' => $request->scheduled_time,
             'court_number' => $request->court_number,
             'reschedule_count' => $match->reschedule_count + 1,
+            'status' => 'scheduled', // Reset status to scheduled after rescheduling
         ]);
         
+        // Update match status based on new schedule
+        $this->matchStatusService->updateMatchStatuses($match);
+        
+        // Send notifications to all players (including partners for doubles)
+        $playersToNotify = [];
+        
         if ($match->player1_id) {
-            Notification::create([
-                'user_id' => $match->player1_id,
-                'type' => 'match_rescheduled',
-                'title' => 'Match Rescheduled',
-                'message' => "Your match in {$match->tournament->name} has been rescheduled.",
-                'data' => ['match_id' => $match->id],
-                'action_url' => route('player.matches.show', $match->id),
-            ]);
+            $playersToNotify[] = $match->player1_id;
+        }
+        if ($match->player2_id) {
+            $playersToNotify[] = $match->player2_id;
         }
         
-        if ($match->player2_id) {
-            Notification::create([
-                'user_id' => $match->player2_id,
-                'type' => 'match_rescheduled',
-                'title' => 'Match Rescheduled',
-                'message' => "Your match in {$match->tournament->name} has been rescheduled.",
-                'data' => ['match_id' => $match->id],
-                'action_url' => route('player.matches.show', $match->id),
-            ]);
+        // Add partners for doubles/mixed doubles matches
+        if ($match->player1_partner_id) {
+            $playersToNotify[] = $match->player1_partner_id;
+        }
+        if ($match->player2_partner_id) {
+            $playersToNotify[] = $match->player2_partner_id;
+        }
+        
+        // Remove duplicates and send notifications
+        $playersToNotify = array_unique(array_filter($playersToNotify));
+        foreach ($playersToNotify as $playerId) {
+            try {
+                $notification = Notification::create([
+                    'user_id' => $playerId,
+                    'type' => 'match_rescheduled',
+                    'title' => 'Match Rescheduled',
+                    'message' => "Your match in {$match->tournament->name} has been rescheduled.",
+                    'data' => ['match_id' => $match->id],
+                    'action_url' => route('player.matches.show', $match->id),
+                ]);
+
+                // Send email notification
+                app(\App\Services\EmailService::class)->sendNotificationEmail($notification);
+            } catch (\Exception $e) {
+                // Log error but don't fail the entire operation
+                \Log::warning("Failed to send notification to player {$playerId}: " . $e->getMessage());
+            }
         }
         
         return back()->with('success', 'Match rescheduled successfully!');
