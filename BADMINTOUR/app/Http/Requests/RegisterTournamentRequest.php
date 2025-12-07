@@ -6,12 +6,14 @@ use Illuminate\Foundation\Http\FormRequest;
 use App\Models\TournamentCategory;
 use App\Models\TournamentRegistration;
 use App\Models\ClubPlayer;
-use Carbon\Carbon;
+use App\Services\EligibilityService;
 
 class RegisterTournamentRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     * 
+     * This method uses EligibilityService as the single source of truth for eligibility checks.
      */
     public function authorize(): bool
     {
@@ -21,24 +23,16 @@ class RegisterTournamentRequest extends FormRequest
             return false;
         }
         
-        $clubMembership = ClubPlayer::where('player_id', $user->id)
-            ->where('status', 'approved')
-            ->first();
-        
-        if (!$clubMembership) {
-            session()->flash('error', 'You must be a member of a club to register for tournaments.');
-            return false;
-        }
-        
         $category = TournamentCategory::find($this->category_id);
         
         if (!$category) {
             return false;
         }
         
+        // Check if already registered
         $alreadyRegistered = TournamentRegistration::where('player_id', $user->id)
             ->where('category_id', $category->id)
-            ->whereIn('status', ['pending', 'paid', 'approved'])
+            ->whereIn('status', ['pending', 'pending_payment', 'awaiting_payment', 'paid', 'approved'])
             ->exists();
         
         if ($alreadyRegistered) {
@@ -46,14 +40,43 @@ class RegisterTournamentRequest extends FormRequest
             return false;
         }
         
-        if ($this->checkAgeRequirement($user, $category) === false) {
-            session()->flash('error', 'You do not meet the age requirement for this category.');
+        // Use EligibilityService as single source of truth for eligibility checks
+        $eligibilityService = app(EligibilityService::class);
+        
+        // Get partner if provided
+        $partner = $this->partner_id ? \App\Models\User::find($this->partner_id) : null;
+        
+        // Check eligibility using EligibilityService
+        $eligibility = $eligibilityService->checkEligibility($user, $category, $partner);
+        
+        if (!$eligibility['eligible']) {
+            $errorMessage = 'Registration not allowed: ' . implode(' ', $eligibility['reasons']);
+            session()->flash('error', $errorMessage);
             return false;
         }
         
-        if ($this->checkSkillRequirement($user, $category) === false) {
-            session()->flash('error', 'You do not meet the skill level requirement for this category.');
-            return false;
+        // Validate interclub-specific rules (if applicable)
+        $tournament = $category->tournament;
+        if ($tournament->is_dual_meet) {
+            if (!$this->validateInterclubRules($user, $category, $this->partner_id)) {
+                return false;
+            }
+        }
+        
+        // Check if partner is already registered (additional validation)
+        if ($partner) {
+            $partnerAlreadyRegistered = TournamentRegistration::where('category_id', $category->id)
+                ->where(function($query) use ($partner) {
+                    $query->where('player_id', $partner->id)
+                          ->orWhere('partner_id', $partner->id);
+                })
+                ->whereIn('status', ['pending', 'pending_payment', 'awaiting_payment', 'paid', 'approved'])
+                ->exists();
+            
+            if ($partnerAlreadyRegistered) {
+                session()->flash('error', 'The selected partner is already registered in this category.');
+                return false;
+            }
         }
         
         return true;
@@ -70,33 +93,48 @@ class RegisterTournamentRequest extends FormRequest
         ];
     }
 
-    protected function checkAgeRequirement($user, $category): bool
-    {
-        if (!$category->age_requirement) {
-            return true;
-        }
-        
-        $birthDate = Carbon::parse($user->birth_date);
-        $age = $birthDate->age;
-        
-        if (str_contains($category->age_requirement, '-')) {
-            [$min, $max] = explode('-', $category->age_requirement);
-            return $age >= (int)$min && $age <= (int)$max;
-        }
-        
-        if (str_contains($category->age_requirement, '+')) {
-            $min = (int)str_replace('+', '', $category->age_requirement);
-            return $age >= $min;
-        }
-        
-        return true;
-    }
+    /**
+     * Validate interclub-specific rules (dual meet tournaments)
+     * This is separate from eligibility as it's tournament-type specific
+     */
 
-    protected function checkSkillRequirement($user, $category): bool
+    protected function validateInterclubRules($user, $category, $partnerId = null): bool
     {
-        if (!$category->skill_level_requirements) {
-            return true;
+        $tournament = $category->tournament;
+        
+        if (!$tournament->is_dual_meet) {
+            return true; // Not an interclub tournament
         }
+        
+        $userClub = ClubPlayer::where('player_id', $user->id)
+            ->where('status', 'approved')
+            ->first();
+        
+        if (!$userClub) {
+            session()->flash('error', 'You must be a member of a club to participate in interclub tournaments.');
+            return false;
+        }
+        
+        // Validate partner is from different club (if partner provided)
+        if ($partnerId) {
+            $partnerClub = ClubPlayer::where('player_id', $partnerId)
+                ->where('status', 'approved')
+                ->first();
+            
+            if (!$partnerClub) {
+                session()->flash('error', 'Your partner must be a member of a club to participate in interclub tournaments.');
+                return false;
+            }
+            
+            // For interclub: partners should be from different clubs
+            if ($userClub->club_id === $partnerClub->club_id) {
+                session()->flash('error', 'In interclub tournaments, partners must be from different clubs.');
+                return false;
+            }
+        }
+        
+        // Additional interclub validation can be added here
+        // (e.g., club-level pairing rules, ranking restrictions)
         
         return true;
     }
