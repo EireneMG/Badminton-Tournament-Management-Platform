@@ -41,35 +41,72 @@
                     <p class="text-gray-600 text-lg">Complete the details below to register your club in the BadminTour system.</p>
                 </div>
 
-               <!-- Form -->
+                <!-- Validation Errors -->
+                @if ($errors->any())
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded mb-6">
+                    <div class="flex">
+                        <svg class="h-5 w-5 text-red-500 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <div class="text-sm text-red-800">
+                            <p class="font-semibold mb-1">Please fix the following errors:</p>
+                            <ul class="list-disc list-inside space-y-1 text-red-700">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                <!-- Success/Error Messages -->
+                @if (session('error'))
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded mb-6">
+                    <div class="flex">
+                        <svg class="h-5 w-5 text-red-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-sm text-red-800">{{ session('error') }}</p>
+                    </div>
+                </div>
+                @endif
+
+                <!-- Form -->
                 <form action="{{ route('manager.create-club.submit') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                     @csrf
                     <!-- Club Name -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Club Name <span class="text-red-500">*</span></label>
                         <input type="text" 
-                               name="club_name"
+                               name="name"
+                               value="{{ old('name') }}"
                                placeholder="Enter your club name"
                                required
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent @error('name') border-red-500 @enderror">
+                        @error('name')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Club Description -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Club Description <span class="text-red-500">*</span></label>
-                        <textarea name="club_description"
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Club Description</label>
+                        <textarea name="description"
                                   rows="4"
                                   placeholder="Describe your club's mission, values, and what makes it unique..."
-                                  required
-                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent resize-none"></textarea>
-                        <p class="text-xs text-gray-500 mt-1">Minimum 50 characters</p>
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent resize-none @error('description') border-red-500 @enderror">{{ old('description') }}</textarea>
+                        <p class="text-xs text-gray-500 mt-1">Optional - tell players about your club</p>
+                        @error('description')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Two Column Grid: Club Logo and Location -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Club Logo -->
                         <div class="space-y-4">
-                            <label class="block text-sm font-semibold text-gray-700">Club Logo <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-semibold text-gray-700">Club Logo</label>
                             
                             <!-- Upload Area -->
                             <div x-show="!clubLogoPreview" 
@@ -80,14 +117,13 @@
                                 <label for="logo-upload" class="mt-3 cursor-pointer block">
                                     <span class="text-[#2C5F4F] hover:text-[#244D3E] font-semibold">Upload Logo</span>
                                     <input id="logo-upload" 
-                                           name="club_logo"
+                                           name="logo"
                                            type="file" 
                                            class="sr-only" 
                                            accept="image/*"
-                                           required
                                            @change="uploadLogo($event)">
                                 </label>
-                                <p class="text-xs text-gray-500 mt-1">PNG, JPG (Max 5MB)</p>
+                                <p class="text-xs text-gray-500 mt-1">PNG, JPG (Max 5MB) - Optional</p>
                             </div>
 
                             <!-- Logo Preview -->
@@ -109,31 +145,66 @@
                                     </button>
                                 </div>
                             </div>
+                            @error('logo')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- Club Location -->
                         <div class="space-y-4">
                             <label class="block text-sm font-semibold text-gray-700">Club Location <span class="text-red-500">*</span></label>
-                            <input type="text" 
-                                   name="club_location"
-                                   placeholder="City, Province"
-                                   required
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
+                            
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <input type="text" 
+                                           name="city"
+                                           value="{{ old('city') }}"
+                                           placeholder="City"
+                                           required
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent @error('city') border-red-500 @enderror">
+                                    @error('city')
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <input type="text" 
+                                           name="province"
+                                           value="{{ old('province') }}"
+                                           placeholder="Province"
+                                           required
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent @error('province') border-red-500 @enderror">
+                                    @error('province')
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
                             
                             <div class="space-y-3 pt-2">
-                                <label class="block text-sm font-semibold text-gray-700">Contact Information</label>
+                                <label class="block text-sm font-semibold text-gray-700">Contact Information <span class="text-red-500">*</span></label>
                                 
-                                <input type="email" 
-                                       name="club_email"
-                                       placeholder="Club Email Address"
-                                       required
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
+                                <div>
+                                    <input type="email" 
+                                           name="contact_email"
+                                           value="{{ old('contact_email') }}"
+                                           placeholder="Club Email Address"
+                                           required
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent @error('contact_email') border-red-500 @enderror">
+                                    @error('contact_email')
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
                                 
-                                <input type="tel" 
-                                       name="club_phone"
-                                       placeholder="Club Contact Number"
-                                       required
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
+                                <div>
+                                    <input type="tel" 
+                                           name="contact_phone"
+                                           value="{{ old('contact_phone') }}"
+                                           placeholder="Club Contact Number"
+                                           required
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent @error('contact_phone') border-red-500 @enderror">
+                                    @error('contact_phone')
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -147,17 +218,18 @@
                             <div class="text-sm text-green-800">
                                 <p class="font-semibold mb-1">What happens next?</p>
                                 <ul class="list-disc list-inside space-y-1 text-green-700">
-                                    <li>Your club will be reviewed by our admin team</li>
-                                    <li>You'll receive a notification once approved (usually within 24 hours)</li>
-                                    <li>You can then start inviting players and managing tournaments</li>
+                                    <li>Your club will be created and active immediately</li>
+                                    <li>You can start inviting players to join your club</li>
+                                    <li>Once you have 5 or more players, you can host tournaments</li>
+                                    <li>Players can discover and request to join your club</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
 
-                     <!-- Action Buttons -->
+                    <!-- Action Buttons -->
                     <div class="flex flex-col sm:flex-row gap-4 pt-6">
-                        <a href="{{ route('manager.verify-id') }}" 
+                        <a href="{{ route('manager.dashboard') }}" 
                            class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg font-semibold text-center transition duration-200">
                             Back
                         </a>
