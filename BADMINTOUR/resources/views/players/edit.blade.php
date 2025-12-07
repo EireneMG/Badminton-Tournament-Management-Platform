@@ -41,6 +41,64 @@
                     </ul>
                 </div>
             @endif
+
+            <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
+                @csrf
+                @method('PUT')
+
+                <div class="border-b border-gray-200 pb-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Profile Photo</h2>
+                    <div class="flex items-center gap-6">
+                        <div class="flex-shrink-0">
+                            @if($player->profile_photo)
+                                <img src="{{ Storage::url($player->profile_photo) }}" alt="Profile Photo" class="w-24 h-24 rounded-full object-cover border-2 border-[#2C5F4F]">
+                            @else
+                                <div class="w-24 h-24 rounded-full bg-[#2C5F4F] flex items-center justify-center text-white text-3xl font-bold">
+                                    {{ strtoupper(substr($player->first_name ?? 'U', 0, 1)) }}
+                                </div>
+                            @endif
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Upload New Photo</label>
+                            <input type="file" name="profile_photo" accept="image/jpeg,image/png,image/jpg" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#2C5F4F] file:text-white hover:file:bg-[#234b3f]">
+                            <p class="text-xs text-gray-500 mt-1">JPG, JPEG or PNG. Max 2MB.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-b border-gray-200 pb-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Personal Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="first_name" class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                            <input type="text" name="first_name" id="first_name" value="{{ old('first_name', $player->first_name) }}" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#2C5F4F] focus:border-[#2C5F4F]">
+                        </div>
+                        <div>
+                            <label for="middle_name" class="block text-sm font-medium text-gray-700 mb-1">Middle Name</label>
+                            <input type="text" name="middle_name" id="middle_name" value="{{ old('middle_name', $player->middle_name) }}" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#2C5F4F] focus:border-[#2C5F4F]">
+                        </div>
+                        <div>
+                            <label for="last_name" class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                            <input type="text" name="last_name" id="last_name" value="{{ old('last_name', $player->last_name) }}" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#2C5F4F] focus:border-[#2C5F4F]">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label for="contact_number" class="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                            <input type="text" name="contact_number" id="contact_number" value="{{ old('contact_number', $player->contact_number) }}" placeholder="+63 9XX XXX XXXX" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#2C5F4F] focus:border-[#2C5F4F]">
+                        </div>
+                        <div>
+                            <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                            <select name="gender" id="gender" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#2C5F4F] focus:border-[#2C5F4F]">
+                                <option value="">Select Gender</option>
+                                <option value="male" {{ old('gender', $player->gender) == 'male' ? 'selected' : '' }}>Male</option>
+                                <option value="female" {{ old('gender', $player->gender) == 'female' ? 'selected' : '' }}>Female</option>
+                                <option value="other" {{ old('gender', $player->gender) == 'other' ? 'selected' : '' }}>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
         </div>
     </div>
 </x-dashboard-layout>
