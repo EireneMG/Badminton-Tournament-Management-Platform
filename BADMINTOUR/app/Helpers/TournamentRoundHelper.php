@@ -99,35 +99,6 @@ class TournamentRoundHelper
         return $rounds;
     }
 
-    protected static function getDoubleEliminationRounds(int $participantCount): array
-    {
-        $rounds = [];
-        $numRounds = ceil(log($participantCount, 2)) * 2 - 1;
-        
-        // Winners bracket rounds
-        $winnersRounds = ceil(log($participantCount, 2));
-        for ($i = 1; $i <= $winnersRounds; $i++) {
-            $roundsFromEnd = $winnersRounds - $i + 1;
-            $rounds[] = match($roundsFromEnd) {
-                1 => 'Winners Bracket Finals',
-                2 => 'Winners Semifinals',
-                3 => 'Winners Quarterfinals',
-                default => "Winners Round {$i}",
-            };
-        }
-        
-        // Losers bracket rounds
-        $losersRounds = $winnersRounds - 1;
-        for ($i = 1; $i <= $losersRounds; $i++) {
-            $rounds[] = $i === $losersRounds ? 'Losers Bracket Finals' : "Losers Round {$i}";
-        }
-        
-        // Grand Finals
-        $rounds[] = 'Grand Finals';
-        
-        return $rounds;
-    }
-
     protected static function getRoundRobinRounds(int $participantCount): array
     {
         $rounds = [];
