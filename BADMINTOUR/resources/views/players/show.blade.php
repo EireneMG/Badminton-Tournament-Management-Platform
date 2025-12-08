@@ -557,5 +557,52 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Rankings Tab -->
+            <div x-show="activeTab === 'rankings'" x-cloak>
+                <h3 class="text-lg font-bold mb-4">RANKING HISTORY</h3>
+                <div class="space-y-3">
+                    @forelse($rankingHistory as $history)
+                        <div class="border-2 border-[#D4A574] rounded-lg p-4">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    @php
+                                        $categoryMap = [
+                                            'MS' => "Men's Singles",
+                                            'WS' => "Women's Singles",
+                                            'MD' => "Men's Doubles",
+                                            'WD' => "Women's Doubles",
+                                            'XD' => "Mixed Doubles",
+                                        ];
+                                        $categoryName = $categoryMap[$history->category] ?? strtoupper($history->category);
+                                    @endphp
+                                    <p class="font-semibold">{{ $categoryName }}</p>
+                                    <p class="text-sm text-gray-600">{{ $history->tournament?->name ?? 'Initial Rating' }}</p>
+                                    <p class="text-sm text-gray-500">{{ $history->recorded_at->format('M d, Y') }}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-2xl font-bold text-[#C85A54]">{{ number_format($history->rating) }}</p>
+                                    <p class="text-sm text-gray-600">Rank #{{ $history->rank ?? 'N/A' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center text-gray-500 py-8">
+                            <p>No ranking history available.</p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- Account Settings Tab -->
+            @if(auth()->check() && auth()->id() === $player->id)
+            <div x-show="activeTab === 'account'" x-cloak>
+                <div class="space-y-6">
+                    <!-- Success Message -->
+                    @if (session('success'))
+                        <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-md">
+                            <p class="text-sm text-green-700 font-medium">{{ session('success') }}</p>
+                        </div>
+                    @endif
     </div>
 </x-dashboard-layout>
