@@ -419,5 +419,89 @@
                     @endforelse
                 </div>
             </div>
+
+            <!-- Tournaments Tab -->
+            <div x-show="activeTab === 'tournaments'" x-cloak>
+                <h3 class="text-lg font-bold mb-4">TOURNAMENT HISTORY</h3>
+                <div class="bg-white border-2 border-[#D4A574] rounded-lg overflow-hidden shadow-sm">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tournament</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($registrations as $registration)
+                                @php
+                                    $statusColors = [
+                                        'pending' => 'bg-gray-100 text-gray-800',
+                                        'eligible' => 'bg-blue-100 text-blue-800',
+                                        'awaiting_payment' => 'bg-yellow-100 text-yellow-800',
+                                        'paid' => 'bg-green-100 text-green-800',
+                                        'approved' => 'bg-green-100 text-green-800',
+                                        'rejected' => 'bg-red-100 text-red-800',
+                                        'withdrawn' => 'bg-gray-100 text-gray-800',
+                                    ];
+                                @endphp
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">{{ $registration->tournament->name }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ $registration->category->name }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-500">{{ $registration->tournament->start_date->format('M d, Y') }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $statusColors[$registration->status] ?? 'bg-gray-100 text-gray-800' }}">
+                                            {{ strtoupper(str_replace('_', ' ', $registration->status)) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <a href="{{ route('tournaments.show', $registration->tournament) }}" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                            View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                        <p>No tournament registrations yet.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Statistics Tab -->
+            <div x-show="activeTab === 'statistics'" x-cloak>
+                <h3 class="text-lg font-bold mb-4">PLAYER STATISTICS</h3>
+                
+                <!-- Recent Performance & Average Points -->
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center">
+                        <p class="text-xs text-gray-600 mb-1">RECENT PERFORMANCE</p>
+                        <p class="text-xl font-bold text-[#2C5F4F]">{{ $recentWinRate }}%</p>
+                        <p class="text-xs text-gray-500 mt-1">Last 10 matches ({{ $recentWins }}W-{{ $recentLosses }}L)</p>
+                    </div>
+                    <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center">
+                        <p class="text-xs text-gray-600 mb-1">AVG POINTS PER SET</p>
+                        <p class="text-xl font-bold text-[#C85A54]">{{ $averagePoints }}</p>
+                        <p class="text-xs text-gray-500 mt-1">Across all matches</p>
+                    </div>
+                    <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center">
+                        <p class="text-xs text-gray-600 mb-1">BEST FINISH</p>
+                        <p class="text-xl font-bold text-[#2C5F4F]">{{ $tournamentStats['bestFinish'] }}</p>
+                        <p class="text-xs text-gray-500 mt-1">Tournament record</p>
+                    </div>
+                </div>
+                
     </div>
 </x-dashboard-layout>
