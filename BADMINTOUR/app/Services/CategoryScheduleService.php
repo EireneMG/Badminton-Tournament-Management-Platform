@@ -303,6 +303,93 @@ class CategoryScheduleService
             }
             $roundToDayMapping[$roundNumber] = $dayOffset;
         }
-   
+        
+        // Schedule matches by round with even distribution across days
+        foreach ($matchesByRound as $roundNumber => $matches) {
+            // Get day offset for this round
+            $dayOffset = $roundToDayMapping[$roundNumber] ?? 0;
+            $currentDate = $tournamentStartDate->copy()->addDays($dayOffset);
+            
+            // Ensure we don't exceed tournament end date (safety check)
+            if ($currentDate->gt($tournamentEndDate)) {
+                $currentDate = $tournamentEndDate->copy();
+            }
+            
+            // All rounds (including finals) use category's configured start time
+            // No special time handling for finals - consistent with category start time
+            
+            // Group matches by category
+            $matchesByCategory = [];
+            foreach ($matches as $match) {
+                $catId = $match['category_id'];
+                if (!isset($matchesByCategory[$catId])) {
+                    $matchesByCategory[$catId] = [];
+                }
+                $matchesByCategory[$catId][] = $match;
+            }
+            
+            $numCategories = count($matchesByCategory);
+            if ($numCategories === 0) {
+                continue; // Skip if no categories
+            }
+            
+            // ============================================================
+            // COURT ALLOCATION LOGIC
+            // ============================================================
+            // Case 1: Categories ≤ Courts → All categories run simultaneously, courts split evenly
+            // Case 2: Categories > Courts → Categories grouped into batches, batches run sequentially
+            // ============================================================
+            
+            if ($numCategories <= $numberOfCourts) {
+                // CASE 1: Categories ≤ Courts - All run simultaneously
+                // Split courts evenly among categories
+                $baseCourtsPerCategory = floor($numberOfCourts / $numCategories);
+                $remainder = $numberOfCourts % $numCategories;
+                
+                $courtAllocations = [];
+                $currentCourt = 1;
+                $categoryIndex = 0;
+                
+                foreach ($matchesByCategory as $catId => $catMatches) {
+                    // First 'remainder' categories get one extra court
+                    $courtsForThisCategory = $baseCourtsPerCategory + ($categoryIndex < $remainder ? 1 : 0);
+                    $catStartCourt = $currentCourt;
+                    $catEndCourt = $currentCourt + $courtsForThisCategory - 1;
+                    
+                    $courtAllocations[$catId] = [
+                        'start' => $catStartCourt,
+                        'end' => $catEndCourt,
+                        'matches' => $catMatches,
+                        'batch' => 0, // All in first batch (simultaneous)
+                    ];
+                    
+                    $currentCourt = $catEndCourt + 1;
+                    $categoryIndex++;
+                }
+            } else {
+                // CASE 2: Categories > Courts - Group into batches
+                // Each batch has at most numberOfCourts categories
+                // Batches run sequentially (one batch finishes before next starts)
+                $categoryKeys = array_keys($matchesByCategory);
+                $batches = array_chunk($categoryKeys, $numberOfCourts, false);
+                
+                $courtAllocations = [];
+                $batchIndex = 0;
+                
+                foreach ($batches as $batch) {
+                    // In each batch, each category gets exactly 1 court
+                    $courtNumber = 1;
+                    foreach ($batch as $catId) {
+                        $courtAllocations[$catId] = [
+                            'start' => $courtNumber,
+                            'end' => $courtNumber,
+                            'matches' => $matchesByCategory[$catId],
+                            'batch' => $batchIndex,
+                        ];
+                        $courtNumber++;
+                    }
+                    $batchIndex++;
+                }
+            }
 }
 
