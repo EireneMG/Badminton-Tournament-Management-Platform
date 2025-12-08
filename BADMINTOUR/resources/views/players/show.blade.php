@@ -502,6 +502,60 @@
                         <p class="text-xs text-gray-500 mt-1">Tournament record</p>
                     </div>
                 </div>
-                
+
+                <!-- Tournament Participation -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center">
+                        <p class="text-xs text-gray-600 mb-1">TOURNAMENTS JOINED</p>
+                        <p class="text-2xl font-bold">{{ $tournamentStats['tournamentsJoined'] }}</p>
+                    </div>
+                    <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center">
+                        <p class="text-xs text-gray-600 mb-1">TOURNAMENTS COMPLETED</p>
+                        <p class="text-2xl font-bold">{{ $tournamentStats['tournamentsCompleted'] }}</p>
+                    </div>
+                </div>
+
+                <!-- Category-Specific Statistics -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold mb-3">PERFORMANCE BY CATEGORY</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        @php
+                            $categoryMap = [
+                                'MS' => "Men's Singles",
+                                'WS' => "Women's Singles",
+                                'MD' => "Men's Doubles",
+                                'WD' => "Women's Doubles",
+                                'XD' => "Mixed Doubles",
+                            ];
+                        @endphp
+                        @foreach($categoryStats as $category => $stats)
+                            @if($stats['matches'] > 0)
+                                <div class="border-2 border-[#D4A574] rounded-lg p-4">
+                                    <p class="text-sm font-semibold text-gray-700 mb-2">{{ $categoryMap[$category] ?? $category }}</p>
+                                    <div class="grid grid-cols-3 gap-2 text-center">
+                                        <div>
+                                            <p class="text-xs text-gray-600">Matches</p>
+                                            <p class="text-lg font-bold">{{ $stats['matches'] }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-gray-600">Wins</p>
+                                            <p class="text-lg font-bold text-green-600">{{ $stats['wins'] }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-gray-600">Win Rate</p>
+                                            <p class="text-lg font-bold text-[#2C5F4F]">{{ $stats['winRate'] }}%</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+                        @endforeach
+                        @if(collect($categoryStats)->sum('matches') === 0)
+                            <div class="col-span-2 text-center text-gray-500 py-4">
+                                <p>No category statistics yet.</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
     </div>
 </x-dashboard-layout>
