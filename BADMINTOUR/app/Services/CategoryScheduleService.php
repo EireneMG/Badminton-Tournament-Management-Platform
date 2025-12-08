@@ -127,6 +127,38 @@ class CategoryScheduleService
         return $schedules;
     }
 
+    /**
+     * Calculate rounds for a bracket type
+     */
+    /**
+     * Get round name based on number of participants and round number
+     */
+    protected function getRoundName(int $roundNumber, int $participantsInRound, int $totalParticipants, int $totalRounds): string
+    {
+        // Round 1: Show participant count (e.g., "Round 1 (Round of 12)")
+        if ($roundNumber === 1) {
+            return "Round 1 (Round of {$totalParticipants})";
+        }
+        
+        // Last round: Finals
+        if ($roundNumber === $totalRounds) {
+            return "Finals";
+        }
+        
+        // Second to last: Semifinals
+        if ($roundNumber === $totalRounds - 1) {
+            return "Semifinals";
+        }
+        
+        // Third to last: Quarterfinals
+        if ($roundNumber === $totalRounds - 2) {
+            return "Quarterfinals";
+        }
+        
+        // Other rounds: Round N (Round of X)
+        return "Round {$roundNumber} (Round of {$participantsInRound})";
+    }
+
    
 }
 
