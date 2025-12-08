@@ -159,6 +159,150 @@ class CategoryScheduleService
         return "Round {$roundNumber} (Round of {$participantsInRound})";
     }
 
+    public function calculateRoundsForBracket(int $slots, string $bracketType): array
+    {
+        $rounds = [];
+        
+        if ($bracketType === 'single_elimination') {
+            $numRounds = ceil(log($slots, 2));
+            $remainingMatches = $slots;
+            $totalParticipants = $slots;
+            
+            for ($i = 0; $i < $numRounds; $i++) {
+                $roundNumber = $i + 1;
+                $matchesInRound = ceil($remainingMatches / 2);
+                $participantsInRound = $remainingMatches;
+                
+                $roundName = $this->getRoundName($roundNumber, $participantsInRound, $totalParticipants, $numRounds);
+                
+                $rounds[] = [
+                    'name' => $roundName,
+                    'matches' => $matchesInRound,
+                    'round_number' => $roundNumber, // Add round number for sorting
+                ];
+                
+                $remainingMatches = $matchesInRound;
+            }
+        } else { // round_robin
+            $numRounds = $slots - 1;
+            $matchesPerRound = floor($slots / 2);
+            
+            for ($i = 0; $i < $numRounds; $i++) {
+                $rounds[] = [
+                    'name' => "Round " . ($i + 1),
+                    'matches' => $matchesPerRound,
+                ];
+            }
+        }
+        
+        return $rounds;
+    }
+
+    /**
+     * Get total number of matches for a bracket type
+     */
+    public function getTotalMatches(int $slots, string $bracketType): int
+    {
+        return match($bracketType) {
+            'single_elimination' => $slots - 1,
+            'round_robin' => ($slots * ($slots - 1)) / 2,
+            default => $slots - 1,
+        };
+    }
+
+    /**
+     * Generate tournament-wide schedule for all categories
+     * Distributes rounds evenly across available tournament days
+     * Allows overlapping start times - splits courts between categories
+     * All rounds (including finals) use category's configured start time
+     * 
+     * @param Tournament $tournament
+     * @param array $categoryMatchData Array of ['category_id' => X, 'rounds' => [...], 'total_matches' => Y, 'category_type' => 'MS']
+     * @return array Array of schedules indexed by category_id
+     */
+    public function generateTournamentSchedule($tournament, array $categoryMatchData): array
+    {
+        $schedules = [];
+        $tournamentStartDate = Carbon::parse($tournament->start_date);
+        $tournamentEndDate = Carbon::parse($tournament->end_date);
+        $numberOfCourts = $tournament->number_of_courts;
+        
+        // Collect all categories with their start times
+        $categories = [];
+        foreach ($categoryMatchData as $catData) {
+            $categoryId = $catData['category_id'];
+            $category = TournamentCategory::find($categoryId);
+            if (!$category) continue;
+            
+            $startTime = $this->parseTime($category->schedule_start_time ?? '09:00');
+            $categories[] = [
+                'category_id' => $categoryId,
+                'category' => $category,
+                'type' => $catData['category_type'] ?? 'MS',
+                'rounds' => $catData['rounds'] ?? [],
+                'start_time' => $startTime,
+                'match_duration' => $category->match_duration_minutes ?? $this->getDefaultMatchDuration($catData['category_type'] ?? 'MS'),
+                'break_duration' => $category->break_between_matches_minutes ?? 5,
+            ];
+        }
+        
+        // Group all matches by round number across all categories
+        $matchesByRound = [];
+        foreach ($categories as $catInfo) {
+            foreach ($catInfo['rounds'] as $roundIndex => $roundInfo) {
+                $roundNumber = $roundIndex + 1;
+                if (!isset($matchesByRound[$roundNumber])) {
+                    $matchesByRound[$roundNumber] = [];
+                }
+                
+                // Add all matches for this category's round
+                for ($i = 0; $i < $roundInfo['matches']; $i++) {
+                    $matchesByRound[$roundNumber][] = [
+                        'category_id' => $catInfo['category_id'],
+                        'category_info' => $catInfo,
+                        'round_name' => $roundInfo['name'],
+                        'round_index' => $roundIndex,
+                        'match_in_round' => $i + 1,
+                    ];
+                }
+            }
+        }
+        
+        // Sort rounds by round number
+        ksort($matchesByRound);
+        
+        // If no matches, return empty schedules
+        if (empty($matchesByRound)) {
+            return $schedules;
+        }
+        
+        $maxRound = max(array_keys($matchesByRound));
+        $totalRounds = count($matchesByRound);
+        
+        // Calculate total available days (inclusive of start and end date)
+        $totalDays = $tournamentStartDate->diffInDays($tournamentEndDate) + 1;
+        
+        // Distribute rounds evenly across available days
+        // Round-to-day mapping: [roundNumber => dayOffset]
+        $roundToDayMapping = [];
+        $roundNumbers = array_keys($matchesByRound);
+        sort($roundNumbers);
+        
+        foreach ($roundNumbers as $index => $roundNumber) {
+            if ($totalRounds <= $totalDays) {
+                // More days than rounds: distribute evenly, one round per day when possible
+                $dayOffset = min($index, $totalDays - 1);
+            } else {
+                // More rounds than days: distribute evenly across days
+                // Handle edge case: if only 1 round, put it on day 0
+                if ($totalRounds === 1) {
+                    $dayOffset = 0;
+                } else {
+                    $dayOffset = (int)floor(($index / ($totalRounds - 1)) * ($totalDays - 1));
+                }
+            }
+            $roundToDayMapping[$roundNumber] = $dayOffset;
+        }
    
 }
 
