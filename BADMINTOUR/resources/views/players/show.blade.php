@@ -343,6 +343,81 @@
                         </div>
                     </div>
                     @endif
-        </div>
+
+                    <!-- ID Document -->
+                    @if($player->player_id_document || $player->id_type)
+                    <div class="bg-white rounded-lg p-6 border-2 border-[#D4A574]">
+                        <h3 class="text-lg font-bold mb-4 text-[#2C5F4F]">ID Document</h3>
+                        <div class="space-y-3">
+                            @if($player->id_type)
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">ID Type</p>
+                                <p class="font-semibold">
+                                    @php
+                                        $idTypeLabels = [
+                                            'drivers_license' => 'Driver\'s License',
+                                            'student_id' => 'Student ID',
+                                            'passport' => 'Passport',
+                                            'national_id' => 'National ID',
+                                            'prc_id' => 'PRC ID',
+                                            'postal_id' => 'Postal ID',
+                                            'senior_citizen_id' => 'Senior Citizen ID',
+                                            'others' => 'Others',
+                                        ];
+                                        echo $idTypeLabels[$player->id_type] ?? ucfirst(str_replace('_', ' ', $player->id_type));
+                                    @endphp
+                                </p>
+                            </div>
+                            @endif
+                            @if($player->player_id_document)
+                            <div class="flex justify-center">
+                                <a href="{{ Storage::url($player->player_id_document) }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-[#2C5F4F] text-white rounded-lg hover:bg-[#244D3E] transition">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                    View ID Document
+                                </a>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @endif
+
+            <!-- Matches Tab -->
+            <div x-show="activeTab === 'matches'" x-cloak>
+                <h3 class="text-lg font-bold mb-4">RECENT MATCHES</h3>
+                <div class="space-y-3">
+                    @forelse($recentMatches->sortByDesc(function($match) { return $match->updated_at ?? $match->created_at; }) as $match)
+                        <div class="border-2 border-[#D4A574] rounded-lg p-4">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-semibold">{{ $match->tournament->name }}</p>
+                                    <p class="text-sm text-gray-600">{{ $match->category->name }}</p>
+                                    <p class="text-sm text-gray-500">{{ ($match->updated_at ?? $match->created_at)->format('M d, Y H:i') }}</p>
+                                </div>
+                                <div class="text-right">
+                                    @if($match->result)
+                                        @php
+                                            $isWinner = $match->result->winner_id === $player->id || 
+                                                       ($match->result->match->winner_partner_id && $match->result->match->winner_partner_id === $player->id);
+                                        @endphp
+                                        <span class="px-3 py-1 rounded-full text-sm font-semibold {{ $isWinner ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                            {{ $isWinner ? 'WON' : 'LOST' }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center text-gray-500 py-8">
+                            <p>No match history yet.</p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
     </div>
 </x-dashboard-layout>
