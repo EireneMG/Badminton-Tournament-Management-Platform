@@ -391,5 +391,103 @@ class CategoryScheduleService
                     $batchIndex++;
                 }
             }
+
+            // ============================================================
+            // SCHEDULE MATCHES USING ALLOCATED COURTS
+            // ============================================================
+            // Process batches in order to properly track sequential timing
+            // Group allocations by batch index
+            $allocationsByBatch = [];
+            foreach ($courtAllocations as $catId => $allocation) {
+                $batchIdx = $allocation['batch'];
+                if (!isset($allocationsByBatch[$batchIdx])) {
+                    $allocationsByBatch[$batchIdx] = [];
+                }
+                $allocationsByBatch[$batchIdx][$catId] = $allocation;
+            }
+            ksort($allocationsByBatch); // Process batches in order (0, 1, 2, ...)
+            
+            // Track time progression per batch to avoid conflicts
+            $batchLatestTimes = []; // [batchIndex => latestTime]
+            
+            // Process each batch sequentially
+            foreach ($allocationsByBatch as $batchIndex => $batchAllocations) {
+                foreach ($batchAllocations as $catId => $allocation) {
+                    $catMatches = $allocation['matches'];
+                    $catInfo = $catMatches[0]['category_info'];
+                    $catStartTime = $this->parseTime($catInfo['start_time']);
+                    $matchDuration = $catInfo['match_duration'];
+                    
+                    // Assign starting and ending courts for this category
+                    $catStartCourt = $allocation['start'];
+                    $catEndCourt = $allocation['end'];
+                    
+                    // Determine start time for this category
+                    // All rounds (including finals) use category's configured start time
+                    // For simultaneous categories (batch 0), use category's start time
+                    // For sequential batches, start after previous batch completes
+                    if ($batchIndex === 0) {
+                        // First batch: use category's configured start time (applies to all rounds including finals)
+                        $currentTime = Carbon::createFromTimeString($catStartTime);
+                    } else {
+                        // Subsequent batches: start after previous batch's latest match time
+                        if (isset($batchLatestTimes[$batchIndex - 1])) {
+                            // Start after previous batch's latest time
+                            $currentTime = $batchLatestTimes[$batchIndex - 1]->copy()->addMinutes($matchDuration);
+                        } else {
+                            // Fallback: use category's start time (shouldn't happen if processing in order)
+                            $currentTime = Carbon::createFromTimeString($catStartTime);
+                        }
+                    }
+                    
+                    $catCourtNumber = $catStartCourt;
+                    $categoryLatestTime = $currentTime->copy();
+                    
+                    foreach ($catMatches as $match) {
+                        // Ensure we don't exceed tournament end date
+                        if ($currentDate->gt($tournamentEndDate)) {
+                            $currentDate = $tournamentEndDate->copy();
+                        }
+                        
+                        // Store schedule
+                        if (!isset($schedules[$catId])) {
+                            $schedules[$catId] = [];
+                        }
+                        
+                        $schedules[$catId][] = [
+                            'round' => $match['round_name'],
+                            'round_number' => $roundNumber,
+                            'round_index' => $match['round_index'],
+                            'match_in_round' => $match['match_in_round'],
+                            'date' => $currentDate->format('Y-m-d'),
+                            'time' => $currentTime->format('H:i'),
+                            'court' => $catCourtNumber,
+                        ];
+                        
+                        // Move to next court for this category (rotate within allocated courts)
+                        $catCourtNumber++;
+                        if ($catCourtNumber > $catEndCourt) {
+                            $catCourtNumber = $catStartCourt;
+                            // Move to next time slot when all courts for this category are used
+                            $currentTime->addMinutes($matchDuration);
+                            // Breaks only apply within a match (3 sets), not between matches
+                        }
+                        
+                        // Track latest time for this category
+                        if ($currentTime->gt($categoryLatestTime)) {
+                            $categoryLatestTime = $currentTime->copy();
+                        }
+                    }
+                    
+                    // Track latest time for this batch (for next batch's start time)
+                    if (!isset($batchLatestTimes[$batchIndex]) || $categoryLatestTime->gt($batchLatestTimes[$batchIndex])) {
+                        $batchLatestTimes[$batchIndex] = $categoryLatestTime->copy();
+                    }
+                }
+            }
+        }
+        
+        return $schedules;
+    }
 }
 
