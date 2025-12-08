@@ -604,5 +604,150 @@
                             <p class="text-sm text-green-700 font-medium">{{ session('success') }}</p>
                         </div>
                     @endif
+
+                    <!-- Error Messages -->
+                    @if ($errors->any())
+                        <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded-md">
+                            <p class="text-sm text-red-700 font-medium mb-2">Please fix the following errors:</p>
+                            <ul class="text-sm text-red-700 list-disc list-inside">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    <!-- Update Email Section -->
+                    <div class="bg-white border-2 border-[#D4A574] rounded-lg p-6">
+                        <h3 class="text-lg font-bold mb-4">Update Email Address</h3>
+                        <form action="{{ route('player.account.update-email') }}" method="POST" class="space-y-4">
+                            @csrf
+                            @method('PUT')
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Current Email</label>
+                                <input 
+                                    type="email" 
+                                    value="{{ $player->email }}" 
+                                    disabled
+                                    class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600"
+                                >
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">New Email</label>
+                                <input 
+                                    type="email" 
+                                    name="new_email" 
+                                    placeholder="Enter new email address"
+                                    value="{{ old('new_email') }}"
+                                    required
+                                    class="w-full px-4 py-2 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#2C5F4F]"
+                                >
+                                @error('new_email')
+                                    <p class="mt-1 text-sm text-red-600 font-medium">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Email</label>
+                                <input 
+                                    type="email" 
+                                    name="confirm_email" 
+                                    placeholder="Confirm new email address"
+                                    required
+                                    class="w-full px-4 py-2 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#2C5F4F]"
+                                >
+                                @error('confirm_email')
+                                    <p class="mt-1 text-sm text-red-600 font-medium">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                                <input 
+                                    type="password" 
+                                    name="current_password" 
+                                    placeholder="Enter your current password"
+                                    required
+                                    class="w-full px-4 py-2 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#2C5F4F]"
+                                >
+                                @error('current_password')
+                                    <p class="mt-1 text-sm text-red-600 font-medium">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <button 
+                                type="submit"
+                                class="bg-[#2C5F4F] text-white px-6 py-2 rounded-lg hover:bg-[#234A3D] transition duration-200 font-semibold"
+                            >
+                                Update Email
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Update Password Section -->
+                    <div class="bg-white border-2 border-[#D4A574] rounded-lg p-6">
+                        <h3 class="text-lg font-bold mb-4">Update Password</h3>
+                        <form action="{{ route('player.account.update-password') }}" method="POST" class="space-y-4">
+                            @csrf
+                            @method('PUT')
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                                <input 
+                                    type="password" 
+                                    name="current_password" 
+                                    placeholder="Enter your current password"
+                                    required
+                                    class="w-full px-4 py-2 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#2C5F4F]"
+                                >
+                                @error('current_password')
+                                    <p class="mt-1 text-sm text-red-600 font-medium">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                                <input 
+                                    type="password" 
+                                    name="new_password" 
+                                    placeholder="Enter new password (minimum 8 characters)"
+                                    required
+                                    minlength="8"
+                                    class="w-full px-4 py-2 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#2C5F4F]"
+                                >
+                                @error('new_password')
+                                    <p class="mt-1 text-sm text-red-600 font-medium">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                                <input 
+                                    type="password" 
+                                    name="new_password_confirmation" 
+                                    placeholder="Confirm new password"
+                                    required
+                                    minlength="8"
+                                    class="w-full px-4 py-2 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#2C5F4F]"
+                                >
+                                @error('new_password_confirmation')
+                                    <p class="mt-1 text-sm text-red-600 font-medium">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <button 
+                                type="submit"
+                                class="bg-[#2C5F4F] text-white px-6 py-2 rounded-lg hover:bg-[#234A3D] transition duration-200 font-semibold"
+                            >
+                                Update Password
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            @endif
+        </div>
     </div>
 </x-dashboard-layout>
