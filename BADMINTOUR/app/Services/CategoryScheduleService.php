@@ -391,7 +391,7 @@ class CategoryScheduleService
                     $batchIndex++;
                 }
             }
-
+            
             // ============================================================
             // SCHEDULE MATCHES USING ALLOCATED COURTS
             // ============================================================
@@ -488,6 +488,25 @@ class CategoryScheduleService
         }
         
         return $schedules;
+    }
+
+    /**
+     * Parse time string to HH:mm format
+     */
+    protected function parseTime($timeString): string
+    {
+        if (is_string($timeString)) {
+            if (preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $timeString)) {
+                return substr($timeString, 0, 5); // Get HH:mm
+            } else {
+                try {
+                    return Carbon::parse($timeString)->format('H:i');
+                } catch (\Exception $e) {
+                    return '09:00';
+                }
+            }
+        }
+        return '09:00';
     }
 }
 
