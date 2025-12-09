@@ -324,5 +324,64 @@ class MatchGenerationService
             ]);
             $round1Matches[] = $match;
         }
+
+        // ============================================
+        // GENERATE ALL SUBSEQUENT ROUNDS (QF, SF, Finals)
+        // ============================================
+        $currentRoundMatches = $round1Matches;
+        
+        for ($roundIndex = 1; $roundIndex < count($rounds); $roundIndex++) {
+            $roundNumber = $roundIndex + 1;
+            $roundName = $rounds[$roundIndex]['name'] ?? "Round {$roundNumber}";
+            $matchesInThisRound = ceil(count($currentRoundMatches) / 2);
+            $nextRoundMatches = [];
+            
+            for ($matchIndex = 0; $matchIndex < $matchesInThisRound; $matchIndex++) {
+                $matchInRound = $matchIndex + 1;
+                
+                // Find schedule for this round and match position
+                $schedule = null;
+                foreach ($schedules as $sched) {
+                    if (isset($sched['round_number']) && $sched['round_number'] == $roundNumber && 
+                        isset($sched['match_in_round']) && $sched['match_in_round'] == $matchInRound) {
+                        $schedule = $sched;
+                        break;
+                    }
+                }
+
+                // Parse scheduled date and time
+                $scheduledDate = $schedule && isset($schedule['date']) 
+                    ? Carbon::parse($schedule['date']) 
+                    : Carbon::parse($tournament->start_date)->addDays($roundIndex);
+                $scheduledTime = null;
+                if ($schedule && isset($schedule['time'])) {
+                    $scheduledTime = Carbon::createFromTimeString($schedule['time'])
+                        ->setDate($scheduledDate->year, $scheduledDate->month, $scheduledDate->day);
+                } else {
+                    $scheduledTime = $scheduledDate->copy()->setTime(9, 0, 0);
+                }
+                
+                // Create match with TBD players (will be filled when previous round completes)
+                $match = TournamentMatch::create([
+                    'tournament_id' => $tournament->id,
+                    'tournament_category_id' => $category->id,
+                    'round' => $roundName,
+                    'match_number' => $globalMatchNumber++,
+                    'player1_id' => null, // TBD - will be filled from previous round winner
+                    'player2_id' => null, // TBD - will be filled from previous round winner
+                    'player1_partner_id' => null,
+                    'player2_partner_id' => null,
+                    'scheduled_date' => $scheduledDate,
+                    'scheduled_time' => $scheduledTime,
+                    'court_number' => ($schedule && isset($schedule['court'])) ? $schedule['court'] : (($matchIndex % $tournament->number_of_courts) + 1),
+                    'status' => 'scheduled',
+                ]);
+                
+                $nextRoundMatches[] = $match;
+            }
+            
+            $currentRoundMatches = $nextRoundMatches;
+        }       
+
     }
 }
