@@ -384,4 +384,61 @@ class MatchGenerationService
         }       
 
     }
+
+     protected function generateRoundRobinBracket($category, $registrations, $tournament, array $schedules = []): void
+    {
+        $participants = $registrations->toArray();
+        $totalParticipants = count($participants);
+        
+        $slots = $category->max_participants ?? $totalParticipants;
+        $rounds = $this->scheduleService->calculateRoundsForBracket($slots, 'round_robin');
+        
+        $round = 1;
+        $matchNumber = 1;
+        $scheduleIndex = 0;
+        $roundMatchIndex = [];
+
+        for ($i = 0; $i < $totalParticipants - 1; $i++) {
+            for ($j = $i + 1; $j < $totalParticipants; $j++) {
+                if (!isset($roundMatchIndex[$round])) {
+                    $roundMatchIndex[$round] = 0;
+                }
+                
+                $matchInRound = $roundMatchIndex[$round]++;
+                
+                // Find schedule for this round and match position
+                $schedule = null;
+                foreach ($schedules as $sched) {
+                    if ($sched['round_number'] == $round && 
+                        $sched['match_in_round'] == $matchInRound + 1) {
+                        $schedule = $sched;
+                        break;
+                    }
+                }
+                
+                // Parse scheduled date and time for round robin
+                $rrScheduledDate = $schedule ? Carbon::parse($schedule['date']) : Carbon::parse($tournament->start_date)->addDays($round - 1);
+                $rrScheduledTime = $schedule 
+                    ? Carbon::createFromTimeString($schedule['time'])->setDate($rrScheduledDate->year, $rrScheduledDate->month, $rrScheduledDate->day)
+                    : Carbon::parse($tournament->start_date)->setTime(9, 0, 0);
+                
+                TournamentMatch::create([
+                    'tournament_id' => $tournament->id,
+                    'tournament_category_id' => $category->id,
+                    'round' => ($schedule && isset($schedule['round'])) ? $schedule['round'] : ($rounds[$round - 1]['name'] ?? "Round {$round}"),
+                    'match_number' => $matchNumber++,
+                    'player1_id' => $participants[$i]['player_id'],
+                    'player2_id' => $participants[$j]['player_id'],
+                    'player1_partner_id' => $participants[$i]['partner_id'] ?? null,
+                    'player2_partner_id' => $participants[$j]['partner_id'] ?? null,
+                    'scheduled_date' => $rrScheduledDate,
+                    'scheduled_time' => $rrScheduledTime,
+                    'court_number' => ($schedule && isset($schedule['court'])) ? $schedule['court'] : (($matchNumber - 1) % $tournament->number_of_courts) + 1,
+                    'status' => 'scheduled',
+                ]);
+                $scheduleIndex++;
+            }
+            $round++;
+        }
+    }
 }
