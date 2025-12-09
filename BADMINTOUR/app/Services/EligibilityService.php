@@ -113,7 +113,7 @@ class EligibilityService
             'reasons' => $reasons,
         ];
     }
-
+    
     /**
      * Check age requirement
      */
@@ -193,4 +193,34 @@ class EligibilityService
         // Example: Category B allows B, C, D (but not A)
         return $playerLevel >= $requiredLevel;
     }
+    
+    /**
+     * Automatically check and update eligibility for a registration
+     * 
+     * @param TournamentRegistration $registration
+     * @return bool True if eligible, false otherwise
+     */
+    public function checkAndUpdateEligibility(TournamentRegistration $registration): bool
+    {
+        $player = $registration->player;
+        $category = $registration->category;
+        $partner = $registration->partner;
+        
+        $eligibility = $this->checkEligibility($player, $category, $partner);
+        
+        // If eligible and currently pending, update to awaiting_payment
+        if ($eligibility['eligible'] && in_array($registration->status, ['pending', 'pending_payment'])) {
+            $registration->update(['status' => 'awaiting_payment']);
+            return true;
+        }
+        
+        // If not eligible and currently awaiting_payment or eligible, update to pending
+        if (!$eligibility['eligible'] && in_array($registration->status, ['awaiting_payment', 'eligible'])) {
+            $registration->update(['status' => 'pending']);
+            return false;
+        }
+        
+        return $eligibility['eligible'];
+    }
 }
+
