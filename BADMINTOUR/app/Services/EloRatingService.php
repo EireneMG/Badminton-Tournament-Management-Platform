@@ -72,40 +72,91 @@ class EloRatingService
         return 1 / (1 + pow(10, ($opponentRating - $playerRating) / 400));
     }
 
-    protected function getCurrentRating(User $player, string $categoryType): float
+    public function getCurrentRating(User $player, string $categoryType): float
     {
         $eloRating = EloRating::where('player_id', $player->id)
-            ->where('category_type', $categoryType)
+            ->where('category', $categoryType)
             ->first();
 
-        return $eloRating ? $eloRating->current_rating : 1200;
+        if ($eloRating) {
+            return $eloRating->current_rating;
+        }
+
+        // If no ELO rating exists, check for provisional ELO from club membership
+        $clubMembership = \App\Models\ClubPlayer::where('player_id', $player->id)
+            ->where('status', 'approved')
+            ->whereNotNull('provisional_elo')
+            ->first();
+
+        if ($clubMembership && $clubMembership->is_provisional) {
+            return $clubMembership->provisional_elo;
+        }
+
+        return 1200; // Default starting rating
     }
 
     protected function updateRating(User $player, string $categoryType, float $newRating): void
     {
         $rating = EloRating::firstOrNew([
             'player_id' => $player->id,
-            'category_type' => $categoryType,
+            'category' => $categoryType,
         ]);
+        
+        // Check if this is the first match (player had provisional ELO)
+        $clubMembership = \App\Models\ClubPlayer::where('player_id', $player->id)
+            ->where('status', 'approved')
+            ->where('is_provisional', true)
+            ->first();
         
         if ($rating->exists) {
             $rating->current_rating = $newRating;
             $rating->peak_rating = max($rating->peak_rating ?? $newRating, $newRating);
             $rating->matches_played = ($rating->matches_played ?? 0) + 1;
         } else {
+            // First official match - convert from provisional
             $rating->current_rating = $newRating;
             $rating->peak_rating = $newRating;
             $rating->matches_played = 1;
+            
+            // Mark provisional as converted
+            if ($clubMembership) {
+                $clubMembership->update(['is_provisional' => false]);
+            }
         }
         
         $rating->save();
+        
+        // Update skill level based on primary category (MS/WS based on gender)
+        // Only update if this is the player's primary category
+        $primaryCategory = $player->gender === 'Female' ? 'WS' : 'MS';
+        if ($categoryType === $primaryCategory && $rating->matches_played > 0) {
+            $this->updateSkillLevelFromElo($player, $newRating);
+        }
+    }
+
+    /**
+     * Update player's skill level based on their ELO rating
+     */
+    protected function updateSkillLevelFromElo(User $player, float $eloRating): void
+    {
+        $clubMembership = \App\Models\ClubPlayer::where('player_id', $player->id)
+            ->where('status', 'approved')
+            ->first();
+        
+        if ($clubMembership) {
+            $newSkillLevel = \App\Helpers\SkillLevelHelper::convertEloToSkillLevel($eloRating);
+            $clubMembership->update([
+                'skill_level' => $newSkillLevel,
+                'is_provisional' => false, // Mark as official since it's based on actual matches
+            ]);
+        }
     }
 
     protected function saveRankingHistory(User $player, string $categoryType, float $oldRating, float $newRating): void
     {
         RankingHistory::create([
             'player_id' => $player->id,
-            'category_type' => $categoryType,
+            'category' => $categoryType,
             'rating' => $newRating,
             'previous_rating' => $oldRating,
             'change' => $newRating - $oldRating,
