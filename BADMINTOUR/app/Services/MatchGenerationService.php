@@ -324,7 +324,7 @@ class MatchGenerationService
             ]);
             $round1Matches[] = $match;
         }
-
+        
         // ============================================
         // GENERATE ALL SUBSEQUENT ROUNDS (QF, SF, Finals)
         // ============================================
@@ -348,7 +348,7 @@ class MatchGenerationService
                         break;
                     }
                 }
-
+                
                 // Parse scheduled date and time
                 $scheduledDate = $schedule && isset($schedule['date']) 
                     ? Carbon::parse($schedule['date']) 
@@ -381,11 +381,10 @@ class MatchGenerationService
             }
             
             $currentRoundMatches = $nextRoundMatches;
-        }       
-
+        }
     }
 
-     protected function generateRoundRobinBracket($category, $registrations, $tournament, array $schedules = []): void
+    protected function generateRoundRobinBracket($category, $registrations, $tournament, array $schedules = []): void
     {
         $participants = $registrations->toArray();
         $totalParticipants = count($participants);
@@ -439,6 +438,110 @@ class MatchGenerationService
                 $scheduleIndex++;
             }
             $round++;
+        }
+    }
+
+    public function advanceWinner(TournamentMatch $match, array $schedules = []): void
+    {
+        if (!$match->winner_id || $match->status !== 'completed') {
+            return;
+        }
+
+        // Determine next round number from current round name
+        $category = TournamentCategory::find($match->tournament_category_id);
+        $slots = $category->max_participants ?? 16;
+        $rounds = $this->scheduleService->calculateRoundsForBracket($slots, $match->tournament->bracket_type ?? 'single_elimination');
+        
+        // Find current round index
+        $currentRoundIndex = -1;
+        foreach ($rounds as $index => $roundInfo) {
+            if ($roundInfo['name'] === $match->round) {
+                $currentRoundIndex = $index;
+                break;
+            }
+        }
+        
+        if ($currentRoundIndex === -1 || $currentRoundIndex >= count($rounds) - 1) {
+            return; // Round not found or already at finals
+        }
+        
+        $nextRoundIndex = $currentRoundIndex + 1;
+        $nextRoundName = $rounds[$nextRoundIndex]['name'];
+        
+        // Calculate which match in the next round this winner should go to
+        // In single elimination: match 1&2 -> match 1, match 3&4 -> match 2, etc.
+        $currentRoundMatches = TournamentMatch::where('tournament_id', $match->tournament_id)
+            ->where('tournament_category_id', $match->tournament_category_id)
+            ->where('round', $match->round)
+            ->orderBy('match_number')
+            ->get();
+        
+        $matchPositionInRound = $currentRoundMatches->search(function($m) use ($match) {
+            return $m->id === $match->id;
+        });
+        
+        $nextMatchNumber = floor($matchPositionInRound / 2) + 1;
+
+        $nextMatch = TournamentMatch::where('tournament_id', $match->tournament_id)
+            ->where('tournament_category_id', $match->tournament_category_id)
+            ->where('round', $nextRoundName)
+            ->orderBy('match_number')
+            ->skip($nextMatchNumber - 1)
+            ->first();
+
+        if (!$nextMatch) {
+            // Match should already exist (pre-generated with TBD players)
+            // If it doesn't exist, something went wrong, but we'll create it as fallback
+            return;
+        }
+        
+        // Fill in the TBD player slot in the next match
+        // Determine which slot (player1 or player2) based on match position
+        $isFirstMatchInPair = ($matchPositionInRound % 2) === 0;
+        
+        // Handle late inputs: if next match already has players, update the correct slot anyway
+        // This allows late result inputs to still update brackets correctly
+        if ($isFirstMatchInPair) {
+            // This match's winner goes to player1 slot
+            // Update even if slot already filled (for late inputs)
+            $nextMatch->update([
+                'player1_id' => $match->winner_id,
+                'player1_partner_id' => $match->winner_partner_id,
+            ]);
+        } else {
+            // This match's winner goes to player2 slot
+            // Update even if slot already filled (for late inputs)
+            $nextMatch->update([
+                'player2_id' => $match->winner_id,
+                'player2_partner_id' => $match->winner_partner_id,
+            ]);
+        }
+        
+        $nextMatch->refresh();
+        
+        $previousRoundMatchesComplete = TournamentMatch::where('tournament_id', $match->tournament_id)
+            ->where('tournament_category_id', $match->tournament_category_id)
+            ->where('round', $match->round)
+            ->whereIn('match_number', [($nextMatchNumber - 1) * 2 + 1, ($nextMatchNumber - 1) * 2 + 2])
+            ->where('status', '!=', 'completed')
+            ->doesntExist();
+        
+        if ($previousRoundMatchesComplete) {
+            if ($nextMatch->player1_id && !$nextMatch->player2_id) {
+                $nextMatch->update([
+                    'status' => 'completed',
+                    'winner_id' => $nextMatch->player1_id,
+                    'winner_partner_id' => $nextMatch->player1_partner_id,
+                ]);
+                $this->advanceWinner($nextMatch, $schedules);
+            } elseif ($nextMatch->player2_id && !$nextMatch->player1_id) {
+                $nextMatch->update([
+                    'status' => 'completed',
+                    'winner_id' => $nextMatch->player2_id,
+                    'winner_partner_id' => $nextMatch->player2_partner_id,
+                ]);
+                $this->advanceWinner($nextMatch, $schedules);
+            }
         }
     }
 }
