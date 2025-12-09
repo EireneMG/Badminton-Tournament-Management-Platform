@@ -113,4 +113,84 @@ class EligibilityService
             'reasons' => $reasons,
         ];
     }
+
+    /**
+     * Check age requirement
+     */
+    protected function checkAgeRequirement(User $player, TournamentCategory $category): bool
+    {
+        // If no age restrictions, allow all
+        if ($category->min_age === null && $category->max_age === null) {
+            return true;
+        }
+        
+        // Check if player has birth date
+        if (!$player->birth_year) {
+            return true; // No age data, assume eligible
+        }
+        
+        // Calculate age from birth_year, birth_month, birth_day
+        $birthDate = Carbon::create(
+            $player->birth_year,
+            $player->birth_month ?? 1,
+            $player->birth_day ?? 1
+        );
+        
+        // Use tournament start date as reference for age calculation
+        $referenceDate = $category->tournament->start_date ?? Carbon::now();
+        $age = $birthDate->diffInYears($referenceDate);
+        
+        // Check min_age
+        if ($category->min_age !== null && $age < $category->min_age) {
+            return false;
+        }
+        
+        // Check max_age
+        if ($category->max_age !== null && $age > $category->max_age) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Check skill level requirement
+     */
+    protected function checkSkillRequirement(User $player, TournamentCategory $category): bool
+    {
+        if (!$category->skill_level || $category->skill_level === 'Open') {
+            return true;
+        }
+        
+        // Get player's skill level from club membership
+        $clubMembership = ClubPlayer::where('player_id', $player->id)
+            ->where('status', 'approved')
+            ->first();
+        
+        if (!$clubMembership) {
+            return false;
+        }
+        
+        // Skill levels: Open, A, B, C, D
+        // Open = all levels allowed
+        // A = A only
+        // B = B and below (B, C, D)
+        // C = C and below (C, D)
+        // D = D only
+        
+        $playerSkillLevel = $clubMembership->skill_level ?? 'D';
+        $requiredSkillLevel = $category->skill_level;
+        
+        if ($requiredSkillLevel === 'Open') {
+            return true;
+        }
+        
+        $skillHierarchy = ['A' => 1, 'B' => 2, 'C' => 3, 'D' => 4];
+        $playerLevel = $skillHierarchy[$playerSkillLevel] ?? 4;
+        $requiredLevel = $skillHierarchy[$requiredSkillLevel] ?? 4;
+        
+        // For skill-restricted categories, player must be at or below the required level
+        // Example: Category B allows B, C, D (but not A)
+        return $playerLevel >= $requiredLevel;
+    }
 }
