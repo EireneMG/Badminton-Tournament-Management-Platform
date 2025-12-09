@@ -87,5 +87,48 @@ class EmailService
             ]);
         }
     }
+
+    /**
+     * Send forgot email notification
+     */
+    public function sendForgotEmail($user): void
+    {
+        if ($this->isEnabled()) {
+            Mail::to($user->email)->send(new ForgotEmailNotification($user));
+        } else {
+            $this->logEmail('forgot_email', $user->email, [
+                'subject' => 'Your Email Address',
+                'content' => 'Your email: ' . $user->email
+            ]);
+        }
+    }
+
+    /**
+     * Send password reset notification
+     */
+    public function sendPasswordReset($user, $token): void
+    {
+        if ($this->isEnabled()) {
+            Mail::to($user->email)->send(new PasswordResetNotification($user, $token));
+        } else {
+            $resetUrl = route('password.reset', ['token' => $token, 'email' => $user->email]);
+            $this->logEmail('password_reset', $user->email, [
+                'subject' => 'Reset Your Password',
+                'reset_url' => $resetUrl
+            ]);
+        }
+    }
+
+    /**
+     * Log email to file for testing
+     */
+    private function logEmail(string $type, string $to, array $data): void
+    {
+        Log::channel('email-simulation')->info("Email: {$type}", [
+            'to' => $to,
+            'timestamp' => now(),
+            ...$data
+        ]);
+    }
 }
 
