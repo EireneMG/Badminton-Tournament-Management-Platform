@@ -267,5 +267,62 @@ class MatchGenerationService
             ]);
             $round1Matches[] = $match;
         }
-
+        
+        // Pair remaining players: Seed (byes+1) vs Seed N, Seed (byes+2) vs Seed (N-1), etc.
+        $matchInRound = $byes;
+        for ($i = $byes; $i < ($totalParticipants + $byes) / 2; $i++) {
+            $seed1Index = $i; // Index in array (0-based)
+            $seed2Index = $totalParticipants - 1 - ($i - $byes); // Index in array (0-based)
+            
+            $seed1 = $seed1Index + 1; // Actual seed number (1-based)
+            $seed2 = $seed2Index + 1; // Actual seed number (1-based)
+            
+            $participant1 = $seededParticipants[$seed1Index];
+            $participant2 = $seededParticipants[$seed2Index];
+            
+            $registration1 = $participant1['registration'];
+            $registration2 = $participant2['registration'];
+            
+            $matchInRound++;
+            
+            // Find schedule for this match
+            $schedule = null;
+            foreach ($schedules as $sched) {
+                if (isset($sched['round_number']) && $sched['round_number'] == $roundNumber && 
+                    isset($sched['match_in_round']) && $sched['match_in_round'] == $matchInRound) {
+                    $schedule = $sched;
+                    break;
+                }
+            }
+            
+            // Parse scheduled date and time
+            $scheduledDate = $schedule && isset($schedule['date']) 
+                ? Carbon::parse($schedule['date']) 
+                : Carbon::parse($tournament->start_date);
+            $scheduledTime = null;
+            if ($schedule && isset($schedule['time'])) {
+                $scheduledTime = Carbon::createFromTimeString($schedule['time'])
+                    ->setDate($scheduledDate->year, $scheduledDate->month, $scheduledDate->day);
+            } else {
+                $scheduledTime = Carbon::parse($tournament->start_date)->setTime(9, 0, 0);
+            }
+            
+            // Create match: Seed $seed1 vs Seed $seed2
+            $match = TournamentMatch::create([
+                'tournament_id' => $tournament->id,
+                'tournament_category_id' => $category->id,
+                'round' => $roundName,
+                'match_number' => $globalMatchNumber++,
+                'player1_id' => $registration1->player_id,
+                'player2_id' => $registration2->player_id,
+                'player1_partner_id' => $registration1->partner_id,
+                'player2_partner_id' => $registration2->partner_id,
+                'scheduled_date' => $scheduledDate,
+                'scheduled_time' => $scheduledTime,
+                'court_number' => ($schedule && isset($schedule['court'])) ? $schedule['court'] : (($matchInRound - 1) % $tournament->number_of_courts) + 1,
+                'status' => 'scheduled',
+            ]);
+            $round1Matches[] = $match;
+        }
+    }
 }
