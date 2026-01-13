@@ -1,8 +1,8 @@
 <!-- Manager Sidebar -->
 <div class="w-64 bg-[#D8E3E7] h-screen flex flex-col">
     <!-- Logo Section -->
-    <div class="p-4">
-        <img src="{{ asset('images/logo.jpg') }}" alt="Badminton Tournament Management Platform" class="w-16 h-16 object-contain">
+    <div class="p-4 flex justify-center">
+        <img src="{{ asset('images/logo.jpg') }}" alt="Badminton Tournament Management Platform" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover mx-auto">
     </div>
 
     <!-- Navigation Menu -->
@@ -49,6 +49,14 @@
                 </a>
             </li>
             <li>
+                <a href="{{ route('manager.clubs') }}" class="{{ request()->routeIs('manager.clubs') ? 'bg-[#1B4965] text-white' : 'text-gray-700 hover:bg-gray-300' }} flex items-center px-4 py-2.5 rounded transition duration-150">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                    Clubs
+                </a>
+            </li>
+            <li>
                 <a href="{{ route('manager.players') }}" class="{{ request()->routeIs('manager.players') ? 'bg-[#1B4965] text-white' : 'text-gray-700 hover:bg-gray-300' }} flex items-center px-4 py-2.5 rounded transition duration-150">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -62,6 +70,20 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
                     Profile
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('notifications.index') }}" class="{{ request()->routeIs('notifications.*') ? 'bg-[#1B4965] text-white' : 'text-gray-700 hover:bg-gray-300' }} flex items-center px-4 py-2.5 rounded transition duration-150">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                    </svg>
+                    Notifications
+                    @php
+                        $unreadCount = auth()->user()->notifications()->whereNull('read_at')->count();
+                    @endphp
+                    @if($unreadCount > 0)
+                        <span class="ml-auto bg-[#C85A54] text-white text-xs font-bold rounded-full px-2 py-0.5">{{ $unreadCount }}</span>
+                    @endif
                 </a>
             </li>
         </ul>
