@@ -1,17 +1,13 @@
-@extends('components.dashboard-layout') 
+<x-dashboard-layout>
+    <x-slot:title>Request Tournament Withdrawal</x-slot:title>
+    <x-slot:greeting>WITHDRAWAL REQUEST</x-slot:greeting>
 
-@section('content')
-<div class="min-h-screen bg-gray-50 p-6" x-data="withdrawalRequestData()">
+    <div x-data="withdrawalRequestData()">
     <div class="max-w-4xl mx-auto">
         <!-- Page Header -->
         <div class="mb-6">
-            <h1 class="text-4xl font-bold text-gray-900 mb-2">
-                Request Tournament Withdrawal
-            </h1>
-            <p class="text-gray-600">
-                Submit a withdrawal request for a tournament you've joined. A
-                manager will review your request.
-            </p>
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">Request Tournament Withdrawal</h1>
+            <p class="text-gray-600">Submit a withdrawal request for a tournament you've joined. A manager will review your request.</p>
         </div>
 
         <!-- Main Form Card -->
@@ -19,7 +15,7 @@
             <!-- Select Tournament Section -->
             <div class="mb-6">
                 <label class="block text-sm font-semibold text-gray-700 mb-3">Select Tournament to Withdraw From</label>
-
+                
                 <!-- Tournament Cards List -->
                 <div class="space-y-3">
                     <!-- Tournament 1 - Eligible -->
@@ -173,8 +169,8 @@
             <h3 class="text-xl font-bold text-gray-900 mb-2">Withdrawal Request Submitted!</h3>
             <p class="text-gray-700 mb-4">Your request has been sent to the tournament manager for review. You will be notified once a decision is made.</p>
             <div class="flex justify-center space-x-3">
-                <a href="/withdrawal/status" class="px-6 py-2.5 bg-[#C85A54] text-white rounded-lg font-semibold hover:bg-[#B54A44] transition">
-                    View Withdrawal Status
+                <a href="{{ route('tournaments.index') }}" class="px-6 py-2.5 bg-[#C85A54] text-white rounded-lg font-semibold hover:bg-[#B54A44] transition">
+                    Back to Tournaments
                 </a>
                 <a href="/tournaments" class="px-6 py-2.5 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition">
                     Back to Tournaments
@@ -215,4 +211,4 @@ function withdrawalRequestData() {
 <style>
 [x-cloak] { display: none !important; }
 </style>
-@endsection
+</x-dashboard-layout>
