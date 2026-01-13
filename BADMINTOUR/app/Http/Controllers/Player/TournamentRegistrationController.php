@@ -12,6 +12,7 @@ use App\Models\Club;
 use App\Models\TournamentMatch;
 use App\Models\MatchResult;
 use Illuminate\Http\RedirectResponse;
+use App\Services\PartnerMatchingService;
 use Carbon\Carbon;
 
 class TournamentRegistrationController extends Controller
@@ -31,21 +32,16 @@ class TournamentRegistrationController extends Controller
                 return back()->with('error', 'This category is already full.');
             }
             
-            // For doubles/mixed categories, partner is required
-            $isDoublesCategory = str_contains(strtolower($category->name), 'doubles') || 
-                                 str_contains(strtolower($category->name), 'mixed');
-            
+            // For doubles/mixed categories, enforce partner selection (no solo checkout)
+            $name = strtolower($category->name);
+            $matchType = strtolower($category->match_type ?? '');
+            $type = strtolower($category->type ?? '');
+            $isDoublesCategory = str_contains($name, 'doubles') || str_contains($name, 'mixed') ||
+                str_contains($matchType, 'double') || str_contains($matchType, 'mixed') ||
+                in_array($type, ['md', 'wd', 'xd', 'doubles', 'mixed'], true);
+
             if ($isDoublesCategory && !$request->partner_id) {
-                // Check if player has a withdrawn registration
-                $withdrawnRegistration = TournamentRegistration::where('tournament_id', $tournament->id)
-                    ->where('category_id', $category->id)
-                    ->where('player_id', $player->id)
-                    ->where('status', 'withdrawn')
-                    ->first();
-                
-                if (!$withdrawnRegistration) {
-                    return back()->with('error', 'A partner is required for doubles/mixed categories. Please invite a partner first.');
-                }
+                return back()->with('error', 'You must invite and link a confirmed partner before registering for this doubles/mixed category.');
             }
             
             $registration = TournamentRegistration::create([
@@ -65,21 +61,20 @@ class TournamentRegistrationController extends Controller
             // Refresh registration to get updated status
             $registration->refresh();
             
-            // Send appropriate notification based on eligibility status
+            // No auto-assignment: partner must be confirmed before registration
+
             if ($isEligible) {
                 $notification = Notification::create([
                     'user_id' => $player->id,
-                    'type' => 'registration_awaiting_payment',
-                    'title' => 'Registration Confirmed - Payment Required',
-                    'message' => "Your registration for {$tournament->name} is approved. Please contact the manager to complete payment. Fee: ₱{$tournament->tournament_fee}",
+                    'type' => 'registration_eligible',
+                    'title' => 'Registration Eligible',
+                    'message' => "Your registration for {$tournament->name} is eligible. Awaiting manager approval.",
                     'data' => [
                         'tournament_id' => $tournament->id,
                         'registration_id' => $registration->id,
                     ],
                     'action_url' => route('player.tournaments.show', $tournament->id),
                 ]);
-
-                // Send email notification
                 app(\App\Services\EmailService::class)->sendNotificationEmail($notification);
             } else {
                 Notification::create([
@@ -95,12 +90,17 @@ class TournamentRegistrationController extends Controller
                 ]);
             }
             
-            $manager = $tournament->club->manager;
+            $manager = $tournament->club?->manager;
+            if (!$manager) {
+                \Log::warning("Tournament {$tournament->id} has no club or manager, skipping notification");
+                return redirect()->route('player.tournaments.show', $tournament->id)
+                    ->with('error', 'Registration failed: Tournament manager not found.');
+            }
             Notification::create([
                 'user_id' => $manager->id,
                 'type' => 'registration_submitted',
                 'title' => 'New Tournament Registration',
-                'message' => $player->first_name . ' ' . $player->last_name . " has registered for {$tournament->name}. Status: " . ($isEligible ? 'Awaiting Payment' : 'Pending Review'),
+                'message' => $player->first_name . ' ' . $player->last_name . " has registered for {$tournament->name}. Status: " . ($isEligible ? 'Eligible' : 'Pending Review'),
                 'data' => [
                     'tournament_id' => $tournament->id,
                     'registration_id' => $registration->id,
@@ -117,13 +117,13 @@ class TournamentRegistrationController extends Controller
                 
                 // Only notify if player belongs to a club and it's different from the tournament's hosting club
                 if ($playerClubMembership && $playerClubMembership->club_id !== $tournament->club_id) {
-                    $playerClubManager = $playerClubMembership->club->manager;
+                    $playerClubManager = $playerClubMembership->club?->manager;
                     
                     Notification::create([
                         'user_id' => $playerClubManager->id,
                         'type' => 'dual_meet_registration',
                         'title' => 'Player Registered in Dual Meet Tournament',
-                        'message' => "One of your players, {$player->first_name} {$player->last_name}, has registered for the dual meet tournament: {$tournament->name} (hosted by {$tournament->club->name}).",
+                        'message' => "One of your players, {$player->first_name} {$player->last_name}, has registered for the dual meet tournament: {$tournament->name} (hosted by " . ($tournament->club?->name ?? 'Unknown Club') . ").",
                         'data' => [
                             'tournament_id' => $tournament->id,
                             'registration_id' => $registration->id,
@@ -134,11 +134,11 @@ class TournamentRegistrationController extends Controller
                 }
             }
             
-            if ($isEligible) {
-                return back()->with('success', "Registration successful! Please contact the manager to complete payment. Fee: ₱{$tournament->tournament_fee}");
-            } else {
-                return back()->with('success', 'Registration submitted successfully! Pending eligibility review.');
-            }
+            $message = $isEligible
+                ? "Registration successful! Your registration is eligible and awaiting manager approval."
+                : 'Registration submitted successfully! Pending eligibility review.';
+
+            return back()->with('success', $message);
             
         } catch (\Exception $e) {
             return back()->with('error', 'Failed to register: ' . $e->getMessage());
@@ -166,8 +166,8 @@ class TournamentRegistrationController extends Controller
             abort(403, 'Unauthorized access.');
         }
         
-        if (!in_array($registration->status, ['approved', 'paid', 'pending_payment'])) {
-            return back()->with('error', 'You can only withdraw from approved, paid, or pending registrations.');
+        if (!in_array($registration->status, ['approved', 'pending', 'eligible'])) {
+            return back()->with('error', 'You can only withdraw from approved or pending registrations.');
         }
         
         $tournament = $registration->tournament;
@@ -189,7 +189,7 @@ class TournamentRegistrationController extends Controller
             str_contains(strtolower($category->name), 'mixed')
         );
         
-        // For doubles/mixed teams: AUTOMATIC TEAM WITHDRAWAL
+        // For doubles/mixed teams: Automatically withdraw BOTH partners
         if ($hasPartner && $isDoublesCategory) {
             return $this->withdrawTeam($registration, $tournament);
         } else {
@@ -200,28 +200,83 @@ class TournamentRegistrationController extends Controller
     
     /**
      * Withdraw entire team (doubles/mixed)
+     * Automatically withdraws BOTH partners when one requests withdrawal
      */
     protected function withdrawTeam(TournamentRegistration $registration, Tournament $tournament): RedirectResponse
     {
-        $category = $registration->category;
-        $partner = $registration->partner;
+        $playerA = $registration->player_id;
+        $playerB = $registration->partner_id;
         
-        // Withdraw every registration record that references this team
-        $teamRegistrations = $this->getTeamRegistrations($registration);
-        foreach ($teamRegistrations as $teamRegistration) {
-            $teamRegistration->update(['status' => 'withdrawn']);
+        if (!$playerA || !$playerB) {
+            return $this->withdrawIndividual($registration, $tournament);
+        }
+        
+        // Find ALL registrations for this team in this category
+        $teamRegistrations = \App\Models\TournamentRegistration::where('tournament_id', $tournament->id)
+            ->where('category_id', $registration->category_id)
+            ->where(function($query) use ($playerA, $playerB) {
+                $query->where(function($q) use ($playerA, $playerB) {
+                    $q->where('player_id', $playerA)->where('partner_id', $playerB);
+                })->orWhere(function($q) use ($playerA, $playerB) {
+                    $q->where('player_id', $playerB)->where('partner_id', $playerA);
+                });
+            })
+            ->get();
+        
+        // Withdraw all found team registrations
+        foreach ($teamRegistrations as $teamReg) {
+            $teamReg->status = 'withdrawn';
+            $teamReg->save();
+        }
+        
+        // If Partner B doesn't have their own registration record, create one with withdrawn status
+        // This ensures Partner B shows as withdrawn in the registration list
+        $partnerBHasRegistration = $teamRegistrations->contains(function($reg) use ($playerB) {
+            return $reg->player_id === $playerB;
+        });
+        
+        if (!$partnerBHasRegistration) {
+            // Create a withdrawn registration for Partner B to ensure they show as withdrawn
+            \App\Models\TournamentRegistration::updateOrCreate(
+                [
+                    'tournament_id' => $tournament->id,
+                    'category_id' => $registration->category_id,
+                    'player_id' => $playerB,
+                ],
+                [
+                    'partner_id' => $playerA,
+                    'status' => 'withdrawn',
+                ]
+            );
         }
         
         // Cancel all matches involving this team and advance opponents
         $this->cancelTeamMatches($tournament, $registration);
         
-        // Notify partner
+        // Notify both players
+        $withdrawingPlayer = $registration->player;
+        $partner = $registration->partner;
+        
+        // Notify the withdrawing player
+        Notification::create([
+            'user_id' => $playerA,
+            'type' => 'team_withdrawn',
+            'title' => 'Team Withdrawn',
+            'message' => "You and your partner have been withdrawn from {$tournament->name}.",
+            'data' => [
+                'tournament_id' => $tournament->id,
+                'category_id' => $registration->category_id,
+            ],
+            'action_url' => route('player.tournaments.show', $tournament->id),
+        ]);
+        
+        // Notify the partner
         if ($partner) {
             Notification::create([
-                'user_id' => $partner->id,
+                'user_id' => $registration->partner_id,
                 'type' => 'team_withdrawn',
                 'title' => 'Team Withdrawn',
-                'message' => "Your team has been withdrawn from {$tournament->name} - {$category->name} because your partner withdrew.",
+                'message' => "You and your partner, {$withdrawingPlayer->first_name} {$withdrawingPlayer->last_name}, have been automatically withdrawn from {$tournament->name} because your partner requested withdrawal.",
                 'data' => [
                     'tournament_id' => $tournament->id,
                     'category_id' => $registration->category_id,
@@ -230,21 +285,7 @@ class TournamentRegistrationController extends Controller
             ]);
         }
         
-        // Notify manager
-        $manager = $tournament->club->manager;
-        Notification::create([
-            'user_id' => $manager->id,
-            'type' => 'team_withdrawal',
-            'title' => 'Team Withdrawal',
-            'message' => auth()->user()->first_name . ' ' . auth()->user()->last_name . " has withdrawn from {$tournament->name}. The entire team has been removed.",
-            'data' => [
-                'tournament_id' => $tournament->id,
-                'registration_id' => $registration->id,
-            ],
-            'action_url' => route('manager.tournaments.show', $tournament->id),
-        ]);
-        
-        return back()->with('success', 'You have successfully withdrawn from the tournament. The entire team has been removed.');
+        return back()->with('success', 'You have been withdrawn from the tournament. Your partner has also been automatically withdrawn.');
     }
     
     /**
@@ -258,7 +299,12 @@ class TournamentRegistrationController extends Controller
         $this->cancelPlayerMatches($tournament, $registration);
         
         // Notify manager
-        $manager = $tournament->club->manager;
+        $manager = $tournament->club?->manager;
+        if (!$manager) {
+            \Log::warning("Tournament {$tournament->id} has no club or manager, skipping withdrawal notification");
+            return redirect()->route('player.tournaments.show', $tournament->id)
+                ->with('error', 'Withdrawal request failed: Tournament manager not found.');
+        }
         Notification::create([
             'user_id' => $manager->id,
             'type' => 'withdrawal_requested',
@@ -337,7 +383,7 @@ class TournamentRegistrationController extends Controller
             ->get();
         
         foreach ($matches as $match) {
-            if (in_array($match->status, ['scheduled', 'pending', 'in_progress', null])) {
+            if (in_array($match->status, ['scheduled', 'ongoing', null])) {
                 $this->advanceOpponent($match, $registration);
             }
             
