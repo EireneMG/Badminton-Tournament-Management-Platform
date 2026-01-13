@@ -5,13 +5,19 @@ namespace App\Services;
 use App\Models\EloRating;
 use App\Models\RankingHistory;
 use App\Models\User;
+use App\Services\StatisticsService;
 use Carbon\Carbon;
 
 class EloRatingService
 {
-    const K_FACTOR = 32;
+    protected StatisticsService $statisticsService;
 
-    public function calculateMatchRatings(User $player1, User $player2, bool $player1Won, string $categoryType): void
+    public function __construct(StatisticsService $statisticsService)
+    {
+        $this->statisticsService = $statisticsService;
+    }
+
+    public function calculateMatchRatings(User $player1, User $player2, bool $player1Won, string $categoryType, ?int $tournamentId = null): void
     {
         $player1OldRating = $this->getCurrentRating($player1, $categoryType);
         $player2OldRating = $this->getCurrentRating($player2, $categoryType);
@@ -22,17 +28,21 @@ class EloRatingService
         $player1ActualScore = $player1Won ? 1 : 0;
         $player2ActualScore = $player1Won ? 0 : 1;
         
-        $player1NewRating = round($player1OldRating + self::K_FACTOR * ($player1ActualScore - $player1ExpectedScore));
-        $player2NewRating = round($player2OldRating + self::K_FACTOR * ($player2ActualScore - $player2ExpectedScore));
+        $kFactor = config('elo.k_factor', 32);
+        $player1NewRating = round($player1OldRating + $kFactor * ($player1ActualScore - $player1ExpectedScore));
+        $player2NewRating = round($player2OldRating + $kFactor * ($player2ActualScore - $player2ExpectedScore));
 
         $this->updateRating($player1, $categoryType, $player1NewRating);
         $this->updateRating($player2, $categoryType, $player2NewRating);
         
-        $this->saveRankingHistory($player1, $categoryType, $player1OldRating, $player1NewRating);
-        $this->saveRankingHistory($player2, $categoryType, $player2OldRating, $player2NewRating);
+        $this->saveRankingHistory($player1, $categoryType, $player1OldRating, $player1NewRating, $tournamentId);
+        $this->saveRankingHistory($player2, $categoryType, $player2OldRating, $player2NewRating, $tournamentId);
+        
+        $this->invalidateStatisticsCache($player1);
+        $this->invalidateStatisticsCache($player2);
     }
 
-    public function calculateDoublesMatchRatings(User $team1Player1, User $team1Player2, User $team2Player1, User $team2Player2, bool $team1Won, string $categoryType): void
+    public function calculateDoublesMatchRatings(User $team1Player1, User $team1Player2, User $team2Player1, User $team2Player2, bool $team1Won, string $categoryType, ?int $tournamentId = null): void
     {
         $team1Player1OldRating = $this->getCurrentRating($team1Player1, $categoryType);
         $team1Player2OldRating = $this->getCurrentRating($team1Player2, $categoryType);
@@ -48,8 +58,9 @@ class EloRatingService
         $team1ActualScore = $team1Won ? 1 : 0;
         $team2ActualScore = $team1Won ? 0 : 1;
         
-        $team1RatingChange = self::K_FACTOR * ($team1ActualScore - $team1ExpectedScore);
-        $team2RatingChange = self::K_FACTOR * ($team2ActualScore - $team2ExpectedScore);
+        $kFactor = config('elo.k_factor', 32);
+        $team1RatingChange = $kFactor * ($team1ActualScore - $team1ExpectedScore);
+        $team2RatingChange = $kFactor * ($team2ActualScore - $team2ExpectedScore);
 
         $team1Player1NewRating = round($team1Player1OldRating + $team1RatingChange);
         $team1Player2NewRating = round($team1Player2OldRating + $team1RatingChange);
@@ -61,10 +72,15 @@ class EloRatingService
         $this->updateRating($team2Player1, $categoryType, $team2Player1NewRating);
         $this->updateRating($team2Player2, $categoryType, $team2Player2NewRating);
         
-        $this->saveRankingHistory($team1Player1, $categoryType, $team1Player1OldRating, $team1Player1NewRating);
-        $this->saveRankingHistory($team1Player2, $categoryType, $team1Player2OldRating, $team1Player2NewRating);
-        $this->saveRankingHistory($team2Player1, $categoryType, $team2Player1OldRating, $team2Player1NewRating);
-        $this->saveRankingHistory($team2Player2, $categoryType, $team2Player2OldRating, $team2Player2NewRating);
+        $this->saveRankingHistory($team1Player1, $categoryType, $team1Player1OldRating, $team1Player1NewRating, $tournamentId);
+        $this->saveRankingHistory($team1Player2, $categoryType, $team1Player2OldRating, $team1Player2NewRating, $tournamentId);
+        $this->saveRankingHistory($team2Player1, $categoryType, $team2Player1OldRating, $team2Player1NewRating, $tournamentId);
+        $this->saveRankingHistory($team2Player2, $categoryType, $team2Player2OldRating, $team2Player2NewRating, $tournamentId);
+        
+        $this->invalidateStatisticsCache($team1Player1);
+        $this->invalidateStatisticsCache($team1Player2);
+        $this->invalidateStatisticsCache($team2Player1);
+        $this->invalidateStatisticsCache($team2Player2);
     }
 
     protected function calculateExpectedScore(float $playerRating, float $opponentRating): float
@@ -79,6 +95,8 @@ class EloRatingService
             ->first();
 
         if ($eloRating) {
+            // Refresh the model to ensure we have the latest current_rating
+            $eloRating->refresh();
             return $eloRating->current_rating;
         }
 
@@ -92,10 +110,10 @@ class EloRatingService
             return $clubMembership->provisional_elo;
         }
 
-        return 1200; // Default starting rating
+        return config('elo.initial_rating', 1500);
     }
 
-    protected function updateRating(User $player, string $categoryType, float $newRating): void
+    public function updateRating(User $player, string $categoryType, float $newRating): void
     {
         $rating = EloRating::firstOrNew([
             'player_id' => $player->id,
@@ -126,6 +144,9 @@ class EloRatingService
         
         $rating->save();
         
+        // Refresh the model to ensure it's up to date
+        $rating->refresh();
+        
         // Update skill level based on primary category (MS/WS based on gender)
         // Only update if this is the player's primary category
         $primaryCategory = $player->gender === 'Female' ? 'WS' : 'MS';
@@ -152,15 +173,103 @@ class EloRatingService
         }
     }
 
-    protected function saveRankingHistory(User $player, string $categoryType, float $oldRating, float $newRating): void
+    protected function saveRankingHistory(User $player, string $categoryType, float $oldRating, float $newRating, ?int $tournamentId = null): void
     {
+        $change = $newRating - $oldRating;
         RankingHistory::create([
             'player_id' => $player->id,
             'category' => $categoryType,
             'rating' => $newRating,
             'previous_rating' => $oldRating,
-            'change' => $newRating - $oldRating,
+            'change' => $change,
+            'rank' => null, // Rank will be calculated separately if needed
+            'tournament_id' => $tournamentId,
             'recorded_at' => Carbon::now(),
         ]);
+    }
+    
+    /**
+     * Apply walkover penalty to a player
+     * Used when a player forfeits a match (walkover loss)
+     * 
+     * @param User $player The player receiving the penalty
+     * @param string $categoryType The category (MS, WS, MD, WD, XD)
+     * @param int|null $penalty Custom penalty amount (default: WALKOVER_PENALTY constant)
+     * @return array ['old_rating' => float, 'new_rating' => float, 'penalty' => int]
+     */
+    public function applyWalkoverPenalty(User $player, string $categoryType, ?int $penalty = null): array
+    {
+        $penaltyAmount = $penalty ?? config('elo.walkover_penalty', 25);
+        $oldRating = $this->getCurrentRating($player, $categoryType);
+        $newRating = max(100, $oldRating - $penaltyAmount); // Minimum rating of 100
+        
+        // Update the rating (but don't increment matches_played for walkover)
+        $rating = EloRating::firstOrNew([
+            'player_id' => $player->id,
+            'category' => $categoryType,
+        ]);
+        
+        if ($rating->exists) {
+            $rating->current_rating = $newRating;
+            // Don't update peak_rating for penalty (it can only go down)
+            // Don't increment matches_played for walkover
+        } else {
+            // Create new rating record if doesn't exist
+            $rating->current_rating = $newRating;
+            $rating->peak_rating = $oldRating; // Peak was before penalty
+            $rating->matches_played = 0;
+        }
+        
+        $rating->save();
+        $rating->refresh();
+        
+        // Save to ranking history with walkover note
+        RankingHistory::create([
+            'player_id' => $player->id,
+            'category' => $categoryType,
+            'rating' => $newRating,
+            'previous_rating' => $oldRating,
+            'change' => -$penaltyAmount,
+            'rank' => null,
+            'recorded_at' => Carbon::now(),
+        ]);
+        
+        // Update skill level if this is the player's primary category
+        $primaryCategory = $player->gender === 'Female' ? 'WS' : 'MS';
+        if ($categoryType === $primaryCategory) {
+            $this->updateSkillLevelFromElo($player, $newRating);
+        }
+        
+        return [
+            'old_rating' => $oldRating,
+            'new_rating' => $newRating,
+            'penalty' => $penaltyAmount,
+        ];
+    }
+    
+    /**
+     * Get the default walkover penalty amount
+     */
+    public static function getWalkoverPenalty(): int
+    {
+        return config('elo.walkover_penalty', 25);
+    }
+
+    protected function invalidateStatisticsCache(User $player): void
+    {
+        try {
+            $this->statisticsService->invalidatePlayerCache($player);
+            
+            $club = $player->approvedClubMembership?->club;
+            if ($club) {
+                $this->statisticsService->invalidateClubCache($club);
+                
+                if ($club->manager) {
+                    $this->statisticsService->invalidateManagerCache($club->manager);
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::warning("Failed to invalidate statistics cache for player {$player->id}: " . $e->getMessage());
+        }
     }
 }

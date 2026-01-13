@@ -23,6 +23,10 @@ class EligibilityService
         $reasons = [];
         $eligible = true;
         
+        // Normalize genders for comparison
+        $playerGender = strtolower($player->gender ?? '');
+        $partnerGender = $partner ? strtolower($partner->gender ?? '') : null;
+        
         // 1. Check club membership
         $clubMembership = ClubPlayer::where('player_id', $player->id)
             ->where('status', 'approved')
@@ -49,35 +53,27 @@ class EligibilityService
             }
         }
         
-        // 4. Check gender requirement (for singles categories)
-        $categoryType = strtolower($category->name ?? '');
-        $isMenSingles = str_contains($categoryType, "men's singles") || str_contains($categoryType, 'mens singles') || $category->type === 'MS';
-        $isWomenSingles = str_contains($categoryType, "women's singles") || str_contains($categoryType, 'womens singles') || $category->type === 'WS';
-        $isMenDoubles = str_contains($categoryType, "men's doubles") || str_contains($categoryType, 'mens doubles') || $category->type === 'MD';
-        $isWomenDoubles = str_contains($categoryType, "women's doubles") || str_contains($categoryType, 'womens doubles') || $category->type === 'WD';
-        $isMixedDoubles = str_contains($categoryType, 'mixed doubles') || $category->type === 'XD';
+        // 4. Check gender requirement (for singles/doubles categories)
+        $categoryName = strtolower($category->name ?? '');
+        $categoryTypeCode = strtoupper($category->type ?? '');
+        $isMixedDoubles = str_contains($categoryName, 'mixed') || $categoryTypeCode === 'XD';
+        $isWomenCategory = str_contains($categoryName, 'women') || in_array($categoryTypeCode, ['WS', 'WD'], true);
+        // check men only if not already classified as women to avoid "women" matching "men"
+        $isMenCategory = !$isWomenCategory && (str_contains($categoryName, "men'") || str_contains($categoryName, 'mens') || str_contains($categoryName, 'men ') || in_array($categoryTypeCode, ['MS', 'MD'], true));
         
-        if ($isMenSingles && $player->gender !== 'male') {
-            $eligible = false;
-            $reasons[] = 'Category is for men only.';
+        // Singles/doubles flags (used only for messaging/partner checks)
+        $isSingles = str_contains($categoryName, 'single') || in_array($categoryTypeCode, ['MS', 'WS'], true);
+        $isDoubles = str_contains($categoryName, 'double') || in_array($categoryTypeCode, ['MD', 'WD', 'XD'], true);
+
+        if (!$isMixedDoubles) {
+            if ($isWomenCategory && $playerGender !== 'female') {
+                $eligible = false;
+                $reasons[] = 'Category is for women only.';
+            } elseif ($isMenCategory && $playerGender !== 'male') {
+                $eligible = false;
+                $reasons[] = 'Category is for men only.';
+            }
         }
-        
-        if ($isWomenSingles && $player->gender !== 'female') {
-            $eligible = false;
-            $reasons[] = 'Category is for women only.';
-        }
-        
-        if ($isMenDoubles && $player->gender !== 'male') {
-            $eligible = false;
-            $reasons[] = 'Category is for men only.';
-        }
-        
-        if ($isWomenDoubles && $player->gender !== 'female') {
-            $eligible = false;
-            $reasons[] = 'Category is for women only.';
-        }
-        
-        // For mixed doubles, any gender is allowed (no gender restriction)
         
         // 5. Check partner eligibility (for doubles/mixed doubles)
         if ($partner) {
@@ -87,23 +83,19 @@ class EligibilityService
                 $reasons[] = 'Partner is not eligible: ' . implode(' ', $partnerEligibility['reasons']);
             }
             
-            // For men's doubles, partner must be male
-            if ($isMenDoubles && $partner->gender !== 'male') {
-                $eligible = false;
-                $reasons[] = 'Partner must be male for men\'s doubles.';
-            }
-            
-            // For women's doubles, partner must be female
-            if ($isWomenDoubles && $partner->gender !== 'female') {
-                $eligible = false;
-                $reasons[] = 'Partner must be female for women\'s doubles.';
-            }
-            
-            // For mixed doubles, partner must be opposite gender
             if ($isMixedDoubles) {
-                if ($player->gender === $partner->gender) {
+                if ($playerGender === $partnerGender) {
                     $eligible = false;
                     $reasons[] = 'Mixed doubles requires one male and one female player.';
+                }
+            } else {
+                if ($isWomenCategory && $partnerGender !== 'female') {
+                    $eligible = false;
+                    $reasons[] = 'Partner must be female for this category.';
+                }
+                if ($isMenCategory && $partnerGender !== 'male') {
+                    $eligible = false;
+                    $reasons[] = 'Partner must be male for this category.';
                 }
             }
         }
@@ -137,8 +129,14 @@ class EligibilityService
         );
         
         // Use tournament start date as reference for age calculation
-        $referenceDate = $category->tournament->start_date ?? Carbon::now();
-        $age = $birthDate->diffInYears($referenceDate);
+        $referenceDate = Carbon::parse($category->tournament->start_date ?? Carbon::now());
+        
+        // Calculate age accurately: check if birthday has occurred in the reference year
+        $age = $referenceDate->year - $birthDate->year;
+        if ($referenceDate->month < $birthDate->month || 
+            ($referenceDate->month === $birthDate->month && $referenceDate->day < $birthDate->day)) {
+            $age--; // Birthday hasn't occurred yet this year
+        }
         
         // Check min_age
         if ($category->min_age !== null && $age < $category->min_age) {
@@ -208,14 +206,12 @@ class EligibilityService
         
         $eligibility = $this->checkEligibility($player, $category, $partner);
         
-        // If eligible and currently pending, update to awaiting_payment
-        if ($eligibility['eligible'] && in_array($registration->status, ['pending', 'pending_payment'])) {
-            $registration->update(['status' => 'awaiting_payment']);
+        if ($eligibility['eligible'] && in_array($registration->status, ['pending'])) {
+            $registration->update(['status' => 'eligible']);
             return true;
         }
         
-        // If not eligible and currently awaiting_payment or eligible, update to pending
-        if (!$eligibility['eligible'] && in_array($registration->status, ['awaiting_payment', 'eligible'])) {
+        if (!$eligibility['eligible'] && in_array($registration->status, ['eligible'])) {
             $registration->update(['status' => 'pending']);
             return false;
         }

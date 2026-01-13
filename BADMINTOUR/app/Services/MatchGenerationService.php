@@ -7,6 +7,7 @@ use App\Models\TournamentCategory;
 use App\Models\TournamentMatch;
 use App\Models\TournamentRegistration;
 use App\Services\EloRatingService;
+use App\Enums\CategoryType;
 use Carbon\Carbon;
 
 class MatchGenerationService
@@ -18,6 +19,7 @@ class MatchGenerationService
     {
         $this->scheduleService = $scheduleService;
         $this->eloService = app(EloRatingService::class);
+        $this->eloGap = (int) config('elo.gap', env('ELO_FAIR_GAP', 350));
     }
     public function generateMatches(Tournament $tournament, string $bracketType = 'single_elimination'): void
     {
@@ -33,25 +35,48 @@ class MatchGenerationService
                 ->with(['player', 'partner'])
                 ->get();
             
-            // Validate that players match the category type
-            $categoryType = strtolower($category->name ?? '');
-            $isMenSingles = str_contains($categoryType, "men's singles") || str_contains($categoryType, 'mens singles') || $category->type === 'MS';
-            $isWomenSingles = str_contains($categoryType, "women's singles") || str_contains($categoryType, 'womens singles') || $category->type === 'WS';
-            $isDoublesCategory = str_contains($categoryType, 'doubles') || str_contains($categoryType, 'mixed') || in_array($category->type, ['MD', 'WD', 'XD']);
+            // Validate that players match the category type (normalize to avoid "women" containing "men")
+            $categoryName = strtolower($category->name ?? '');
+            $categoryTypeCode = strtoupper($category->type ?? '');
+            $isMixedCategory = str_contains($categoryName, 'mixed') || $categoryTypeCode === CategoryType::MIXED_DOUBLES->value;
+            $isWomenCategory = str_contains($categoryName, 'women') || in_array($categoryTypeCode, [CategoryType::WOMENS_SINGLES->value, CategoryType::WOMENS_DOUBLES->value], true);
+            $isMenCategory = !$isWomenCategory && (str_contains($categoryName, "men'") || str_contains($categoryName, 'mens') || str_contains($categoryName, 'men ') || in_array($categoryTypeCode, [CategoryType::MENS_SINGLES->value, CategoryType::MENS_DOUBLES->value], true));
+            $isDoublesCategory = str_contains($categoryName, 'double') || in_array($categoryTypeCode, [CategoryType::MENS_DOUBLES->value, CategoryType::WOMENS_DOUBLES->value, CategoryType::MIXED_DOUBLES->value], true);
             
             // Filter registrations to ensure players match category gender requirements
-            $approvedRegistrations = $approvedRegistrations->filter(function($registration) use ($isMenSingles, $isWomenSingles) {
+            $approvedRegistrations = $approvedRegistrations->filter(function($registration) use ($isMenCategory, $isWomenCategory, $isMixedCategory, $isDoublesCategory) {
                 $player = $registration->player;
+                $partner = $registration->partner;
                 if (!$player) {
                     return false;
                 }
                 
-                // For singles categories, validate gender
-                if ($isMenSingles && $player->gender !== 'male') {
-                    return false;
+                $gender = strtolower($player->gender ?? '');
+                $partnerGender = $partner ? strtolower($partner->gender ?? '') : null;
+                
+                if ($isDoublesCategory) {
+                    // For doubles categories, enforce both players meet the gender rule
+                    if ($isMixedCategory) {
+                        // Mixed requires one male + one female
+                        if (!$partner) return false;
+                        return ($gender === 'male' && $partnerGender === 'female') || ($gender === 'female' && $partnerGender === 'male');
+                    }
+                    if ($isWomenCategory) {
+                        return $gender === 'female' && (!$partner || $partnerGender === 'female');
+                    }
+                    if ($isMenCategory) {
+                        return $gender === 'male' && (!$partner || $partnerGender === 'male');
+                    }
                 }
-                if ($isWomenSingles && $player->gender !== 'female') {
-                    return false;
+                
+                if ($isMixedCategory) {
+                    return true; // any gender for mixed; pairing handled elsewhere
+                }
+                if ($isWomenCategory) {
+                    return $gender === 'female';
+                }
+                if ($isMenCategory) {
+                    return $gender === 'male';
                 }
                 
                 return true;
@@ -119,6 +144,62 @@ class MatchGenerationService
                 'round_robin' => $this->generateRoundRobinBracket($category, $registrations, $tournament, $schedules),
                 default => $this->generateSingleEliminationBracket($category, $registrations, $tournament, $schedules),
             };
+        }
+        
+        if ($tournament->bracket_type === 'round_robin') {
+            $this->normalizeRoundRobinRounds($tournament);
+        }
+    }
+    
+    private function normalizeRoundRobinRounds(Tournament $tournament): void
+    {
+        if ($tournament->bracket_type !== 'round_robin') {
+            return;
+        }
+        
+        $matchesByCategory = \App\Models\TournamentMatch::where('tournament_id', $tournament->id)
+            ->get()
+            ->groupBy('tournament_category_id');
+        
+        foreach ($matchesByCategory as $categoryId => $matches) {
+            $matchesByRound = $matches->groupBy('round');
+            $roundData = [];
+            
+            foreach ($matchesByRound->keys() as $roundName) {
+                $r = strtolower(trim((string)$roundName));
+                if (preg_match('/round\s*(\d+)/i', $r, $m)) {
+                    $roundNum = (int)$m[1];
+                    $roundData[] = [
+                        'name' => $roundName,
+                        'number' => $roundNum
+                    ];
+                }
+            }
+            
+            if (empty($roundData)) {
+                continue;
+            }
+            
+            usort($roundData, function($a, $b) {
+                return $a['number'] <=> $b['number'];
+            });
+            
+            $roundMapping = [];
+            $newRoundNum = 1;
+            
+            foreach ($roundData as $roundInfo) {
+                $oldRoundName = $roundInfo['name'];
+                $newRoundName = "Round {$newRoundNum}";
+                $roundMapping[$oldRoundName] = $newRoundName;
+                $newRoundNum++;
+            }
+            
+            foreach ($roundMapping as $oldRound => $newRound) {
+                \App\Models\TournamentMatch::where('tournament_id', $tournament->id)
+                    ->where('tournament_category_id', $categoryId)
+                    ->where('round', $oldRound)
+                    ->update(['round' => $newRound]);
+            }
         }
     }
 
@@ -193,6 +274,74 @@ class MatchGenerationService
         return $seeded;
     }
 
+    /**
+     * Normalize round name for comparison (handles variations)
+     */
+    protected function normalizeRoundName(string $roundName): string
+    {
+        $normalized = strtolower(trim($roundName));
+        
+        // Map common variations to standard names
+        if (str_contains($normalized, 'final') && !str_contains($normalized, 'semi') && !str_contains($normalized, 'quarter')) {
+            return 'finals';
+        }
+        if (str_contains($normalized, 'semi')) {
+            return 'semifinals';
+        }
+        if (str_contains($normalized, 'quarter')) {
+            return 'quarterfinals';
+        }
+        if (preg_match('/round\s+of\s+(\d+)/i', $normalized, $matches)) {
+            return 'round of ' . $matches[1];
+        }
+        if (preg_match('/round\s*(\d+)/i', $normalized, $matches)) {
+            return 'round ' . $matches[1];
+        }
+        
+        return $normalized;
+    }
+
+    /**
+     * Adjust seeds locally to reduce very large ELO gaps in round 1.
+     * Keeps overall seeding mostly intact; performs small neighbor swaps when gap exceeds threshold.
+     */
+    protected function adjustSeedsForFairness(array $seeded, int $eloGap): array
+    {
+        $count = count($seeded);
+        if ($count <= 2) {
+            return $seeded;
+        }
+
+        // Work on a copy; seeded is already sorted high->low
+        for ($i = 0; $i < $count / 2; $i++) {
+            $seed1Index = $i;
+            $seed2Index = $count - 1 - $i;
+
+            $elo1 = $seeded[$seed1Index]['elo'] ?? 0;
+            $elo2 = $seeded[$seed2Index]['elo'] ?? 0;
+            $gap = abs($elo1 - $elo2);
+
+            if ($gap <= $eloGap) {
+                continue;
+            }
+
+            // Try swapping the lower seed with its neighbor to reduce gap
+            $swapIndex = $seed2Index - 1;
+            if ($swapIndex > $seed1Index) {
+                $eloSwap = $seeded[$swapIndex]['elo'] ?? $elo2;
+                $newGap = abs($elo1 - $eloSwap);
+                if ($newGap < $gap && $newGap <= $eloGap) {
+                    // Perform swap
+                    $tmp = $seeded[$seed2Index];
+                    $seeded[$seed2Index] = $seeded[$swapIndex];
+                    $seeded[$swapIndex] = $tmp;
+                }
+            }
+        }
+
+        return $seeded;
+    }
+
     protected function generateSingleEliminationBracket($category, $registrations, $tournament, array $schedules = []): void
     {
         // Seed participants by ELO (highest ELO = Seed 1)
@@ -214,8 +363,13 @@ class MatchGenerationService
         // ============================================
         $round1Matches = [];
         $roundNumber = 1;
-        $roundName = $rounds[0]['name'] ?? 'Round 1';
+        // Use TournamentRoundHelper for consistent round naming
+        $maxRounds = count($rounds);
+        $roundName = \App\Helpers\TournamentRoundHelper::getRoundName('single_elimination', $roundNumber, $maxRounds);
         
+        // Optional fairness adjustment for round 1 to avoid huge ELO gaps
+        $seededParticipants = $this->adjustSeedsForFairness($seededParticipants, $this->eloGap);
+
         // Calculate bracket size and byes
         $nextPowerOfTwo = pow(2, ceil(log($totalParticipants, 2)));
         $byes = $nextPowerOfTwo - $totalParticipants;
@@ -238,19 +392,18 @@ class MatchGenerationService
                 }
             }
             
-            // Parse scheduled date and time
-            $scheduledDate = $schedule && isset($schedule['date']) 
-                ? Carbon::parse($schedule['date']) 
-                : Carbon::parse($tournament->start_date);
+            $tournamentDay = \App\Helpers\TournamentDayHelper::calculateTournamentDay($roundNumber, 'single_elimination', $maxRounds);
+            
             $scheduledTime = null;
             if ($schedule && isset($schedule['time'])) {
-                $scheduledTime = Carbon::createFromTimeString($schedule['time'])
-                    ->setDate($scheduledDate->year, $scheduledDate->month, $scheduledDate->day);
+                $scheduledTime = Carbon::createFromTimeString($schedule['time']);
             } else {
                 $scheduledTime = Carbon::parse($tournament->start_date)->setTime(9, 0, 0);
             }
             
-            // Create bye match (player advances automatically)
+            $baseDate = Carbon::parse($tournament->start_date);
+            $scheduledDate = $baseDate->copy()->addDays($tournamentDay - 1);
+            
             $match = TournamentMatch::create([
                 'tournament_id' => $tournament->id,
                 'tournament_category_id' => $category->id,
@@ -260,6 +413,7 @@ class MatchGenerationService
                 'player1_partner_id' => $registration->partner_id,
                 'scheduled_date' => $scheduledDate,
                 'scheduled_time' => $scheduledTime,
+                'tournament_day' => $tournamentDay,
                 'court_number' => ($schedule && isset($schedule['court'])) ? $schedule['court'] : (($matchInRound - 1) % $tournament->number_of_courts) + 1,
                 'status' => 'completed',
                 'winner_id' => $registration->player_id,
@@ -268,11 +422,17 @@ class MatchGenerationService
             $round1Matches[] = $match;
         }
         
-        // Pair remaining players: Seed (byes+1) vs Seed N, Seed (byes+2) vs Seed (N-1), etc.
+        // Pair remaining players for Round 1 matches
+        // After byes, pair: Seed (byes+1) vs Seed N, Seed (byes+2) vs Seed (N-1), etc.
+        // Example with 10 participants (6 byes): Seed 7 vs Seed 10, Seed 8 vs Seed 9
         $matchInRound = $byes;
-        for ($i = $byes; $i < ($totalParticipants + $byes) / 2; $i++) {
-            $seed1Index = $i; // Index in array (0-based)
-            $seed2Index = $totalParticipants - 1 - ($i - $byes); // Index in array (0-based)
+        $playingParticipants = $totalParticipants - $byes; // Number of participants who actually play in Round 1
+        $actualMatches = $playingParticipants / 2; // Number of actual matches (not byes)
+        
+        for ($i = 0; $i < $actualMatches; $i++) {
+            // Pair from opposite ends: first playing seed vs last playing seed, etc.
+            $seed1Index = $byes + $i; // First playing seed index (after byes)
+            $seed2Index = $totalParticipants - 1 - $i; // Last playing seed index (counting from end)
             
             $seed1 = $seed1Index + 1; // Actual seed number (1-based)
             $seed2 = $seed2Index + 1; // Actual seed number (1-based)
@@ -285,7 +445,6 @@ class MatchGenerationService
             
             $matchInRound++;
             
-            // Find schedule for this match
             $schedule = null;
             foreach ($schedules as $sched) {
                 if (isset($sched['round_number']) && $sched['round_number'] == $roundNumber && 
@@ -295,19 +454,18 @@ class MatchGenerationService
                 }
             }
             
-            // Parse scheduled date and time
-            $scheduledDate = $schedule && isset($schedule['date']) 
-                ? Carbon::parse($schedule['date']) 
-                : Carbon::parse($tournament->start_date);
+            $tournamentDay = \App\Helpers\TournamentDayHelper::calculateTournamentDay($roundNumber, 'single_elimination', $maxRounds);
+            
             $scheduledTime = null;
             if ($schedule && isset($schedule['time'])) {
-                $scheduledTime = Carbon::createFromTimeString($schedule['time'])
-                    ->setDate($scheduledDate->year, $scheduledDate->month, $scheduledDate->day);
+                $scheduledTime = Carbon::createFromTimeString($schedule['time']);
             } else {
                 $scheduledTime = Carbon::parse($tournament->start_date)->setTime(9, 0, 0);
             }
             
-            // Create match: Seed $seed1 vs Seed $seed2
+            $baseDate = Carbon::parse($tournament->start_date);
+            $scheduledDate = $baseDate->copy()->addDays($tournamentDay - 1);
+            
             $match = TournamentMatch::create([
                 'tournament_id' => $tournament->id,
                 'tournament_category_id' => $category->id,
@@ -319,6 +477,7 @@ class MatchGenerationService
                 'player2_partner_id' => $registration2->partner_id,
                 'scheduled_date' => $scheduledDate,
                 'scheduled_time' => $scheduledTime,
+                'tournament_day' => $tournamentDay,
                 'court_number' => ($schedule && isset($schedule['court'])) ? $schedule['court'] : (($matchInRound - 1) % $tournament->number_of_courts) + 1,
                 'status' => 'scheduled',
             ]);
@@ -332,14 +491,14 @@ class MatchGenerationService
         
         for ($roundIndex = 1; $roundIndex < count($rounds); $roundIndex++) {
             $roundNumber = $roundIndex + 1;
-            $roundName = $rounds[$roundIndex]['name'] ?? "Round {$roundNumber}";
+            // Use TournamentRoundHelper for consistent round naming
+            $roundName = \App\Helpers\TournamentRoundHelper::getRoundName('single_elimination', $roundNumber, $maxRounds);
             $matchesInThisRound = ceil(count($currentRoundMatches) / 2);
             $nextRoundMatches = [];
             
             for ($matchIndex = 0; $matchIndex < $matchesInThisRound; $matchIndex++) {
                 $matchInRound = $matchIndex + 1;
                 
-                // Find schedule for this round and match position
                 $schedule = null;
                 foreach ($schedules as $sched) {
                     if (isset($sched['round_number']) && $sched['round_number'] == $roundNumber && 
@@ -349,30 +508,30 @@ class MatchGenerationService
                     }
                 }
                 
-                // Parse scheduled date and time
-                $scheduledDate = $schedule && isset($schedule['date']) 
-                    ? Carbon::parse($schedule['date']) 
-                    : Carbon::parse($tournament->start_date)->addDays($roundIndex);
+                $tournamentDay = \App\Helpers\TournamentDayHelper::calculateTournamentDay($roundNumber, 'single_elimination', $maxRounds);
+                
                 $scheduledTime = null;
                 if ($schedule && isset($schedule['time'])) {
-                    $scheduledTime = Carbon::createFromTimeString($schedule['time'])
-                        ->setDate($scheduledDate->year, $scheduledDate->month, $scheduledDate->day);
+                    $scheduledTime = Carbon::createFromTimeString($schedule['time']);
                 } else {
-                    $scheduledTime = $scheduledDate->copy()->setTime(9, 0, 0);
+                    $scheduledTime = Carbon::parse($tournament->start_date)->setTime(9, 0, 0);
                 }
                 
-                // Create match with TBD players (will be filled when previous round completes)
+                $baseDate = Carbon::parse($tournament->start_date);
+                $scheduledDate = $baseDate->copy()->addDays($tournamentDay - 1);
+                
                 $match = TournamentMatch::create([
                     'tournament_id' => $tournament->id,
                     'tournament_category_id' => $category->id,
                     'round' => $roundName,
                     'match_number' => $globalMatchNumber++,
-                    'player1_id' => null, // TBD - will be filled from previous round winner
-                    'player2_id' => null, // TBD - will be filled from previous round winner
+                    'player1_id' => null,
+                    'player2_id' => null,
                     'player1_partner_id' => null,
                     'player2_partner_id' => null,
                     'scheduled_date' => $scheduledDate,
                     'scheduled_time' => $scheduledTime,
+                    'tournament_day' => $tournamentDay,
                     'court_number' => ($schedule && isset($schedule['court'])) ? $schedule['court'] : (($matchIndex % $tournament->number_of_courts) + 1),
                     'status' => 'scheduled',
                 ]);
@@ -386,58 +545,104 @@ class MatchGenerationService
 
     protected function generateRoundRobinBracket($category, $registrations, $tournament, array $schedules = []): void
     {
-        $participants = $registrations->toArray();
+        $participants = $registrations->values()->all();
         $totalParticipants = count($participants);
+        
+        if ($totalParticipants < 2) {
+            return;
+        }
         
         $slots = $category->max_participants ?? $totalParticipants;
         $rounds = $this->scheduleService->calculateRoundsForBracket($slots, 'round_robin');
         
-        $round = 1;
+        // Use circular rotation method for proper round robin scheduling
+        // For n participants: n-1 rounds, each participant plays once per round (except when odd, one sits out)
+        $numRounds = $totalParticipants - 1;
+        $isOdd = ($totalParticipants % 2) === 1;
+        
+        // Create participant indices array (0 to n-1)
+        $participantIndices = range(0, $totalParticipants - 1);
+        
+        // If odd, add a "bye" index (-1) to make it even for rotation
+        if ($isOdd) {
+            $participantIndices[] = -1; // Bye index
+        }
+        
         $matchNumber = 1;
-        $scheduleIndex = 0;
-        $roundMatchIndex = [];
-
-        for ($i = 0; $i < $totalParticipants - 1; $i++) {
-            for ($j = $i + 1; $j < $totalParticipants; $j++) {
-                if (!isset($roundMatchIndex[$round])) {
-                    $roundMatchIndex[$round] = 0;
+        
+        for ($round = 1; $round <= $numRounds; $round++) {
+            $roundName = \App\Helpers\TournamentRoundHelper::getRoundName('round_robin', $round, $numRounds);
+            $matchesInRound = floor(count($participantIndices) / 2);
+            $roundMatchIndex = 0;
+            
+            // Pair participants: first with last, second with second-to-last, etc.
+            for ($i = 0; $i < $matchesInRound; $i++) {
+                $idx1 = $participantIndices[$i];
+                $idx2 = $participantIndices[count($participantIndices) - 1 - $i];
+                
+                // Skip if either index is bye (-1)
+                if ($idx1 === -1 || $idx2 === -1) {
+                    continue;
                 }
                 
-                $matchInRound = $roundMatchIndex[$round]++;
+                $participant1 = $participants[$idx1];
+                $participant2 = $participants[$idx2];
                 
-                // Find schedule for this round and match position
+                if (!$participant1 || !$participant2) {
+                    continue;
+                }
+                
+                $roundMatchIndex++;
+                
                 $schedule = null;
                 foreach ($schedules as $sched) {
-                    if ($sched['round_number'] == $round && 
-                        $sched['match_in_round'] == $matchInRound + 1) {
+                    if (isset($sched['round_number']) && $sched['round_number'] == $round && 
+                        isset($sched['match_in_round']) && $sched['match_in_round'] == $roundMatchIndex) {
                         $schedule = $sched;
                         break;
                     }
                 }
                 
-                // Parse scheduled date and time for round robin
-                $rrScheduledDate = $schedule ? Carbon::parse($schedule['date']) : Carbon::parse($tournament->start_date)->addDays($round - 1);
-                $rrScheduledTime = $schedule 
-                    ? Carbon::createFromTimeString($schedule['time'])->setDate($rrScheduledDate->year, $rrScheduledDate->month, $rrScheduledDate->day)
-                    : Carbon::parse($tournament->start_date)->setTime(9, 0, 0);
+                $tournamentDay = \App\Helpers\TournamentDayHelper::calculateTournamentDay($round, 'round_robin', $numRounds);
+                
+                $scheduledTime = null;
+                if ($schedule && isset($schedule['time'])) {
+                    $scheduledTime = Carbon::createFromTimeString($schedule['time']);
+                } else {
+                    $scheduledTime = Carbon::parse($tournament->start_date)->setTime(9, 0, 0);
+                }
+                
+                $baseDate = Carbon::parse($tournament->start_date);
+                $scheduledDate = $baseDate->copy()->addDays($tournamentDay - 1);
                 
                 TournamentMatch::create([
                     'tournament_id' => $tournament->id,
                     'tournament_category_id' => $category->id,
-                    'round' => ($schedule && isset($schedule['round'])) ? $schedule['round'] : ($rounds[$round - 1]['name'] ?? "Round {$round}"),
+                    'round' => $roundName,
                     'match_number' => $matchNumber++,
-                    'player1_id' => $participants[$i]['player_id'],
-                    'player2_id' => $participants[$j]['player_id'],
-                    'player1_partner_id' => $participants[$i]['partner_id'] ?? null,
-                    'player2_partner_id' => $participants[$j]['partner_id'] ?? null,
-                    'scheduled_date' => $rrScheduledDate,
-                    'scheduled_time' => $rrScheduledTime,
-                    'court_number' => ($schedule && isset($schedule['court'])) ? $schedule['court'] : (($matchNumber - 1) % $tournament->number_of_courts) + 1,
+                    'player1_id' => $participant1['player_id'] ?? null,
+                    'player2_id' => $participant2['player_id'] ?? null,
+                    'player1_partner_id' => $participant1['partner_id'] ?? null,
+                    'player2_partner_id' => $participant2['partner_id'] ?? null,
+                    'scheduled_date' => $scheduledDate,
+                    'scheduled_time' => $scheduledTime,
+                    'tournament_day' => $tournamentDay,
+                    'court_number' => ($schedule && isset($schedule['court'])) ? $schedule['court'] : (($roundMatchIndex - 1) % $tournament->number_of_courts) + 1,
                     'status' => 'scheduled',
                 ]);
-                $scheduleIndex++;
             }
-            $round++;
+            
+            // Rotate participants for next round (circular rotation)
+            // Standard round robin: Keep first fixed, rotate others clockwise
+            // For odd participants: Bye rotates so different player sits out each round
+            if ($round < $numRounds) {
+                // Remove last element
+                $last = array_pop($participantIndices);
+                
+                // Insert after first element (position 1) to rotate clockwise
+                // This rotates all elements including bye, ensuring different player sits out each round
+                array_splice($participantIndices, 1, 0, $last);
+            }
         }
     }
 
@@ -447,38 +652,56 @@ class MatchGenerationService
             return;
         }
 
-        // Determine next round number from current round name
+        // Only advance for single elimination tournaments
+        if ($match->tournament->bracket_type !== 'single_elimination') {
+            return;
+        }
+
+        // Determine next round using normalized round names
         $category = TournamentCategory::find($match->tournament_category_id);
         $slots = $category->max_participants ?? 16;
-        $rounds = $this->scheduleService->calculateRoundsForBracket($slots, $match->tournament->bracket_type ?? 'single_elimination');
+        $rounds = $this->scheduleService->calculateRoundsForBracket($slots, 'single_elimination');
+        $maxRounds = count($rounds);
         
-        // Find current round index
+        // Find current round index by matching normalized round names
         $currentRoundIndex = -1;
-        foreach ($rounds as $index => $roundInfo) {
-            if ($roundInfo['name'] === $match->round) {
-                $currentRoundIndex = $index;
+        $currentRoundNormalized = $this->normalizeRoundName($match->round);
+        
+        for ($i = 1; $i <= $maxRounds; $i++) {
+            $roundName = \App\Helpers\TournamentRoundHelper::getRoundName('single_elimination', $i, $maxRounds);
+            $normalized = $this->normalizeRoundName($roundName);
+            if ($normalized === $currentRoundNormalized) {
+                $currentRoundIndex = $i - 1; // Convert to 0-based index
                 break;
             }
         }
         
-        if ($currentRoundIndex === -1 || $currentRoundIndex >= count($rounds) - 1) {
+        if ($currentRoundIndex === -1 || $currentRoundIndex >= $maxRounds - 1) {
             return; // Round not found or already at finals
         }
         
-        $nextRoundIndex = $currentRoundIndex + 1;
-        $nextRoundName = $rounds[$nextRoundIndex]['name'];
+        $nextRoundNumber = $currentRoundIndex + 2; // Next round (1-based)
+        $nextRoundName = \App\Helpers\TournamentRoundHelper::getRoundName('single_elimination', $nextRoundNumber, $maxRounds);
         
         // Calculate which match in the next round this winner should go to
         // In single elimination: match 1&2 -> match 1, match 3&4 -> match 2, etc.
+        // Use match_number for reliable ordering (ensures correct bracket progression)
         $currentRoundMatches = TournamentMatch::where('tournament_id', $match->tournament_id)
             ->where('tournament_category_id', $match->tournament_category_id)
             ->where('round', $match->round)
             ->orderBy('match_number')
             ->get();
         
+        // Find position of current match in the ordered list
         $matchPositionInRound = $currentRoundMatches->search(function($m) use ($match) {
             return $m->id === $match->id;
         });
+        
+        // Calculate next match number: pairs of matches feed into next round
+        // Match 0&1 -> Match 0, Match 2&3 -> Match 1, etc.
+        if ($matchPositionInRound === false) {
+            return; // Match not found in current round
+        }
         
         $nextMatchNumber = floor($matchPositionInRound / 2) + 1;
 
@@ -523,7 +746,7 @@ class MatchGenerationService
             ->where('tournament_category_id', $match->tournament_category_id)
             ->where('round', $match->round)
             ->whereIn('match_number', [($nextMatchNumber - 1) * 2 + 1, ($nextMatchNumber - 1) * 2 + 2])
-            ->where('status', '!=', 'completed')
+            ->where('status', '!=', \App\Enums\MatchStatus::COMPLETED->value)
             ->doesntExist();
         
         if ($previousRoundMatchesComplete) {
