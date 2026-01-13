@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Player;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ResendDomainErrorHandler;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
@@ -38,7 +39,25 @@ class AccountSettingsController extends Controller
             $user->save();
         });
 
-        return back()->with('success', 'Email address updated successfully! Please verify your new email address.');
+        // Send email verification notification to the new email address
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (\Exception $e) {
+            // Check if it's a Resend domain limitation error
+            if (ResendDomainErrorHandler::isDomainLimitationError($e)) {
+                ResendDomainErrorHandler::handleDomainError($e, $validated['new_email'], 'email verification (change email)');
+                return back()->with('error', 'Email address updated, but verification email cannot be sent due to domain limitations. Please verify a domain in Resend to enable email functionality.');
+            }
+            
+            \Illuminate\Support\Facades\Log::error('Failed to send email verification after email change', [
+                'user_id' => $user->id,
+                'new_email' => $validated['new_email'],
+                'error' => $e->getMessage()
+            ]);
+            return back()->with('error', 'Email address updated, but failed to send verification email. Please use the resend verification link.');
+        }
+
+        return back()->with('success', 'Email address updated successfully! A verification link has been sent to your new email address.');
     }
 
     /**
