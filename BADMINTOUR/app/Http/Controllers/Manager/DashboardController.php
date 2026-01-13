@@ -9,6 +9,7 @@ use App\Models\TournamentMatch;
 use App\Models\User;
 use App\Models\ClubPlayer;
 use App\Models\EloRating;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -33,10 +34,6 @@ class DashboardController extends Controller
                 
             $upcomingTournaments = Tournament::where('club_id', $club->id)
                 ->where('status', 'upcoming')
-                ->orWhere(function($query) use ($club) {
-                    $query->where('club_id', $club->id)
-                          ->where('status', 'published');
-                })
                 ->orderBy('start_date', 'asc')
                 ->take(3)
                 ->get();
@@ -46,8 +43,11 @@ class DashboardController extends Controller
             })->whereDate('scheduled_date', today())->count();
         }
         
+        // Top players by highest rating per player (avoid duplicates from multiple categories)
         $topPlayers = EloRating::with('player')
-            ->orderBy('current_rating', 'desc')
+            ->select('player_id', DB::raw('MAX(current_rating) as current_rating'))
+            ->groupBy('player_id')
+            ->orderByDesc('current_rating')
             ->take(5)
             ->get();
         
@@ -57,6 +57,12 @@ class DashboardController extends Controller
         ->orderBy('club_players_count', 'desc')
         ->take(3)
         ->get();
+
+        // Manager-owned tournaments (for dashboard listing)
+        $myTournaments = Tournament::where('organizer_id', $user->id)
+            ->orderByDesc('created_at')
+            ->take(6)
+            ->get();
         
         // Hide welcome message once manager has created at least one tournament
         $hasCreatedTournament = Tournament::where('organizer_id', $user->id)->exists();
@@ -69,6 +75,7 @@ class DashboardController extends Controller
             'todayMatchCount',
             'topPlayers',
             'topClubs',
+            'myTournaments',
             'hasCreatedTournament'
         ));
     }
