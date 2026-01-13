@@ -185,12 +185,19 @@ class CategoryScheduleService
             }
         } else { // round_robin
             $numRounds = $slots - 1;
+            // For odd participant counts, one sits out each round, so matches per round is floor(slots/2)
+            // For even participant counts, matches per round is slots/2
             $matchesPerRound = floor($slots / 2);
             
             for ($i = 0; $i < $numRounds; $i++) {
+                $roundNumber = $i + 1;
+                // Use TournamentRoundHelper for consistent naming
+                $roundName = \App\Helpers\TournamentRoundHelper::getRoundName('round_robin', $roundNumber, $numRounds);
+                
                 $rounds[] = [
-                    'name' => "Round " . ($i + 1),
+                    'name' => $roundName,
                     'matches' => $matchesPerRound,
+                    'round_number' => $roundNumber,
                 ];
             }
         }
