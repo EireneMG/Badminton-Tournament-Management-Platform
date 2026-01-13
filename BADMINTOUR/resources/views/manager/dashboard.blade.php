@@ -21,20 +21,20 @@
                         <p class="text-sm text-gray-500">Today: {{ date('F d, Y') }}</p>
                     </div>
                     <div class="flex items-center space-x-4">
-                        <button class="relative text-gray-600 hover:text-gray-800">
+                        <a href="{{ route('notifications.index') }}" class="relative text-gray-600 hover:text-gray-800">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                             </svg>
                             <span class="absolute top-0 right-0 inline-block w-2 h-2 bg-red-600 rounded-full"></span>
-                        </button>
+                        </a>
                     </div>
                 </div>
             </header>
 
             <!-- Main Content -->
             <main class="flex-1 overflow-y-auto bg-white p-8">
-                <!-- Welcome Message for Verified Managers -->
-                @if($user->verification_status === 'verified')
+                <!-- Welcome Message for Verified Managers (only show if they haven't created a tournament yet) -->
+                @if($user->verification_status === 'verified' && !$hasCreatedTournament)
                     <div class="mb-6 bg-green-50 border-l-4 border-green-400 p-4 rounded-md">
                         <div class="flex items-start">
                             <svg class="w-6 h-6 text-green-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

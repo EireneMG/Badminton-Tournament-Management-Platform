@@ -30,7 +30,7 @@
         <div class="w-full max-w-4xl">
             <!-- Logo -->
             <div class="flex justify-center mb-8">
-                <img src="{{ asset('images/badmintour-logo.png') }}" alt="BadminTour Logo" class="h-24">
+                <img src="{{ asset('images/logo.jpg') }}" alt="BadminTour Logo" class="h-24">
             </div>
 
             <!-- Main Card -->
@@ -202,6 +202,47 @@
                                            required
                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent @error('contact_phone') border-red-500 @enderror">
                                     @error('contact_phone')
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Manager ID Verification (required) -->
+                        <div class="space-y-3 pt-2">
+                            <label class="block text-sm font-semibold text-gray-700">Manager ID Verification <span class="text-red-500">*</span></label>
+                            <p class="text-xs text-gray-600 mb-2">Upload a valid ID to verify your identity before creating a club.</p>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">ID Type</label>
+                                    <select name="id_type"
+                                            required
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent @error('id_type') border-red-500 @enderror">
+                                        <option value="">Select ID Type</option>
+                                        <option value="philsys_id" {{ old('id_type') === 'philsys_id' ? 'selected' : '' }}>Philippine National ID (PhilSys)</option>
+                                        <option value="drivers_license" {{ old('id_type') === 'drivers_license' ? 'selected' : '' }}>Driver's License</option>
+                                        <option value="umid_sss" {{ old('id_type') === 'umid_sss' ? 'selected' : '' }}>UMID / SSS ID</option>
+                                        <option value="philhealth" {{ old('id_type') === 'philhealth' ? 'selected' : '' }}>PhilHealth ID</option>
+                                        <option value="tin" {{ old('id_type') === 'tin' ? 'selected' : '' }}>TIN ID</option>
+                                        <option value="passport" {{ old('id_type') === 'passport' ? 'selected' : '' }}>Passport</option>
+                                        <option value="voters_id" {{ old('id_type') === 'voters_id' ? 'selected' : '' }}>Voter's ID / COMELEC Certification</option>
+                                        <option value="postal_id" {{ old('id_type') === 'postal_id' ? 'selected' : '' }}>Postal ID</option>
+                                    </select>
+                                    @error('id_type')
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Upload ID</label>
+                                    <input type="file"
+                                           name="id_file"
+                                           accept="image/*,.pdf"
+                                           required
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent @error('id_file') border-red-500 @enderror">
+                                    <p class="text-xs text-gray-500 mt-1">Accepted: JPG, PNG, PDF. Max 5MB.</p>
+                                    @error('id_file')
                                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                     @enderror
                                 </div>
