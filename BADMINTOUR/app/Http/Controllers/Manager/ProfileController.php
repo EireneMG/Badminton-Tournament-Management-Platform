@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Manager;
 use App\Http\Controllers\Controller;
 use App\Models\Club;
 use App\Models\ClubPlayer;
+use App\Services\StatisticsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -13,9 +14,13 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the manager's profile.
-     */
+    protected StatisticsService $statisticsService;
+
+    public function __construct(StatisticsService $statisticsService)
+    {
+        $this->statisticsService = $statisticsService;
+    }
+
     public function index(): View
     {
         $user = auth()->user();
@@ -24,7 +29,20 @@ class ProfileController extends Controller
             ? ClubPlayer::where('club_id', $club->id)->where('status', 'approved')->count() 
             : 0;
 
-        return view('manager.profile', compact('user', 'club', 'clubMemberCount'));
+        try {
+            $managerStatistics = $this->statisticsService->getManagerStatistics($user);
+        } catch (\Exception $e) {
+            \Log::error("Error fetching manager statistics for manager {$user->id}: " . $e->getMessage());
+            $managerStatistics = [
+                'tournaments_organized' => 0,
+                'total_participants' => 0,
+                'matches_managed' => 0,
+                'average_tournament_size' => 0,
+                'completion_rate' => 0,
+            ];
+        }
+
+        return view('manager.profile', compact('user', 'club', 'clubMemberCount', 'managerStatistics'));
     }
 
     /**
