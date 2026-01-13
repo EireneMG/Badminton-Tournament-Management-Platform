@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
@@ -30,13 +32,12 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $rules = [
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('users', 'email')],
             'password' => ['required', 'confirmed', 'string', 'min:8'],
             'password_confirmation' => ['required', 'string'],
             'role' => ['required', 'string', 'in:player,manager'],
         ];
 
-        // Additional validation for player registration
         if ($request->role === 'player') {
             $rules = array_merge($rules, [
                 'first_name' => ['required', 'string', 'max:255'],
@@ -52,19 +53,29 @@ class RegisteredUserController extends Controller
                 'region' => ['required', 'string', 'max:255'],
                 'province' => ['nullable', 'string', 'max:255'],
                 'city' => ['required', 'string', 'max:255'],
+                'accept_terms' => ['required', 'accepted'],
             ]);
         } else {
-            // Manager registration - minimal fields + ID verification
+            // Manager registration - basic identity (ID upload will be handled during club creation)
             $rules = array_merge($rules, [
                 'first_name' => ['required', 'string', 'max:255'],
                 'middle_name' => ['nullable', 'string', 'max:255'],
                 'last_name' => ['required', 'string', 'max:255'],
                 'contact_number' => ['required', 'string', 'max:20'],
-                'id_document' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'], // 5MB max
             ]);
         }
 
-        $request->validate($rules);
+        try {
+            $validated = $request->validate($rules);
+        } catch (ValidationException $e) {
+            // Redirect back to the correct registration page based on role
+            $redirectRoute = $request->role === 'player' ? 'register.player' : 'register.manager';
+            throw ValidationException::withMessages($e->errors())
+                ->redirectTo(route($redirectRoute));
+        }
+
+        // Normalize email to lowercase to avoid false "already taken" collisions
+        $email = strtolower($request->email);
 
         // Build full name from parts
         $fullName = trim($request->first_name . ' ' . ($request->middle_name ?? '') . ' ' . $request->last_name);
@@ -75,7 +86,7 @@ class RegisteredUserController extends Controller
             'first_name' => $request->first_name,
             'middle_name' => $request->middle_name,
             'last_name' => $request->last_name,
-            'email' => $request->email,
+            'email' => $email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
             'contact_number' => $request->contact_number,
@@ -91,28 +102,20 @@ class RegisteredUserController extends Controller
                 'height' => $request->height,
                 'weight' => $request->weight,
                 'region' => $request->region,
-                'province' => ($request->province === 'N/A' || empty($request->province)) ? null : $request->province,
+                // Preserve 'N/A' for NCR so it pre-fills in biodata; otherwise keep submitted province
+                'province' => ($request->province === 'N/A') ? 'N/A' : ($request->province ?: null),
                 'city' => $request->city,
                 'biodata_completed' => false, // New players must complete biodata
             ]);
-        } elseif ($request->role === 'manager') {
-            // Handle manager ID document upload - store in PRIVATE storage for security
-            if ($request->hasFile('id_document')) {
-                $file = $request->file('id_document');
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                // Store in private disk (storage/app/manager_ids) - NOT publicly accessible
-                $filePath = $file->storeAs('manager_ids', $fileName);
-                $userData['id_document'] = $filePath;
-                // Auto-approve managers immediately (can add third-party verification later)
-                $userData['verification_status'] = 'verified';
-            }
         }
 
         $user = User::create($userData);
 
         event(new Registered($user));
 
+        // Log the user in and regenerate session to persist authentication cookie
         Auth::login($user);
+        $request->session()->regenerate();
 
         return redirect()->route('verification.notice');
     }
