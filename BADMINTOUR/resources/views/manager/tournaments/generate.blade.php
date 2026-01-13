@@ -14,6 +14,8 @@
     showCategorySelection: true,
     categoryMode: 'all', // 'all' or 'single'
     selectedSingleCategory: 'MS',
+    isDualMeet: false,
+    selectedClub: null,
     
     calculateMatchesForBracket(slots, bracketType) {
         if (bracketType === 'single_elimination') {
@@ -64,7 +66,7 @@
             type: '',
             slots: 16,
             skill_level: 'Open',
-            age_bracket: 'Open',
+            age_bracket: 'Open (All Ages)',
             schedule_start_time: '09:00',
             match_duration_minutes: 45,
             break_between_matches_minutes: 5
@@ -101,20 +103,20 @@
         if (this.categoryMode === 'all') {
             // Pre-fill with all standard categories
             this.categories = [
-                { id: 1, type: 'MS', slots: 16, skill_level: 'Open', age_bracket: 'Open', schedule_start_time: '09:00', match_duration_minutes: 45, break_between_matches_minutes: 5 },
-                { id: 2, type: 'WS', slots: 16, skill_level: 'Open', age_bracket: 'Open', schedule_start_time: '10:00', match_duration_minutes: 45, break_between_matches_minutes: 5 },
-                { id: 3, type: 'MD', slots: 16, skill_level: 'Open', age_bracket: 'Open', schedule_start_time: '11:00', match_duration_minutes: 60, break_between_matches_minutes: 5 },
-                { id: 4, type: 'WD', slots: 16, skill_level: 'Open', age_bracket: 'Open', schedule_start_time: '12:00', match_duration_minutes: 60, break_between_matches_minutes: 5 },
-                { id: 5, type: 'XD', slots: 16, skill_level: 'Open', age_bracket: 'Open', schedule_start_time: '13:00', match_duration_minutes: 60, break_between_matches_minutes: 5 },
+                { id: 1, type: 'MS', slots: 16, skill_level: 'Open', age_bracket: 'Open (All Ages)', schedule_start_time: '09:00', match_duration_minutes: 45, break_between_matches_minutes: 5 },
+                { id: 2, type: 'WS', slots: 16, skill_level: 'Open', age_bracket: 'Open (All Ages)', schedule_start_time: '10:00', match_duration_minutes: 45, break_between_matches_minutes: 5 },
+                { id: 3, type: 'MD', slots: 16, skill_level: 'Open', age_bracket: 'Open (All Ages)', schedule_start_time: '11:00', match_duration_minutes: 60, break_between_matches_minutes: 5 },
+                { id: 4, type: 'WD', slots: 16, skill_level: 'Open', age_bracket: 'Open (All Ages)', schedule_start_time: '12:00', match_duration_minutes: 60, break_between_matches_minutes: 5 },
+                { id: 5, type: 'XD', slots: 16, skill_level: 'Open', age_bracket: 'Open (All Ages)', schedule_start_time: '13:00', match_duration_minutes: 60, break_between_matches_minutes: 5 },
             ];
         } else {
             // Pre-fill with only the selected single category
             const categoryConfig = {
-                'MS': { type: 'MS', slots: 16, skill_level: 'Open', age_bracket: 'Open', schedule_start_time: '09:00', match_duration_minutes: 45 },
-                'WS': { type: 'WS', slots: 16, skill_level: 'Open', age_bracket: 'Open', schedule_start_time: '09:00', match_duration_minutes: 45 },
-                'MD': { type: 'MD', slots: 16, skill_level: 'Open', age_bracket: 'Open', schedule_start_time: '09:00', match_duration_minutes: 60 },
-                'WD': { type: 'WD', slots: 16, skill_level: 'Open', age_bracket: 'Open', schedule_start_time: '09:00', match_duration_minutes: 60 },
-                'XD': { type: 'XD', slots: 16, skill_level: 'Open', age_bracket: 'Open', schedule_start_time: '09:00', match_duration_minutes: 60 },
+                'MS': { type: 'MS', slots: 16, skill_level: 'Open', age_bracket: 'Open (All Ages)', schedule_start_time: '09:00', match_duration_minutes: 45 },
+                'WS': { type: 'WS', slots: 16, skill_level: 'Open', age_bracket: 'Open (All Ages)', schedule_start_time: '09:00', match_duration_minutes: 45 },
+                'MD': { type: 'MD', slots: 16, skill_level: 'Open', age_bracket: 'Open (All Ages)', schedule_start_time: '09:00', match_duration_minutes: 60 },
+                'WD': { type: 'WD', slots: 16, skill_level: 'Open', age_bracket: 'Open (All Ages)', schedule_start_time: '09:00', match_duration_minutes: 60 },
+                'XD': { type: 'XD', slots: 16, skill_level: 'Open', age_bracket: 'Open (All Ages)', schedule_start_time: '09:00', match_duration_minutes: 60 },
             };
             const config = categoryConfig[this.selectedSingleCategory] || categoryConfig['MS'];
             this.categories = [
@@ -400,10 +402,49 @@
                         <!-- Tournament Type -->
                         <div class="mb-6">
                             <label class="flex items-center">
-                                <input type="checkbox" name="is_dual_meet" value="1" class="w-5 h-5 text-[#2C5F4F] border-gray-300 rounded focus:ring-[#2C5F4F]">
+                                <input type="checkbox" name="is_dual_meet" value="1" x-model="isDualMeet" class="w-5 h-5 text-[#2C5F4F] border-gray-300 rounded focus:ring-[#2C5F4F]">
                                 <span class="ml-2 text-base font-semibold text-black">Dual Meet Tournament</span>
                             </label>
                             <p class="text-sm text-gray-600 mt-1 ml-7">Check if this is a dual meet tournament between two clubs</p>
+                        </div>
+
+                        <!-- Dual Meet Club Selection (shown when checkbox is checked) -->
+                        <div x-show="isDualMeet" x-transition class="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+                            <h4 class="text-base font-semibold text-blue-900 mb-3">Invite Club for Dual Meet</h4>
+                            <p class="text-sm text-blue-700 mb-2">Select one club to invite to participate in this dual meet tournament. Players from the selected club will be able to register.</p>
+                            <p class="text-xs text-blue-600 font-semibold mb-3 bg-blue-100 p-2 rounded">💡 <strong>Note:</strong> The selected club will be automatically invited when you click "Create Tournament". The tournament will be published automatically upon creation.</p>
+                            
+                            @if(isset($otherClubs) && $otherClubs->count() > 0)
+                                <div class="space-y-2 max-h-60 overflow-y-auto">
+                                    @foreach($otherClubs as $otherClub)
+                                        <label class="flex items-center p-2 hover:bg-blue-100 rounded cursor-pointer">
+                                            <input type="radio" 
+                                                   name="invited_club_id" 
+                                                   value="{{ $otherClub->id }}"
+                                                   x-model="selectedClub"
+                                                   class="w-4 h-4 text-[#2C5F4F] border-gray-300 focus:ring-[#2C5F4F]">
+                                            <div class="ml-3 flex-1">
+                                                <span class="text-sm font-medium text-gray-900">{{ $otherClub->name }}</span>
+                                                @if($otherClub->city || $otherClub->province)
+                                                    <span class="text-xs text-gray-600 ml-2">
+                                                        {{ $otherClub->city }}{{ $otherClub->city && $otherClub->province ? ', ' : '' }}{{ $otherClub->province }}
+                                                    </span>
+                                                @endif
+                                                @if($otherClub->manager)
+                                                    <span class="text-xs text-gray-500 block">Manager: {{ $otherClub->manager->first_name }} {{ $otherClub->manager->last_name }}</span>
+                                                @endif
+                                            </div>
+                                        </label>
+                                    @endforeach
+                                </div>
+                                <p class="text-xs text-blue-600 mt-3" x-show="selectedClub">
+                                    <span x-text="selectedClub ? '1' : '0'"></span> club selected
+                                </p>
+                            @else
+                                <div class="bg-yellow-50 border border-yellow-200 rounded p-3">
+                                    <p class="text-sm text-yellow-800">No other clubs available to invite. Other clubs must be created and active in the system first.</p>
+                                </div>
+                            @endif
                         </div>
 
                         <!-- Category Section -->
@@ -428,7 +469,10 @@
                                                 <option value="WD">Women's Doubles</option>
                                                 <option value="XD">Mixed Doubles</option>
                                             </select>
-                                            <input type="number" :name="'categories[' + index + '][slots]'" x-model="category.slots" @change="updateCategory(index)" placeholder="Slots (min: 12)" required min="12" max="128" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                            <select :name="'categories[' + index + '][slots]'" x-model="category.slots" @change="updateCategory(index)" required class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                                <option value="16">16 slots</option>
+                                                <option value="32">32 slots</option>
+                                            </select>
                                             <select :name="'categories[' + index + '][skill_level_requirements]'" x-model="category.skill_level" required class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
                                                 <option value="">Select Skill Level</option>
                                                 <option value="A">Level A</option>
@@ -439,11 +483,9 @@
                                             </select>
                                             <select :name="'categories[' + index + '][age_requirement]'" x-model="category.age_bracket" required class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
                                                 <option value="">Select Age Bracket</option>
-                                                <option value="Junior (13-16)">Junior (13-16)</option>
-                                                <option value="Senior (17-35)">Senior (17-35)</option>
-                                                <option value="Veteran (36-50)">Veteran (36-50)</option>
-                                                <option value="Master (51+)">Master (51+)</option>
-                                                <option value="Open">Open (All Ages)</option>
+                                                <option value="Junior (Under 18)">Junior (Under 18)</option>
+                                                <option value="Senior (18+)">Senior (18+)</option>
+                                                <option value="Open (All Ages)">Open (All Ages)</option>
                                             </select>
                                             <button type="button" @click="removeCategory(index)" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200">
                                                 Remove
@@ -503,9 +545,9 @@
 
                         <!-- Submit Button -->
                         <div class="flex justify-end gap-4 mt-8">
-                            <a href="/manager/tournaments" class="px-6 py-3 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium transition duration-200">
+                            <button type="button" onclick="handleCancel()" class="px-6 py-3 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium transition duration-200">
                                 Cancel
-                            </a>
+                            </button>
                             <button type="submit" class="px-6 py-3 bg-[#2C5F4F] hover:bg-[#244D3E] text-white rounded-md font-medium transition duration-200">
                                 Create Tournament
                             </button>
@@ -516,52 +558,272 @@
         </div>
     </div>
 
-    <!-- Venue Autocomplete Script (same as create.blade.php) -->
+    <!-- OpenStreetMap Nominatim Autocomplete for Venue -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        // OpenStreetMap Nominatim Autocomplete for Venue
+        (function() {
             const venueInput = document.getElementById('venue_name');
             const autocompleteDiv = document.getElementById('venue-autocomplete');
-            
+            let debounceTimer;
+            let selectedIndex = -1;
+            let suggestions = [];
+
             if (!venueInput || !autocompleteDiv) return;
-            
-            let timeout;
-            const venues = @json(\App\Models\Tournament::distinct()->pluck('venue_name')->filter()->values()->toArray());
-            
-            venueInput.addEventListener('input', function() {
-                clearTimeout(timeout);
-                const query = this.value.trim().toLowerCase();
-                
-                if (query.length < 2) {
+
+            // Fetch suggestions from Nominatim
+            async function fetchSuggestions(query) {
+                if (query.length < 3) {
                     autocompleteDiv.classList.add('hidden');
                     return;
                 }
+
+                try {
+                    // Use Nominatim Search API with Philippines focus
+                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ph&limit=5&addressdetails=1`;
+                    
+                    const response = await fetch(url, {
+                        headers: {
+                            'User-Agent': 'Badminton Tournament Management System'
+                        }
+                    });
+                    
+                    if (!response.ok) throw new Error('Failed to fetch suggestions');
+                    
+                    const data = await response.json();
+                    suggestions = data;
+                    displaySuggestions(data);
+                } catch (error) {
+                    console.error('Error fetching location suggestions:', error);
+                    autocompleteDiv.classList.add('hidden');
+                }
+            }
+
+            // Display suggestions in dropdown
+            function displaySuggestions(results) {
+                if (results.length === 0) {
+                    autocompleteDiv.classList.add('hidden');
+                    return;
+                }
+
+                autocompleteDiv.innerHTML = '';
+                results.forEach((result, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-200 last:border-b-0';
+                    item.dataset.index = index;
+                    
+                    // Format display name
+                    const displayName = result.display_name || result.name || 'Unknown location';
+                    const shortName = displayName.split(',')[0] + (displayName.split(',')[1] ? ', ' + displayName.split(',')[1] : '');
+                    
+                    item.innerHTML = `
+                        <div class="font-medium text-gray-900">${shortName}</div>
+                        <div class="text-sm text-gray-500 mt-1">${displayName.length > 60 ? displayName.substring(0, 60) + '...' : displayName}</div>
+                    `;
+                    
+                    item.addEventListener('click', () => selectSuggestion(result));
+                    item.addEventListener('mouseenter', () => {
+                        // Remove previous highlight
+                        autocompleteDiv.querySelectorAll('.bg-gray-100').forEach(el => {
+                            el.classList.remove('bg-gray-100');
+                            el.classList.add('hover:bg-gray-100');
+                        });
+                        // Add highlight
+                        item.classList.remove('hover:bg-gray-100');
+                        item.classList.add('bg-gray-100');
+                        selectedIndex = index;
+                    });
+                    
+                    autocompleteDiv.appendChild(item);
+                });
                 
-                timeout = setTimeout(() => {
-                    const matches = venues.filter(v => v.toLowerCase().includes(query)).slice(0, 5);
-                    
-                    if (matches.length === 0) {
-                        autocompleteDiv.classList.add('hidden');
-                        return;
-                    }
-                    
-                    autocompleteDiv.innerHTML = matches.map(venue => 
-                        `<div class="px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="selectVenue('${venue.replace(/'/g, "\\'")}')">${venue}</div>`
-                    ).join('');
-                    autocompleteDiv.classList.remove('hidden');
-                }, 300);
-            });
-            
-            window.selectVenue = function(venue) {
-                venueInput.value = venue;
+                autocompleteDiv.classList.remove('hidden');
+                selectedIndex = -1;
+            }
+
+            // Select a suggestion
+            function selectSuggestion(result) {
+                venueInput.value = result.display_name || result.name;
                 autocompleteDiv.classList.add('hidden');
-            };
-            
-            document.addEventListener('click', function(e) {
+                suggestions = [];
+                
+                // Store additional location data if needed (lat, lon, etc.)
+                if (result.lat && result.lon) {
+                    // You can store these in hidden fields if needed
+                    const latInput = document.querySelector('input[name="venue_latitude"]');
+                    const lonInput = document.querySelector('input[name="venue_longitude"]');
+                    if (latInput) latInput.value = result.lat;
+                    if (lonInput) lonInput.value = result.lon;
+                }
+            }
+
+            // Handle input with debounce
+            venueInput.addEventListener('input', (e) => {
+                clearTimeout(debounceTimer);
+                const query = e.target.value.trim();
+                
+                debounceTimer = setTimeout(() => {
+                    fetchSuggestions(query);
+                }, 300); // 300ms debounce
+            });
+
+            // Handle keyboard navigation
+            venueInput.addEventListener('keydown', (e) => {
+                if (!autocompleteDiv.classList.contains('hidden') && suggestions.length > 0) {
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        selectedIndex = Math.min(selectedIndex + 1, suggestions.length - 1);
+                        highlightSuggestion(selectedIndex);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        selectedIndex = Math.max(selectedIndex - 1, -1);
+                        highlightSuggestion(selectedIndex);
+                    } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                        e.preventDefault();
+                        selectSuggestion(suggestions[selectedIndex]);
+                    } else if (e.key === 'Escape') {
+                        autocompleteDiv.classList.add('hidden');
+                        selectedIndex = -1;
+                    }
+                }
+            });
+
+            // Highlight suggestion
+            function highlightSuggestion(index) {
+                const items = autocompleteDiv.querySelectorAll('[data-index]');
+                items.forEach((item, i) => {
+                    if (i === index) {
+                        item.classList.remove('hover:bg-gray-100');
+                        item.classList.add('bg-gray-100');
+                    } else {
+                        item.classList.remove('bg-gray-100');
+                        item.classList.add('hover:bg-gray-100');
+                    }
+                });
+            }
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
                 if (!venueInput.contains(e.target) && !autocompleteDiv.contains(e.target)) {
                     autocompleteDiv.classList.add('hidden');
                 }
             });
-        });
+
+            // Close dropdown on blur (with delay to allow click events)
+            venueInput.addEventListener('blur', () => {
+                setTimeout(() => {
+                    autocompleteDiv.classList.add('hidden');
+                }, 200);
+            });
+        })();
+    </script>
+
+    <script>
+        // Back Button Warning (No Draft Saving)
+        (function() {
+            const form = document.querySelector('form[action*="tournaments.store"]');
+            if (!form) return;
+
+            let isSubmitting = false;
+            let hasUnsavedChanges = false;
+
+            // Check if user has unsaved changes
+            function checkUnsavedChanges() {
+                const formData = new FormData(form);
+                for (let [key, value] of formData.entries()) {
+                    if (key === '_token') continue;
+                    if (value && value.trim() !== '') {
+                        return true;
+                    }
+                }
+                // Check Alpine.js categories
+                if (window.Alpine && form.__x) {
+                    const alpineData = form.__x.$data;
+                    if (alpineData && alpineData.categories && alpineData.categories.length > 0) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            // Track form changes
+            form.addEventListener('input', function() {
+                hasUnsavedChanges = true;
+            });
+
+            form.addEventListener('change', function() {
+                hasUnsavedChanges = true;
+            });
+
+            // Clear flag on successful submit
+            form.addEventListener('submit', function() {
+                isSubmitting = true;
+                hasUnsavedChanges = false;
+            });
+
+            // Cancel button handler
+            window.handleCancel = function() {
+                if (checkUnsavedChanges()) {
+                    if (confirm('You have not completed the tournament creation. Are you sure you want to exit? Your data will not be saved.')) {
+                        isSubmitting = true;
+                        window.location.href = '{{ route("manager.tournaments") }}';
+                    }
+                } else {
+                    window.location.href = '{{ route("manager.tournaments") }}';
+                }
+            };
+
+            // Intercept link clicks to show warning
+            document.addEventListener('click', function(e) {
+                const link = e.target.closest('a');
+                if (!link) return;
+                
+                // Skip if it's the cancel button (handled separately)
+                if (link.onclick || link.getAttribute('onclick')) return;
+                
+                // Skip if it's a hash link or same page anchor
+                const href = link.getAttribute('href');
+                if (!href || href === '#' || href.startsWith('#')) return;
+                
+                // Check if it's an internal navigation
+                if (href && !href.startsWith('http') && !href.startsWith('mailto:') && !href.startsWith('tel:')) {
+                    if (hasUnsavedChanges && !isSubmitting && checkUnsavedChanges()) {
+                        e.preventDefault();
+                        if (confirm('You have not completed the tournament creation. Are you sure you want to exit? Your data will not be saved.')) {
+                            isSubmitting = true;
+                            window.location.href = href;
+                        }
+                    }
+                }
+            }, true);
+
+            // Intercept browser back/forward buttons
+            window.addEventListener('popstate', function(e) {
+                if (hasUnsavedChanges && !isSubmitting && checkUnsavedChanges()) {
+                    if (confirm('You have not completed the tournament creation. Are you sure you want to exit? Your data will not be saved.')) {
+                        isSubmitting = true;
+                        // Allow back navigation
+                    } else {
+                        // Push state again to prevent navigation
+                        history.pushState(null, null, window.location.href);
+                    }
+                }
+            });
+
+            // Push initial state to track back button
+            history.pushState(null, null, window.location.href);
+
+            // Browser warning on page unload (closing tab/window)
+            window.addEventListener('beforeunload', function(e) {
+                if (hasUnsavedChanges && !isSubmitting && checkUnsavedChanges()) {
+                    e.preventDefault();
+                    e.returnValue = 'You have not completed the tournament creation. Are you sure you want to exit? Your data will not be saved.';
+                    return e.returnValue;
+                }
+            });
+
+            // Initialize hasUnsavedChanges
+            hasUnsavedChanges = checkUnsavedChanges();
+        })();
     </script>
 </body>
 </html>

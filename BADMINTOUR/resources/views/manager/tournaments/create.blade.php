@@ -11,6 +11,8 @@
     numberOfCourts: 1,
     categories: [],
     bracketType: 'single_elimination',
+    isDualMeet: false,
+    selectedClub: null,
     
     calculateMatchesForBracket(slots, bracketType) {
         if (bracketType === 'single_elimination') {
@@ -269,6 +271,19 @@
                         </div>
                     </div>
                 @else
+                    <!-- Host Notice - Mandatory Message -->
+                    <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg">
+                        <div class="flex items-start">
+                            <svg class="w-6 h-6 text-green-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div>
+                                <p class="font-bold text-green-800">You will be the TOURNAMENT HOST</p>
+                                <p class="text-sm text-green-700 mt-1">As the host, you will manage approvals, rejections, withdrawals, match results, walkovers, and all rescheduling actions for this tournament.</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Success/Error Messages -->
                     @if(session('success'))
                         <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
@@ -373,10 +388,49 @@
                     <!-- Tournament Type -->
                     <div class="mb-6">
                         <label class="flex items-center">
-                            <input type="checkbox" name="is_dual_meet" value="1" class="w-5 h-5 text-[#2C5F4F] border-gray-300 rounded focus:ring-[#2C5F4F]">
+                            <input type="checkbox" name="is_dual_meet" value="1" x-model="isDualMeet" class="w-5 h-5 text-[#2C5F4F] border-gray-300 rounded focus:ring-[#2C5F4F]">
                             <span class="ml-2 text-base font-semibold text-black">Dual Meet Tournament</span>
                         </label>
                         <p class="text-sm text-gray-600 mt-1 ml-7">Check if this is a dual meet tournament between two clubs</p>
+                    </div>
+
+                        <!-- Dual Meet Club Selection (shown when checkbox is checked) -->
+                    <div x-show="isDualMeet" x-transition class="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+                        <h4 class="text-base font-semibold text-blue-900 mb-3">Invite Club for Dual Meet</h4>
+                        <p class="text-sm text-blue-700 mb-2">Select one club to invite to participate in this dual meet tournament. Players from the selected club will be able to register.</p>
+                        <p class="text-xs text-blue-600 font-semibold mb-3 bg-blue-100 p-2 rounded">💡 <strong>Note:</strong> The selected club will be automatically invited when you click "Create Tournament". The tournament will be published automatically upon creation.</p>
+                        
+                        @if(isset($otherClubs) && $otherClubs->count() > 0)
+                            <div class="space-y-2 max-h-60 overflow-y-auto">
+                                @foreach($otherClubs as $otherClub)
+                                    <label class="flex items-center p-2 hover:bg-blue-100 rounded cursor-pointer">
+                                        <input type="radio" 
+                                               name="invited_club_id" 
+                                               value="{{ $otherClub->id }}"
+                                               x-model="selectedClub"
+                                               class="w-4 h-4 text-[#2C5F4F] border-gray-300 focus:ring-[#2C5F4F]">
+                                        <div class="ml-3 flex-1">
+                                            <span class="text-sm font-medium text-gray-900">{{ $otherClub->name }}</span>
+                                            @if($otherClub->city || $otherClub->province)
+                                                <span class="text-xs text-gray-600 ml-2">
+                                                    {{ $otherClub->city }}{{ $otherClub->city && $otherClub->province ? ', ' : '' }}{{ $otherClub->province }}
+                                                </span>
+                                            @endif
+                                            @if($otherClub->manager)
+                                                <span class="text-xs text-gray-500 block">Manager: {{ $otherClub->manager->first_name }} {{ $otherClub->manager->last_name }}</span>
+                                            @endif
+                                        </div>
+                                    </label>
+                                @endforeach
+                            </div>
+                            <p class="text-xs text-blue-600 mt-3" x-show="selectedClub">
+                                <span x-text="selectedClub ? '1' : '0'"></span> club selected
+                            </p>
+                        @else
+                            <div class="bg-yellow-50 border border-yellow-200 rounded p-3">
+                                <p class="text-sm text-yellow-800">No other clubs available to invite. Other clubs must be created and active in the system first.</p>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Category Section -->
@@ -418,7 +472,10 @@
                                             <option value="WD">Women's Doubles</option>
                                             <option value="XD">Mixed Doubles</option>
                                         </select>
-                                        <input type="number" :name="'categories[' + index + '][slots]'" x-model="category.slots" @change="updateCategory(index)" placeholder="Slots (min: 12)" required min="12" max="128" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                        <select :name="'categories[' + index + '][slots]'" x-model="category.slots" @change="updateCategory(index)" required class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                                            <option value="16">16 slots</option>
+                                            <option value="32">32 slots</option>
+                                        </select>
                                         <select :name="'categories[' + index + '][skill_level_requirements]'" x-model="category.skill_level" required class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
                                             <option value="">Select Skill Level</option>
                                             <option value="A">Level A</option>
@@ -429,11 +486,9 @@
                                         </select>
                                         <select :name="'categories[' + index + '][age_requirement]'" x-model="category.age_bracket" required class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
                                             <option value="">Select Age Bracket</option>
-                                            <option value="Junior (13-16)">Junior (13-16)</option>
-                                            <option value="Senior (17-35)">Senior (17-35)</option>
-                                            <option value="Veteran (36-50)">Veteran (36-50)</option>
-                                            <option value="Master (51+)">Master (51+)</option>
-                                            <option value="Open">Open (All Ages)</option>
+                                            <option value="Junior (Under 18)">Junior (Under 18)</option>
+                                            <option value="Senior (18+)">Senior (18+)</option>
+                                            <option value="Open (All Ages)">Open (All Ages)</option>
                                         </select>
                                         <button type="button" @click="removeCategory(index)" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200">
                                             Remove
@@ -514,11 +569,11 @@
 
                     <!-- Action Buttons -->
                     <div class="flex justify-end gap-4">
-                        <button type="button" class="bg-white border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-md font-semibold hover:bg-gray-50 transition duration-200">
-                            Save Draft
+                        <button type="button" onclick="handleCancel()" class="bg-white border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-md font-semibold hover:bg-gray-50 transition duration-200">
+                            Cancel
                         </button>
                         <button type="submit" class="bg-[#1B4965] hover:bg-[#143850] text-white px-8 py-3 rounded-md font-semibold transition duration-200">
-                            Create & Post
+                            Create Tournament
                         </button>
                     </div>
                     </form>
@@ -682,6 +737,115 @@
                     autocompleteDiv.classList.add('hidden');
                 }, 200);
             });
+        })();
+    </script>
+
+    <script>
+        // Back Button Warning (No Draft Saving)
+        (function() {
+            const form = document.querySelector('form[action*="tournaments.store"]');
+            if (!form) return;
+
+            let isSubmitting = false;
+            let hasUnsavedChanges = false;
+
+            // Check if user has unsaved changes
+            function checkUnsavedChanges() {
+                const formData = new FormData(form);
+                for (let [key, value] of formData.entries()) {
+                    if (key === '_token') continue;
+                    if (value && value.trim() !== '') {
+                        return true;
+                    }
+                }
+                // Check Alpine.js categories
+                if (window.Alpine && form.__x) {
+                    const alpineData = form.__x.$data;
+                    if (alpineData && alpineData.categories && alpineData.categories.length > 0) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            // Track form changes
+            form.addEventListener('input', function() {
+                hasUnsavedChanges = true;
+            });
+
+            form.addEventListener('change', function() {
+                hasUnsavedChanges = true;
+            });
+
+            // Clear flag on successful submit
+            form.addEventListener('submit', function() {
+                isSubmitting = true;
+                hasUnsavedChanges = false;
+            });
+
+            // Cancel button handler
+            window.handleCancel = function() {
+                if (checkUnsavedChanges()) {
+                    if (confirm('You have not completed the tournament creation. Are you sure you want to exit? Your data will not be saved.')) {
+                        isSubmitting = true;
+                        window.location.href = '{{ route("manager.tournaments") }}';
+                    }
+                } else {
+                    window.location.href = '{{ route("manager.tournaments") }}';
+                }
+            };
+
+            // Intercept link clicks to show warning
+            document.addEventListener('click', function(e) {
+                const link = e.target.closest('a');
+                if (!link) return;
+                
+                // Skip if it's the cancel button (handled separately)
+                if (link.onclick || link.getAttribute('onclick')) return;
+                
+                // Skip if it's a hash link or same page anchor
+                const href = link.getAttribute('href');
+                if (!href || href === '#' || href.startsWith('#')) return;
+                
+                // Check if it's an internal navigation
+                if (href && !href.startsWith('http') && !href.startsWith('mailto:') && !href.startsWith('tel:')) {
+                    if (hasUnsavedChanges && !isSubmitting && checkUnsavedChanges()) {
+                        e.preventDefault();
+                        if (confirm('You have not completed the tournament creation. Are you sure you want to exit? Your data will not be saved.')) {
+                            isSubmitting = true;
+                            window.location.href = href;
+                        }
+                    }
+                }
+            }, true);
+
+            // Intercept browser back/forward buttons
+            window.addEventListener('popstate', function(e) {
+                if (hasUnsavedChanges && !isSubmitting && checkUnsavedChanges()) {
+                    if (confirm('You have not completed the tournament creation. Are you sure you want to exit? Your data will not be saved.')) {
+                        isSubmitting = true;
+                        // Allow back navigation
+                    } else {
+                        // Push state again to prevent navigation
+                        history.pushState(null, null, window.location.href);
+                    }
+                }
+            });
+
+            // Push initial state to track back button
+            history.pushState(null, null, window.location.href);
+
+            // Browser warning on page unload (closing tab/window)
+            window.addEventListener('beforeunload', function(e) {
+                if (hasUnsavedChanges && !isSubmitting && checkUnsavedChanges()) {
+                    e.preventDefault();
+                    e.returnValue = 'You have not completed the tournament creation. Are you sure you want to exit? Your data will not be saved.';
+                    return e.returnValue;
+                }
+            });
+
+            // Initialize hasUnsavedChanges
+            hasUnsavedChanges = checkUnsavedChanges();
         })();
     </script>
 </body>
