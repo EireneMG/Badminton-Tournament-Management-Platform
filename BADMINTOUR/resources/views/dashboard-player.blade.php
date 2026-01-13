@@ -34,7 +34,7 @@
             <!-- Left Column - Tournaments & Registrations -->
             <div class="lg:col-span-2 space-y-6">
                 <!-- Upcoming Tournaments -->
-                <div class="bg-white rounded-lg shadow p-6">
+                <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-xl font-bold text-gray-900">Upcoming Tournaments</h2>
                         <a href="{{ route('tournaments.index') }}" class="text-sm text-[#2C5F4F] hover:text-[#1B4965] font-semibold">View All →</a>
@@ -68,7 +68,7 @@
                 </div>
 
                 <!-- My Registrations -->
-                <div class="bg-white rounded-lg shadow p-6">
+                <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
                     <h2 class="text-xl font-bold text-gray-900 mb-4">My Tournament Registrations</h2>
                     <div class="space-y-3">
                         @forelse($playerRegistrations as $registration)
@@ -79,14 +79,15 @@
                                 'awaiting_payment' => 'bg-yellow-100 text-yellow-700',
                                 'paid' => 'bg-green-100 text-green-700',
                                 'approved' => 'bg-[#2C5F4F] text-white',
-                                'rejected' => 'bg-red-100 text-red-700'
+                                'rejected' => 'bg-red-100 text-red-700',
+                                'withdrawn' => 'bg-gray-100 text-gray-700'
                             ];
                             $statusColor = $statusColors[$registration->status] ?? 'bg-gray-100 text-gray-700';
                         @endphp
                         <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
                             <div class="flex-1">
                                 <h3 class="font-semibold text-gray-900">{{ $registration->tournament->name }}</h3>
-                                <p class="text-xs text-gray-600 mt-1">{{ $registration->category->name ?? 'General' }}</p>
+                                <p class="text-xs text-gray-600 mt-1">{{ $registration->category->full_name ?? 'General' }}</p>
                             </div>
                             <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $statusColor }}">
                                 {{ ucfirst(str_replace('_', ' ', $registration->status)) }}
@@ -101,39 +102,12 @@
                     </div>
                 </div>
 
-                <!-- Upcoming Matches -->
-                @if($upcomingMatches->count() > 0)
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4">Upcoming Matches</h2>
-                    <div class="space-y-3">
-                        @foreach($upcomingMatches as $match)
-                        <div class="border border-gray-200 rounded-lg p-4">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="font-semibold text-gray-900">{{ $match->tournament->name }}</p>
-                                    <p class="text-sm text-gray-600 mt-1">{{ $match->category->name ?? 'Category' }} - {{ $match->match_type }}</p>
-                                    <p class="text-xs text-gray-500 mt-2">
-                                        📅 {{ \Carbon\Carbon::parse($match->scheduled_date)->format('M d, Y') }} 
-                                        @if($match->scheduled_time)
-                                        at {{ \Carbon\Carbon::parse($match->scheduled_time)->format('h:i A') }}
-                                        @endif
-                                    </p>
-                                </div>
-                                <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
-                                    Round {{ $match->round }}
-                                </span>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
-                @endif
             </div>
 
             <!-- Right Column - Rankings -->
             <div class="space-y-6">
                 <!-- Top Players -->
-                <div class="bg-white rounded-lg shadow p-6">
+                <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-xl font-bold text-gray-900">Top Players</h2>
                         <a href="{{ route('ranking.index') }}" class="text-sm text-[#2C5F4F] hover:text-[#1B4965] font-semibold">View All →</a>
@@ -157,7 +131,7 @@
                 </div>
 
                 <!-- Top Clubs -->
-                <div class="bg-white rounded-lg shadow p-6">
+                <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-xl font-bold text-gray-900">Top Clubs</h2>
                         <a href="{{ route('clubs.index') }}" class="text-sm text-[#2C5F4F] hover:text-[#1B4965] font-semibold">View All →</a>
