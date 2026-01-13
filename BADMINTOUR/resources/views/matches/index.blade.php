@@ -19,7 +19,7 @@
                 <div class="bg-white border-2 border-[#D4A574] rounded-lg p-6 hover:shadow-lg transition">
                     <div class="flex items-center justify-between mb-4">
                         <div>
-                            <h3 class="text-xl font-bold">{{ $match->tournament->name }}</h3>
+                            <h3 class="text-xl font-bold">{{ $match->tournament?->name ?? 'N/A' }}</h3>
                             <p class="text-gray-600">{{ $match->category->name }} - Round {{ $match->round }}</p>
                         </div>
                         <span class="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-semibold">
@@ -59,9 +59,12 @@
                         </div>
                     </div>
 
-                    @if($match->scheduled_at)
+                    @if($match->scheduled_date && $match->scheduled_time)
                         <div class="mt-4 pt-4 border-t text-center">
-                            <p class="text-sm text-gray-600">Scheduled: <span class="font-semibold">{{ $match->scheduled_at->format('M d, Y - h:i A') }}</span></p>
+                            <p class="text-sm text-gray-600">Scheduled: <span class="font-semibold">
+                                {{ \Carbon\Carbon::parse($match->scheduled_date)->format('M d, Y') }} - 
+                                {{ \Carbon\Carbon::parse($match->scheduled_time)->format('h:i A') }}
+                            </span></p>
                         </div>
                     @endif
                 </div>
@@ -82,7 +85,7 @@
                 <div class="bg-white border-2 border-[#D4A574] rounded-lg p-6 hover:shadow-lg transition">
                     <div class="flex items-center justify-between mb-4">
                         <div>
-                            <h3 class="text-xl font-bold">{{ $match->tournament->name }}</h3>
+                            <h3 class="text-xl font-bold">{{ $match->tournament?->name ?? 'N/A' }}</h3>
                             <p class="text-gray-600">{{ $match->category->name }} - Round {{ $match->round }}</p>
                         </div>
                         <span class="px-4 py-2 bg-red-100 text-red-800 rounded-lg font-semibold animate-pulse">
@@ -130,7 +133,7 @@
                 <div class="bg-white border-2 border-[#D4A574] rounded-lg p-6 hover:shadow-lg transition">
                     <div class="flex items-center justify-between mb-4">
                         <div>
-                            <h3 class="text-xl font-bold">{{ $match->tournament->name }}</h3>
+                            <h3 class="text-xl font-bold">{{ $match->tournament?->name ?? 'N/A' }}</h3>
                             <p class="text-gray-600">{{ $match->category->name }} - Round {{ $match->round }}</p>
                             <p class="text-sm text-gray-500">{{ $match->updated_at->format('M d, Y') }}</p>
                         </div>
@@ -157,12 +160,16 @@
                         <!-- Score -->
                         <div class="text-center">
                             @if($match->result)
+                                @php
+                                    $matchScoreService = app(\App\Services\MatchScoreService::class);
+                                    $finalScore = $matchScoreService->calculateFinalScore($match->result);
+                                    $setScores = $matchScoreService->getFormattedSetScores($match->result);
+                                @endphp
                                 <div class="space-y-1">
-                                    <p class="text-sm text-gray-600">Set 1: {{ $match->result->player1_set1_score }}-{{ $match->result->player2_set1_score }}</p>
-                                    <p class="text-sm text-gray-600">Set 2: {{ $match->result->player1_set2_score }}-{{ $match->result->player2_set2_score }}</p>
-                                    @if($match->result->player1_set3_score !== null)
-                                        <p class="text-sm text-gray-600">Set 3: {{ $match->result->player1_set3_score }}-{{ $match->result->player2_set3_score }}</p>
-                                    @endif
+                                    <p class="text-sm font-bold text-gray-900">Final: {{ $finalScore['final_score'] }}</p>
+                                    @foreach($setScores as $set => $score)
+                                        <p class="text-xs text-gray-600">{{ ucfirst(str_replace('set', 'Set ', $set)) }}: {{ $score }}</p>
+                                    @endforeach
                                 </div>
                             @else
                                 <span class="text-gray-400">No score</span>
