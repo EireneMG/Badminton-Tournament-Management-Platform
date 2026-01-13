@@ -36,6 +36,16 @@ class ManagerLoginRequest extends LoginRequest
             ]);
         }
 
+        // Verify email is verified
+        if (!$user->hasVerifiedEmail()) {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'Please verify your email address before logging in. Check your email for the verification link.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 }
