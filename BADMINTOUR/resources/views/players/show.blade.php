@@ -389,34 +389,121 @@
 
             <!-- Matches Tab -->
             <div x-show="activeTab === 'matches'" x-cloak>
-                <h3 class="text-lg font-bold mb-4">RECENT MATCHES</h3>
-                <div class="space-y-3">
-                    @forelse($recentMatches->sortByDesc(function($match) { return $match->updated_at ?? $match->created_at; }) as $match)
-                        <div class="border-2 border-[#D4A574] rounded-lg p-4">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="font-semibold">{{ $match->tournament->name }}</p>
-                                    <p class="text-sm text-gray-600">{{ $match->category->name }}</p>
-                                    <p class="text-sm text-gray-500">{{ ($match->updated_at ?? $match->created_at)->format('M d, Y H:i') }}</p>
-                                </div>
-                                <div class="text-right">
-                                    @if($match->result)
-                                        @php
-                                            $isWinner = $match->result->winner_id === $player->id || 
-                                                       ($match->result->match->winner_partner_id && $match->result->match->winner_partner_id === $player->id);
-                                        @endphp
-                                        <span class="px-3 py-1 rounded-full text-sm font-semibold {{ $isWinner ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                            {{ $isWinner ? 'WON' : 'LOST' }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="text-center text-gray-500 py-8">
-                            <p>No match history yet.</p>
-                        </div>
-                    @endforelse
+                <h3 class="text-lg font-bold mb-4">MATCH HISTORY</h3>
+                <div class="bg-white border-2 border-[#D4A574] rounded-lg overflow-hidden shadow-sm">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tournament</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opponent</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($recentMatches->sortByDesc(function($match) { return $match->updated_at ?? $match->created_at; }) as $match)
+                                @php
+                                    $isDoubles = $match->player1_partner_id || $match->player2_partner_id;
+                                    $opponent = null;
+                                    $opponentPartner = null;
+                                    
+                                    if ($match->player1_id === $player->id || $match->player1_partner_id === $player->id) {
+                                        $opponent = $match->player2;
+                                        $opponentPartner = $match->player2_partner;
+                                    } else {
+                                        $opponent = $match->player1;
+                                        $opponentPartner = $match->player1_partner;
+                                    }
+                                    
+                                    $isWinner = false;
+                                    $score = 'N/A';
+                                    
+                                    if ($match->result) {
+                                        $isWinner = $match->result->winner_id === $player->id || 
+                                                   ($match->winner_partner_id && $match->winner_partner_id === $player->id);
+                                        
+                                        $matchScoreService = app(\App\Services\MatchScoreService::class);
+                                        $finalScore = $matchScoreService->calculateFinalScore($match->result);
+                                        $setScores = $matchScoreService->getFormattedSetScores($match->result);
+                                        $score = 'Final: ' . $finalScore['final_score'];
+                                        foreach ($setScores as $set => $setScore) {
+                                            $score .= ' | ' . ucfirst(str_replace('set', 'Set ', $set)) . ': ' . $setScore;
+                                        }
+                                    }
+                                @endphp
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">{{ $match->tournament?->name ?? 'N/A' }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ $match->category?->name ?? 'N/A' }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">
+                                            @if($opponent)
+                                                {{ $opponent->first_name }} {{ $opponent->last_name }}
+                                                @if($isDoubles && $opponentPartner)
+                                                    / {{ $opponentPartner->first_name }} {{ $opponentPartner->last_name }}
+                                                @endif
+                                            @else
+                                                TBD
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-500">
+                                            @if($match->scheduled_date)
+                                                {{ \Carbon\Carbon::parse($match->scheduled_date)->format('M d, Y') }}
+                                                @if($match->scheduled_time)
+                                                    {{ \Carbon\Carbon::parse($match->scheduled_time)->format('H:i') }}
+                                                @endif
+                                            @else
+                                                {{ ($match->updated_at ?? $match->created_at)->format('M d, Y') }}
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        @if($match->result)
+                                            @php
+                                                $matchScoreService = app(\App\Services\MatchScoreService::class);
+                                                $finalScore = $matchScoreService->calculateFinalScore($match->result);
+                                                $setScores = $matchScoreService->getFormattedSetScores($match->result);
+                                            @endphp
+                                            <div class="text-sm space-y-1">
+                                                <div class="font-bold text-gray-900">Final: {{ $finalScore['final_score'] }}</div>
+                                                <div class="text-xs text-gray-600 space-y-0.5">
+                                                    @foreach($setScores as $set => $setScore)
+                                                        <div>{{ ucfirst(str_replace('set', 'Set ', $set)) }}: {{ $setScore }}</div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="text-sm text-gray-500">{{ $score }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @if($match->result)
+                                            <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $isWinner ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                {{ $isWinner ? 'WON' : 'LOST' }}
+                                            </span>
+                                        @else
+                                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
+                                                PENDING
+                                            </span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                        <p>No match history yet.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -449,13 +536,13 @@
                                 @endphp
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">{{ $registration->tournament->name }}</div>
+                                        <div class="text-sm font-medium text-gray-900">{{ $registration->tournament?->name ?? 'N/A' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">{{ $registration->category->name }}</div>
+                                        <div class="text-sm text-gray-900">{{ $registration->category?->full_name ?? 'N/A' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-500">{{ $registration->tournament->start_date->format('M d, Y') }}</div>
+                                        <div class="text-sm text-gray-500">{{ $registration->tournament?->start_date?->format('M d, Y') ?? 'N/A' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $statusColors[$registration->status] ?? 'bg-gray-100 text-gray-800' }}">
@@ -464,7 +551,7 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <a href="{{ route('tournaments.show', $registration->tournament) }}" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
-                                            View Details
+                                            View Tournament
                                         </a>
                                     </td>
                                 </tr>
@@ -498,7 +585,7 @@
                     </div>
                     <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center">
                         <p class="text-xs text-gray-600 mb-1">BEST FINISH</p>
-                        <p class="text-xl font-bold text-[#2C5F4F]">{{ $tournamentStats['bestFinish'] }}</p>
+                        <p class="text-xl font-bold text-[#2C5F4F]">{{ $tournamentStats['best_finish'] ?? 'N/A' }}</p>
                         <p class="text-xs text-gray-500 mt-1">Tournament record</p>
                     </div>
                 </div>
@@ -507,11 +594,11 @@
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center">
                         <p class="text-xs text-gray-600 mb-1">TOURNAMENTS JOINED</p>
-                        <p class="text-2xl font-bold">{{ $tournamentStats['tournamentsJoined'] }}</p>
+                        <p class="text-2xl font-bold">{{ $tournamentStats['tournaments_joined'] ?? 0 }}</p>
                     </div>
                     <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center">
                         <p class="text-xs text-gray-600 mb-1">TOURNAMENTS COMPLETED</p>
-                        <p class="text-2xl font-bold">{{ $tournamentStats['tournamentsCompleted'] }}</p>
+                        <p class="text-2xl font-bold">{{ $tournamentStats['tournaments_completed'] ?? 0 }}</p>
                     </div>
                 </div>
 
@@ -541,10 +628,10 @@
                                             <p class="text-xs text-gray-600">Wins</p>
                                             <p class="text-lg font-bold text-green-600">{{ $stats['wins'] }}</p>
                                         </div>
-                                        <div>
-                                            <p class="text-xs text-gray-600">Win Rate</p>
-                                            <p class="text-lg font-bold text-[#2C5F4F]">{{ $stats['winRate'] }}%</p>
-                                        </div>
+                                                    <div>
+                                                        <p class="text-xs text-gray-600">Win Rate</p>
+                                                        <p class="text-lg font-bold text-[#2C5F4F]">{{ $stats['win_rate'] ?? 0 }}%</p>
+                                                    </div>
                                     </div>
                                 </div>
                             @endif
@@ -561,36 +648,55 @@
             <!-- Rankings Tab -->
             <div x-show="activeTab === 'rankings'" x-cloak>
                 <h3 class="text-lg font-bold mb-4">RANKING HISTORY</h3>
-                <div class="space-y-3">
-                    @forelse($rankingHistory as $history)
-                        <div class="border-2 border-[#D4A574] rounded-lg p-4">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    @php
-                                        $categoryMap = [
-                                            'MS' => "Men's Singles",
-                                            'WS' => "Women's Singles",
-                                            'MD' => "Men's Doubles",
-                                            'WD' => "Women's Doubles",
-                                            'XD' => "Mixed Doubles",
-                                        ];
-                                        $categoryName = $categoryMap[$history->category] ?? strtoupper($history->category);
-                                    @endphp
-                                    <p class="font-semibold">{{ $categoryName }}</p>
-                                    <p class="text-sm text-gray-600">{{ $history->tournament?->name ?? 'Initial Rating' }}</p>
-                                    <p class="text-sm text-gray-500">{{ $history->recorded_at->format('M d, Y') }}</p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-2xl font-bold text-[#C85A54]">{{ number_format($history->rating) }}</p>
-                                    <p class="text-sm text-gray-600">Rank #{{ $history->rank ?? 'N/A' }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="text-center text-gray-500 py-8">
-                            <p>No ranking history available.</p>
-                        </div>
-                    @endforelse
+                <div class="bg-white border-2 border-[#D4A574] rounded-lg overflow-hidden shadow-sm">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tournament</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($rankingHistory as $history)
+                                @php
+                                    $categoryMap = [
+                                        'MS' => "Men's Singles",
+                                        'WS' => "Women's Singles",
+                                        'MD' => "Men's Doubles",
+                                        'WD' => "Women's Doubles",
+                                        'XD' => "Mixed Doubles",
+                                    ];
+                                    $categoryName = $categoryMap[$history->category] ?? strtoupper($history->category);
+                                @endphp
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">{{ $categoryName }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ $history->tournament?->name ?? 'Initial Rating' }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-500">{{ $history->recorded_at->format('M d, Y') }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-2xl font-bold text-[#C85A54]">{{ number_format($history->rating) }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-600">#{{ $history->calculated_rank ?? $history->rank ?? 'N/A' }}</div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                        <p>No ranking history available.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
 

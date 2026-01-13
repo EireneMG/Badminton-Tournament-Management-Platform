@@ -1,5 +1,5 @@
 <x-dashboard-layout title="Complete Your Profile">
-    <div class="max-w-3xl mx-auto">
+    <div class="max-w-3xl mx-auto" x-data="biodataForm()" x-init="init()">
         <div class="bg-white rounded-lg shadow-lg p-8">
             <div class="mb-8">
                 <h1 class="text-2xl font-bold text-[#2C5F4F]">Complete Your Profile</h1>
@@ -89,13 +89,19 @@
                             <input type="text" name="contact_number" id="contact_number" value="{{ old('contact_number', $player->contact_number) }}" placeholder="+63 9XX XXX XXXX" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#2C5F4F] focus:border-[#2C5F4F]">
                         </div>
                         <div>
-                            <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-                            <select name="gender" id="gender" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#2C5F4F] focus:border-[#2C5F4F]">
-                                <option value="">Select Gender</option>
-                                <option value="male" {{ old('gender', $player->gender) == 'male' ? 'selected' : '' }}>Male</option>
-                                <option value="female" {{ old('gender', $player->gender) == 'female' ? 'selected' : '' }}>Female</option>
-                                <option value="other" {{ old('gender', $player->gender) == 'other' ? 'selected' : '' }}>Other</option>
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Gender (locked)</label>
+                            @php $genderValue = strtolower($player->gender); @endphp
+                            <div class="w-full px-4 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-700">
+                                @if($genderValue === 'male')
+                                    Male
+                                @elseif($genderValue === 'female')
+                                    Female
+                                @elseif($genderValue === 'other')
+                                    Other
+                                @else
+                                    Not set
+                                @endif
+                            </div>
                         </div>
                     </div>
 
@@ -140,15 +146,57 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label for="region" class="block text-sm font-medium text-gray-700 mb-1">Region</label>
-                            <input type="text" name="region" id="region" value="{{ old('region', $player->region) }}" placeholder="NCR" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#2C5F4F] focus:border-[#2C5F4F]">
+                            <select 
+                                name="region"
+                                id="region"
+                                x-model="selectedRegion"
+                                @change="onRegionChange()"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#2C5F4F] focus:border-[#2C5F4F]"
+                            >
+                                <option value="">Select Region</option>
+                                <template x-for="region in regions" :key="region.code">
+                                    <option :value="region.code" x-text="region.name"></option>
+                                </template>
+                            </select>
                         </div>
                         <div>
                             <label for="province" class="block text-sm font-medium text-gray-700 mb-1">Province</label>
-                            <input type="text" name="province" id="province" value="{{ old('province', $player->province) }}" placeholder="Metro Manila" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#2C5F4F] focus:border-[#2C5F4F]">
+                            <template x-if="selectedRegion === 'NCR'">
+                                <input type="hidden" name="province" value="N/A">
+                            </template>
+                            <select 
+                                name="province"
+                                id="province"
+                                x-model="selectedProvince"
+                                @change="onProvinceChange()"
+                                :disabled="!selectedRegion || selectedRegion === 'NCR'"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#2C5F4F] focus:border-[#2C5F4F] disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            >
+                                <option value="">Select Province</option>
+                                <option x-show="selectedRegion === 'NCR'" value="N/A">N/A</option>
+                                <template x-for="province in availableProvinces" :key="province">
+                                    <option :value="province" x-text="province"></option>
+                                </template>
+                            </select>
                         </div>
                         <div>
                             <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City/Municipality</label>
-                            <input type="text" name="city" id="city" value="{{ old('city', $player->city) }}" placeholder="Quezon City" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#2C5F4F] focus:border-[#2C5F4F]">
+                            <!-- Hidden field to preserve city value when disabled -->
+                            <template x-if="(!selectedProvince && selectedRegion !== 'NCR') || !selectedRegion">
+                                <input type="hidden" name="city" :value="selectedCity || '{{ old("city", $player->city) }}'">
+                            </template>
+                            <select 
+                                name="city"
+                                id="city"
+                                x-model="selectedCity"
+                                :disabled="(!selectedProvince && selectedRegion !== 'NCR') || !selectedRegion"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#2C5F4F] focus:border-[#2C5F4F] disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            >
+                                <option value="">Select City</option>
+                                <template x-for="city in availableCities" :key="city">
+                                    <option :value="city" x-text="city"></option>
+                                </template>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -157,12 +205,15 @@
                     <h2 class="text-lg font-semibold text-gray-900 mb-4">Education Background</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label for="school_status" class="block text-sm font-medium text-gray-700 mb-1">School Status</label>
+                            <label for="school_status" class="block text-sm font-medium text-gray-700 mb-1">Education Status</label>
                             <select name="school_status" id="school_status" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#2C5F4F] focus:border-[#2C5F4F]">
                                 <option value="">Select Status</option>
-                                <option value="student" {{ old('school_status', $player->school_status) == 'student' ? 'selected' : '' }}>Currently a Student</option>
-                                <option value="graduated" {{ old('school_status', $player->school_status) == 'graduated' ? 'selected' : '' }}>Graduated</option>
-                                <option value="not_applicable" {{ old('school_status', $player->school_status) == 'not_applicable' ? 'selected' : '' }}>N/A</option>
+                                <option value="junior_high" {{ old('school_status', $player->school_status) == 'junior_high' ? 'selected' : '' }}>Junior High School Student</option>
+                                <option value="senior_high" {{ old('school_status', $player->school_status) == 'senior_high' ? 'selected' : '' }}>Senior High School Student</option>
+                                <option value="college_student" {{ old('school_status', $player->school_status) == 'college_student' ? 'selected' : '' }}>College Student</option>
+                                <option value="college_graduate" {{ old('school_status', $player->school_status) == 'college_graduate' ? 'selected' : '' }}>College Graduate</option>
+                                <option value="post_graduate" {{ old('school_status', $player->school_status) == 'post_graduate' ? 'selected' : '' }}>Post-Graduate (Master's/Doctorate)</option>
+                                <option value="not_applicable" {{ old('school_status', $player->school_status) == 'not_applicable' ? 'selected' : '' }}>N/A (Did not attend school)</option>
                             </select>
                         </div>
                         <div>
@@ -175,6 +226,43 @@
 
                 <div class="border-b border-gray-200 pb-6">
                     <h2 class="text-lg font-semibold text-gray-900 mb-4">Badminton Experience</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <label for="years_of_experience" class="block text-sm font-medium text-gray-700 mb-1">Years of Playing Experience</label>
+                            <select name="years_of_experience" id="years_of_experience" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#2C5F4F] focus:border-[#2C5F4F]">
+                                <option value="">Select Years</option>
+                                <option value="less_than_1" {{ old('years_of_experience', $player->years_of_experience) == 'less_than_1' ? 'selected' : '' }}>Less than 1 year</option>
+                                <option value="1_2" {{ old('years_of_experience', $player->years_of_experience) == '1_2' ? 'selected' : '' }}>1–2 years</option>
+                                <option value="3_5" {{ old('years_of_experience', $player->years_of_experience) == '3_5' ? 'selected' : '' }}>3–5 years</option>
+                                <option value="6_10" {{ old('years_of_experience', $player->years_of_experience) == '6_10' ? 'selected' : '' }}>6–10 years</option>
+                                <option value="more_than_10" {{ old('years_of_experience', $player->years_of_experience) == 'more_than_10' ? 'selected' : '' }}>More than 10 years</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="experience_level" class="block text-sm font-medium text-gray-700 mb-1">Experience Level</label>
+                            <select name="experience_level" id="experience_level" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#2C5F4F] focus:border-[#2C5F4F]">
+                                <option value="">Select Level</option>
+                                <option value="beginner" {{ old('experience_level', $player->experience_level) == 'beginner' ? 'selected' : '' }}>Beginner</option>
+                                <option value="lower_intermediate" {{ old('experience_level', $player->experience_level) == 'lower_intermediate' ? 'selected' : '' }}>Lower Intermediate</option>
+                                <option value="intermediate" {{ old('experience_level', $player->experience_level) == 'intermediate' ? 'selected' : '' }}>Intermediate</option>
+                                <option value="upper_intermediate" {{ old('experience_level', $player->experience_level) == 'upper_intermediate' ? 'selected' : '' }}>Upper Intermediate</option>
+                                <option value="advanced" {{ old('experience_level', $player->experience_level) == 'advanced' ? 'selected' : '' }}>Advanced</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="competitive_background" class="block text-sm font-medium text-gray-700 mb-1">Competitive Background</label>
+                            <select name="competitive_background" id="competitive_background" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#2C5F4F] focus:border-[#2C5F4F]">
+                                <option value="">Select Background</option>
+                                <option value="school_competitions" {{ old('competitive_background', $player->competitive_background) == 'school_competitions' ? 'selected' : '' }}>School competitions</option>
+                                <option value="local_tournaments" {{ old('competitive_background', $player->competitive_background) == 'local_tournaments' ? 'selected' : '' }}>Local tournaments</option>
+                                <option value="regional_tournaments" {{ old('competitive_background', $player->competitive_background) == 'regional_tournaments' ? 'selected' : '' }}>Regional tournaments</option>
+                                <option value="national_tournaments" {{ old('competitive_background', $player->competitive_background) == 'national_tournaments' ? 'selected' : '' }}>National tournaments</option>
+                                <option value="none" {{ old('competitive_background', $player->competitive_background) == 'none' ? 'selected' : '' }}>None</option>
+                            </select>
+                        </div>
+                    </div>
+                    
                     <p class="text-sm text-gray-600 mb-4">Select all that apply to your badminton background:</p>
                     @php
                         $historyOptions = [
@@ -201,18 +289,35 @@
                 <div class="pb-6">
                     <h2 class="text-lg font-semibold text-gray-900 mb-4">ID Document</h2>
                     <p class="text-sm text-gray-600 mb-4">Upload a valid ID for verification purposes (optional but recommended for tournament registration).</p>
-                    <div class="flex items-center gap-4">
-                        @if($player->player_id_document)
-                            <div class="flex items-center gap-2 text-green-600">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                </svg>
-                                <span class="text-sm">ID document uploaded</span>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="id_type" class="block text-sm font-medium text-gray-700 mb-1">ID Type</label>
+                            <select name="id_type" id="id_type" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#2C5F4F] focus:border-[#2C5F4F]">
+                                <option value="">Select ID Type</option>
+                                <option value="drivers_license" {{ old('id_type', $player->id_type) == 'drivers_license' ? 'selected' : '' }}>Driver's License</option>
+                                <option value="student_id" {{ old('id_type', $player->id_type) == 'student_id' ? 'selected' : '' }}>Student ID</option>
+                                <option value="passport" {{ old('id_type', $player->id_type) == 'passport' ? 'selected' : '' }}>Passport</option>
+                                <option value="national_id" {{ old('id_type', $player->id_type) == 'national_id' ? 'selected' : '' }}>National ID</option>
+                                <option value="birth_certificate" {{ old('id_type', $player->id_type) == 'birth_certificate' ? 'selected' : '' }}>Birth Certificate</option>
+                                <option value="prc_id" {{ old('id_type', $player->id_type) == 'prc_id' ? 'selected' : '' }}>PRC ID</option>
+                                <option value="postal_id" {{ old('id_type', $player->id_type) == 'postal_id' ? 'selected' : '' }}>Postal ID</option>
+                                <option value="senior_citizen_id" {{ old('id_type', $player->id_type) == 'senior_citizen_id' ? 'selected' : '' }}>Senior Citizen ID</option>
+                                <option value="others" {{ old('id_type', $player->id_type) == 'others' ? 'selected' : '' }}>Others</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            @if($player->player_id_document)
+                                <div class="flex items-center gap-2 text-green-600">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-sm">ID document uploaded</span>
+                                </div>
+                            @endif
+                            <div class="flex-1">
+                                <input type="file" name="player_id_document" accept="image/jpeg,image/png,image/jpg,application/pdf" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" @if(!$player->player_id_document) required @endif>
+                                <p class="text-xs text-gray-500 mt-1">JPG, JPEG, PNG or PDF. Max 5MB.</p>
                             </div>
-                        @endif
-                        <div class="flex-1">
-                            <input type="file" name="player_id_document" accept="image/jpeg,image/png,image/jpg,application/pdf" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200">
-                            <p class="text-xs text-gray-500 mt-1">JPG, JPEG, PNG or PDF. Max 5MB.</p>
                         </div>
                     </div>
                 </div>
@@ -228,4 +333,188 @@
             </form>
         </div>
     </div>
+
+    <script>
+        function biodataForm() {
+            return {
+                selectedRegion: '{{ old("region", $player->region) }}',
+                selectedProvince: '{{ old("province", $player->province) }}',
+                selectedCity: '{{ old("city", $player->city) }}',
+                availableProvinces: [],
+                availableCities: [],
+                
+                regions: [
+                    { code: 'NCR', name: 'NCR' },
+                    { code: 'CAR', name: 'CAR – Cordillera Administrative Region' },
+                    { code: 'R1', name: 'Region I – Ilocos Region' },
+                    { code: 'R2', name: 'Region II – Cagayan Valley' },
+                    { code: 'R3', name: 'Region III – Central Luzon' },
+                    { code: 'R4A', name: 'Region IV-A – CALABARZON' },
+                    { code: 'R4B', name: 'Region IV-B – MIMAROPA' },
+                    { code: 'R5', name: 'Region V – Bicol Region' }
+                ],
+                
+                regionData: {
+                    'NCR': {
+                        provinces: [],
+                        cities: ['Manila', 'Quezon City', 'Caloocan', 'Las Piñas', 'Makati', 'Malabon', 'Mandaluyong', 'Marikina', 'Muntinlupa', 'Navotas', 'Parañaque', 'Pasay', 'Pasig', 'San Juan', 'Taguig', 'Valenzuela']
+                    },
+                    'CAR': {
+                        provinces: ['Abra', 'Apayao', 'Benguet', 'Ifugao', 'Kalinga', 'Mountain Province'],
+                        cities: {
+                            'Abra': [],
+                            'Apayao': [],
+                            'Benguet': ['Baguio'],
+                            'Ifugao': [],
+                            'Kalinga': ['Tabuk'],
+                            'Mountain Province': []
+                        }
+                    },
+                    'R1': {
+                        provinces: ['Ilocos Norte', 'Ilocos Sur', 'La Union', 'Pangasinan'],
+                        cities: {
+                            'Ilocos Norte': ['Laoag', 'Batac'],
+                            'Ilocos Sur': ['Vigan', 'Candon'],
+                            'La Union': ['San Fernando'],
+                            'Pangasinan': ['Alaminos', 'Dagupan', 'San Carlos', 'Urdaneta']
+                        }
+                    },
+                    'R2': {
+                        provinces: ['Batanes', 'Cagayan', 'Isabela', 'Nueva Vizcaya', 'Quirino'],
+                        cities: {
+                            'Batanes': [],
+                            'Cagayan': ['Tuguegarao'],
+                            'Isabela': ['Ilagan', 'Cauayan', 'Santiago'],
+                            'Nueva Vizcaya': [],
+                            'Quirino': []
+                        }
+                    },
+                    'R3': {
+                        provinces: ['Aurora', 'Bataan', 'Bulacan', 'Nueva Ecija', 'Pampanga', 'Tarlac', 'Zambales'],
+                        cities: {
+                            'Aurora': [],
+                            'Bataan': ['Balanga'],
+                            'Bulacan': ['Baliwag', 'Malolos', 'Meycauayan', 'San Jose del Monte'],
+                            'Nueva Ecija': ['Cabanatuan', 'Gapan', 'Science City of Muñoz', 'Palayan', 'San Jose (NE)'],
+                            'Pampanga': ['Angeles', 'Mabalacat', 'San Fernando (Pampanga)'],
+                            'Tarlac': ['Tarlac City'],
+                            'Zambales': ['Olongapo']
+                        }
+                    },
+                    'R4A': {
+                        provinces: ['Cavite', 'Laguna', 'Batangas', 'Rizal', 'Quezon'],
+                        cities: {
+                            'Cavite': ['Cavite City', 'Tagaytay', 'Trece Martires', 'Dasmariñas', 'Imus', 'Bacoor', 'General Trias'],
+                            'Laguna': ['Biñan', 'Cabuyao', 'Calamba', 'San Pablo', 'Santa Rosa', 'San Pedro'],
+                            'Batangas': ['Batangas City', 'Lipa', 'Tanauan', 'Santo Tomas'],
+                            'Rizal': ['Antipolo'],
+                            'Quezon': ['Lucena', 'Tayabas']
+                        }
+                    },
+                    'R4B': {
+                        provinces: ['Marinduque', 'Occidental Mindoro', 'Oriental Mindoro', 'Palawan', 'Romblon'],
+                        cities: {
+                            'Marinduque': [],
+                            'Occidental Mindoro': [],
+                            'Oriental Mindoro': ['Calapan'],
+                            'Palawan': ['Puerto Princesa'],
+                            'Romblon': []
+                        }
+                    },
+                    'R5': {
+                        provinces: ['Albay', 'Camarines Norte', 'Camarines Sur', 'Catanduanes', 'Masbate', 'Sorsogon'],
+                        cities: {
+                            'Albay': ['Legazpi', 'Ligao'],
+                            'Camarines Norte': [],
+                            'Camarines Sur': ['Naga', 'Iriga'],
+                            'Catanduanes': [],
+                            'Masbate': ['Masbate City'],
+                            'Sorsogon': ['Sorsogon City']
+                        }
+                    }
+                },
+                
+                init() {
+                    // Initialize dropdowns with old values if they exist
+                    const oldRegion = '{{ old("region", $player->region) }}';
+                    const oldProvince = '{{ old("province", $player->province) }}';
+                    const oldCity = '{{ old("city", $player->city) }}';
+                    
+                    // Helper: ensure we keep existing stored values even if they aren't in the predefined list
+                    const ensureOption = (list, value) => {
+                        if (value && !list.includes(value)) {
+                            list.push(value);
+                        }
+                    };
+                    
+                    if (oldRegion) {
+                        this.selectedRegion = oldRegion;
+                        if (oldRegion === 'NCR') {
+                            this.availableProvinces = [];
+                            this.selectedProvince = 'N/A';
+                            this.availableCities = this.regionData['NCR'].cities.slice();
+                            ensureOption(this.availableCities, oldCity);
+                            if (oldCity) {
+                                this.selectedCity = oldCity;
+                            }
+                        } else if (this.regionData[oldRegion]) {
+                            this.availableProvinces = this.regionData[oldRegion].provinces.slice();
+                            ensureOption(this.availableProvinces, oldProvince);
+                            
+                            if (oldProvince) {
+                                const cities = this.regionData[oldRegion].cities[oldProvince] || [];
+                                this.availableCities = cities.slice();
+                                ensureOption(this.availableCities, oldCity);
+                                this.selectedProvince = oldProvince;
+                                if (oldCity) {
+                                    this.selectedCity = oldCity;
+                                }
+                            } else {
+                                // No province selected yet; keep any old city as a selectable option
+                                this.availableCities = [];
+                                ensureOption(this.availableCities, oldCity);
+                                if (oldCity) {
+                                    this.selectedCity = oldCity;
+                                }
+                            }
+                        } else {
+                            // Unknown region: still keep the value selectable
+                            this.availableProvinces = [];
+                            ensureOption(this.availableProvinces, oldProvince);
+                            this.availableCities = [];
+                            ensureOption(this.availableCities, oldCity);
+                            this.selectedProvince = oldProvince || '';
+                            this.selectedCity = oldCity || '';
+                        }
+                    }
+                },
+                
+                onRegionChange() {
+                    this.selectedProvince = '';
+                    this.selectedCity = '';
+                    this.availableCities = [];
+                    
+                    if (this.selectedRegion === 'NCR') {
+                        this.availableProvinces = [];
+                        this.selectedProvince = 'N/A';
+                        this.availableCities = this.regionData['NCR'].cities;
+                    } else if (this.selectedRegion) {
+                        this.availableProvinces = this.regionData[this.selectedRegion].provinces;
+                    } else {
+                        this.availableProvinces = [];
+                    }
+                },
+                
+                onProvinceChange() {
+                    this.selectedCity = '';
+                    
+                    if (this.selectedProvince && this.selectedRegion !== 'NCR') {
+                        this.availableCities = this.regionData[this.selectedRegion].cities[this.selectedProvince] || [];
+                    } else {
+                        this.availableCities = [];
+                    }
+                }
+            }
+        }
+    </script>
 </x-dashboard-layout>

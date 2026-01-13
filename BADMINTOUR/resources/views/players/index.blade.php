@@ -5,10 +5,9 @@
             <div class="relative">
                 <input 
                     type="text" 
-                    id="searchInput"
+                    x-model="searchQuery"
                     placeholder="Search players by name, email, or club"
                     class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400"
-                    onkeyup="filterPlayers()"
                 >
                 <svg class="w-5 h-5 text-gray-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -17,117 +16,194 @@
         </div>
 
         <!-- Players List -->
-        <div class="space-y-4" id="playersList">
-            @forelse($allPlayers as $player)
-                @php
-                    $clubMembership = $player->approvedClubMembership;
-                    $club = $clubMembership?->club;
-                    
-                    // Get player's ELO rating for display
-                    $playerElo = \App\Models\EloRating::where('player_id', $player->id)
-                        ->where('category', 'MS')
-                        ->first();
-                    $displayElo = $playerElo ? number_format($playerElo->current_rating) : ($clubMembership?->provisional_elo ? number_format($clubMembership->provisional_elo) : 'N/A');
-                    
-                    // Get ranking position
+        <div class="bg-white border-2 border-[#D4A574] rounded-lg overflow-hidden shadow-sm" id="playersList" x-data="{
+            searchQuery: '',
+            sortColumn: 'name',
+            sortDirection: 'asc',
+            allPlayers: @js($allPlayers->map(function($player) {
+                $clubMembership = $player->approvedClubMembership;
+                $club = $clubMembership?->club;
+                // Get ELO based on player's gender
+                $primaryCategory = ($player->gender === 'Female') ? 'WS' : 'MS';
+                $playerElo = \App\Models\EloRating::where('player_id', $player->id)->where('category', $primaryCategory)->first();
+                $displayElo = $playerElo ? $playerElo->current_rating : ($clubMembership?->provisional_elo ?? null);
+                // Get rank safely
+                $rankingPosition = null;
+                try {
                     $rankingService = app(\App\Services\RankingService::class);
-                    $rankingPosition = $rankingService->getPlayerRanking($player, 'MS');
-                @endphp
-                <div class="player-card bg-white border-2 border-[#D4A574] rounded-lg p-6 hover:shadow-lg transition" data-name="{{ strtolower($player->first_name . ' ' . $player->last_name) }}" data-email="{{ strtolower($player->email) }}" data-club="{{ strtolower($club?->name ?? 'no club') }}">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-4 flex-1">
-                            <!-- Player Avatar -->
-                            @if($player->profile_photo)
-                                <img src="{{ Storage::url($player->profile_photo) }}" alt="{{ $player->first_name }}" class="h-16 w-16 rounded-full object-cover border-2 border-[#D4A574]">
-                            @else
-                                <div class="h-16 w-16 rounded-full bg-[#2C5F4F] flex items-center justify-center text-white font-bold text-lg border-2 border-[#D4A574]">
-                                    {{ strtoupper(substr($player->first_name, 0, 1) . substr($player->last_name, 0, 1)) }}
+                    $rankingPosition = $rankingService->getPlayerRanking($player, $primaryCategory);
+                } catch (\Exception $e) {
+                    $rankingPosition = null;
+                }
+                return [
+                    'id' => $player->id,
+                    'name' => $player->first_name . ' ' . $player->last_name,
+                    'email' => $player->email,
+                    'profile_photo' => $player->profile_photo,
+                    'club' => $club?->name ?? 'No Club',
+                    'elo' => $displayElo,
+                    'rank' => $rankingPosition,
+                    'status' => $player->getStatus(),
+                ];
+            })->toArray()),
+            get filteredPlayers() {
+                let filtered = this.allPlayers;
+                if (this.searchQuery) {
+                    const query = this.searchQuery.toLowerCase();
+                    filtered = filtered.filter(p => 
+                        p.name.toLowerCase().includes(query) ||
+                        p.email.toLowerCase().includes(query) ||
+                        p.club.toLowerCase().includes(query)
+                    );
+                }
+                return filtered;
+            },
+            get players() {
+                let sorted = [...this.filteredPlayers];
+                sorted.sort((a, b) => {
+                    let aVal = a[this.sortColumn];
+                    let bVal = b[this.sortColumn];
+                    if (aVal === null || aVal === undefined) return 1;
+                    if (bVal === null || bVal === undefined) return -1;
+                    if (this.sortColumn === 'elo' || this.sortColumn === 'rank') {
+                        aVal = aVal ?? 0;
+                        bVal = bVal ?? 0;
+                        return this.sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+                    }
+                    aVal = String(aVal).toLowerCase();
+                    bVal = String(bVal).toLowerCase();
+                    if (aVal < bVal) return this.sortDirection === 'asc' ? -1 : 1;
+                    if (aVal > bVal) return this.sortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                });
+                return sorted;
+            },
+            sort(column) {
+                if (this.sortColumn === column) {
+                    this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    this.sortColumn = column;
+                    this.sortDirection = 'asc';
+                }
+                this.players.sort((a, b) => {
+                    let aVal = a[column];
+                    let bVal = b[column];
+                    if (aVal === null || aVal === undefined) return 1;
+                    if (bVal === null || bVal === undefined) return -1;
+                    if (column === 'elo' || column === 'rank') {
+                        aVal = aVal ?? 0;
+                        bVal = bVal ?? 0;
+                        return this.sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+                    }
+                    aVal = String(aVal).toLowerCase();
+                    bVal = String(bVal).toLowerCase();
+                    if (aVal < bVal) return this.sortDirection === 'asc' ? -1 : 1;
+                    if (aVal > bVal) return this.sortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            },
+            getSortIcon(column) {
+                if (this.sortColumn !== column) return '↕️';
+                return this.sortDirection === 'asc' ? '↑' : '↓';
+            }
+        }">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th @click="sort('name')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                                <div class="flex items-center gap-2">
+                                    Player
+                                    <span x-text="getSortIcon('name')"></span>
                                 </div>
-                            @endif
-                            
-                            <!-- Player Info -->
-                            <div class="flex-1">
-                                <div class="flex items-center gap-3">
-                                    <h3 class="text-lg font-bold text-gray-900">{{ strtoupper($player->last_name) }}</h3>
-                                    <span class="text-lg text-gray-700">{{ $player->first_name }}</span>
+                            </th>
+                            <th @click="sort('club')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                                <div class="flex items-center gap-2">
+                                    Club
+                                    <span x-text="getSortIcon('club')"></span>
                                 </div>
-                                <div class="mt-1 flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                                    <span class="flex items-center gap-1">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                        </svg>
-                                        {{ $player->email }}
-                                    </span>
-                                    @if($club)
-                                        <span class="flex items-center gap-1">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                                            </svg>
-                                            {{ $club->name }}
-                                        </span>
-                                    @endif
-                                    @if($player->gender)
-                                        <span class="flex items-center gap-1">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                            </svg>
-                                            {{ ucfirst($player->gender) }}
-                                        </span>
-                                    @endif
+                            </th>
+                            <th @click="sort('elo')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                                <div class="flex items-center gap-2">
+                                    Elo Rating
+                                    <span x-text="getSortIcon('elo')"></span>
                                 </div>
-                                @if($displayElo !== 'N/A' || $rankingPosition)
-                                    <div class="mt-2 flex items-center gap-3 text-sm">
-                                        @if($displayElo !== 'N/A')
-                                            <span class="text-gray-700 font-semibold">ELO: {{ $displayElo }}</span>
-                                        @endif
-                                        @if($rankingPosition)
-                                            <span class="text-[#2C5F4F] font-semibold">Rank: #{{ $rankingPosition }}</span>
-                                        @endif
+                            </th>
+                            <th @click="sort('rank')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                                <div class="flex items-center gap-2">
+                                    Rank
+                                    <span x-text="getSortIcon('rank')"></span>
+                                </div>
+                            </th>
+                            <th @click="sort('status')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                                <div class="flex items-center gap-2">
+                                    Status
+                                    <span x-text="getSortIcon('status')"></span>
+                                </div>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <template x-for="player in players" :key="player.id">
+                            <tr class="hover:bg-gray-50 transition duration-150">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <template x-if="player.profile_photo">
+                                            <img :src="`/storage/${player.profile_photo}`" :alt="player.name" class="h-10 w-10 rounded-full object-cover border-2 border-[#D4A574] mr-3">
+                                        </template>
+                                        <template x-if="!player.profile_photo">
+                                            <div class="h-10 w-10 rounded-full bg-[#2C5F4F] flex items-center justify-center text-white font-bold text-sm border-2 border-[#D4A574] mr-3" x-text="player.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)"></div>
+                                        </template>
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900" x-text="player.name"></div>
+                                        </div>
                                     </div>
-                                @endif
-                            </div>
-                        </div>
-                        
-                        <!-- Actions -->
-                        <div class="flex items-center gap-3">
-                            <a href="{{ route('players.show', $player) }}" class="inline-flex items-center text-[#2C5F4F] hover:text-[#244D3E] font-semibold">
-                                View Profile
-                                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                </svg>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <div class="bg-white border-2 border-[#D4A574] rounded-lg p-12 text-center">
-                    <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
-                    <h3 class="text-xl font-bold text-gray-700 mb-2">No Players Found</h3>
-                    <p class="text-gray-500">There are no registered players in the system yet.</p>
-                </div>
-            @endforelse
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900" x-text="player.club"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <template x-if="player.elo">
+                                        <div class="text-sm text-gray-900 font-semibold" x-text="new Intl.NumberFormat().format(player.elo)"></div>
+                                    </template>
+                                    <template x-if="!player.elo">
+                                        <div class="text-sm text-gray-500">N/A</div>
+                                    </template>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <template x-if="player.rank">
+                                        <div class="text-sm font-semibold text-[#2C5F4F]" x-text="`#${player.rank}`"></div>
+                                    </template>
+                                    <template x-if="!player.rank">
+                                        <div class="text-sm text-gray-500">N/A</div>
+                                    </template>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <template x-if="player.status === 'Active'">
+                                        <span class="px-2 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded-full">Active</span>
+                                    </template>
+                                    <template x-if="player.status === 'Inactive'">
+                                        <span class="px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-700 rounded-full">Inactive</span>
+                                    </template>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a :href="`/players/${player.id}`" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                        View Details
+                                    </a>
+                                </td>
+                            </tr>
+                        </template>
+                        <template x-if="players.length === 0">
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                    No players found.
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-
-    <script>
-        function filterPlayers() {
-            const input = document.getElementById('searchInput');
-            const filter = input.value.toLowerCase();
-            const cards = document.querySelectorAll('.player-card');
-            
-            cards.forEach(card => {
-                const name = card.getAttribute('data-name');
-                const email = card.getAttribute('data-email');
-                const club = card.getAttribute('data-club');
-                
-                if (name.includes(filter) || email.includes(filter) || club.includes(filter)) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-    </script>
 </x-dashboard-layout>
