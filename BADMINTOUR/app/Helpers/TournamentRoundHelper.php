@@ -110,5 +110,23 @@ class TournamentRoundHelper
         
         return $rounds;
     }
+
+    public static function getRoundProgressionForBracketSize(int $size): array
+    {
+        $size = max(2, $size);
+        $pow = 1;
+        while ($pow < $size) {
+            $pow <<= 1;
+        }
+        
+        return match($pow) {
+            32 => ['Round of 32', 'Round of 16', 'Quarterfinals', 'Semifinals', 'Finals'],
+            16 => ['Round of 16', 'Quarterfinals', 'Semifinals', 'Finals'],
+            8  => ['Quarterfinals', 'Semifinals', 'Finals'],
+            4  => ['Semifinals', 'Finals'],
+            2  => ['Finals'],
+            default => ['Round of ' . $pow, 'Finals'],
+        };
+    }
 }
 
