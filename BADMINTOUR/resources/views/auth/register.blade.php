@@ -199,9 +199,14 @@
                             <input 
                                 type="password" 
                                 name="password" 
-                                placeholder="Create password"
+                                placeholder="Create password (minimum 8 characters)"
+                                required
+                                minlength="8"
                                 class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
                             >
+                            @error('password')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- Confirm Password -->
@@ -210,8 +215,13 @@
                                 type="password" 
                                 name="password_confirmation" 
                                 placeholder="Confirm password"
+                                required
+                                minlength="8"
                                 class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
                             >
+                            @error('password_confirmation')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- Create Button -->

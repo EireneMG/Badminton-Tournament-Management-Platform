@@ -25,7 +25,7 @@
                 <p class="text-white text-lg opacity-90">Select how you want to join the platform</p>
             </div>
 
-             <!-- Registration Type Cards -->
+            <!-- Registration Type Cards -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                 <!-- Player Registration -->
                 <a href="/register/player" class="group">
@@ -108,7 +108,7 @@
         </div>
     </div>
 
-     <!-- Manager Warning Modal -->
+    <!-- Manager Warning Modal -->
     <div x-show="showManagerWarning" x-cloak class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
         <div @click.away="showManagerWarning = false" class="bg-white rounded-2xl max-w-md w-full p-8 transform transition-all">
             <!-- Icon -->
