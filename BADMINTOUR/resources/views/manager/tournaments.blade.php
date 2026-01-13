@@ -6,7 +6,7 @@
     <title>Tournament Management - Badminton Tournament Management</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-white" x-data="{ activeTab: 'ongoing' }">
+<body class="bg-white" x-data="{ activeTab: 'ongoing', searchQuery: '' }">
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
         @include('layouts.manager-sidebar')
@@ -19,11 +19,11 @@
                     <div>
                         <h1 class="text-3xl font-bold text-black">ALL TOURNAMENTS</h1>
                     </div>
-                    <button class="text-gray-600 hover:text-gray-800">
+                    <a href="{{ route('notifications.index') }}" class="text-gray-600 hover:text-gray-800">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                         </svg>
-                    </button>
+                    </a>
                 </div>
             </header>
 
@@ -96,6 +96,15 @@
                                 btnSpinner.classList.remove('hidden');
                             }
                         }
+                        // Ensure overlay/spinner are reset when returning/back
+                        window.addEventListener('pageshow', () => {
+                            const overlay = document.getElementById('generate-loading-overlay');
+                            const btnText = document.getElementById('generate-btn-text');
+                            const btnSpinner = document.getElementById('generate-btn-spinner');
+                            if (overlay) overlay.classList.add('hidden');
+                            if (btnText) btnText.classList.remove('hidden');
+                            if (btnSpinner) btnSpinner.classList.add('hidden');
+                        });
                     </script>
                 </div>
 
@@ -105,7 +114,7 @@
                         <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
-                        <input type="text" placeholder="Search for tournaments" class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
+                        <input type="text" x-model="searchQuery" placeholder="Search for tournaments" class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#2C5F4F]">
                     </div>
                 </div>
 
@@ -144,6 +153,17 @@
                 <div x-show="activeTab === 'ongoing'" x-cloak>
                     @php
                         $ongoingTournaments = $allTournaments->where('status', 'ongoing');
+                        $nextDir = $dir === 'asc' ? 'desc' : 'asc';
+                        $sortLink = function($key) use ($nextDir, $sort) {
+                            return request()->fullUrlWithQuery([
+                                'sort' => $key,
+                                'dir' => ($sort === $key ? $nextDir : 'asc'),
+                            ]);
+                        };
+                        $arrow = function($key) use ($sort, $dir) {
+                            if ($sort !== $key) return '↕';
+                            return $dir === 'asc' ? '▲' : '▼';
+                        };
                     @endphp
                     @if($ongoingTournaments->count() > 0)
                         <div class="bg-white rounded-lg shadow overflow-hidden">
@@ -151,35 +171,51 @@
                                 <table class="min-w-full divide-y divide-gray-200">
                                     <thead class="bg-gray-50">
                                         <tr>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tournament Name</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dates</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organizer</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <a href="{{ $sortLink('name') }}" class="inline-flex items-center gap-1 hover:text-gray-900">
+                                                    Tournament Name <span class="text-gray-400">{{ $arrow('name') }}</span>
+                                                </a>
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <a href="{{ $sortLink('start_date') }}" class="inline-flex items-center gap-1 hover:text-gray-900">
+                                                    Dates <span class="text-gray-400">{{ $arrow('start_date') }}</span>
+                                                </a>
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <a href="{{ $sortLink('venue') }}" class="inline-flex items-center gap-1 hover:text-gray-900">
+                                                    Venue <span class="text-gray-400">{{ $arrow('venue') }}</span>
+                                                </a>
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <a href="{{ $sortLink('organizer') }}" class="inline-flex items-center gap-1 hover:text-gray-900">
+                                                    Organizer <span class="text-gray-400">{{ $arrow('organizer') }}</span>
+                                                </a>
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Format</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200">
                                         @foreach($ongoingTournaments as $tournament)
-                                            <tr class="hover:bg-gray-50 transition duration-150">
+                                            <tr x-show="!searchQuery || '{{ addslashes(strtolower($tournament->name)) }}'.includes(searchQuery.toLowerCase()) || '{{ addslashes(strtolower($tournament->venue_name ?? '')) }}'.includes(searchQuery.toLowerCase()) || '{{ addslashes(strtolower($tournament->club->name ?? '')) }}'.includes(searchQuery.toLowerCase())" class="hover:bg-gray-50 transition duration-150">
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <div class="text-sm font-medium text-gray-900">{{ $tournament->name }}</div>
-                                                </td>
-                                                <td class="px-6 py-4">
-                                                    <div class="text-sm text-gray-500 max-w-md truncate">{{ $tournament->description ?? 'N/A' }}</div>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <div class="text-sm text-gray-900">{{ $tournament->start_date->format('M d, Y') }}</div>
                                                     <div class="text-sm text-gray-500">{{ $tournament->end_date->format('M d, Y') }}</div>
                                                 </td>
+                                                <td class="px-6 py-4 whitespace-normal break-words" style="max-width: 200px;">
+                                                    <div class="text-sm text-gray-900 leading-snug">{{ $tournament->venue_name ?? 'N/A' }}</div>
+                                                </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <div class="text-sm text-gray-900">{{ $tournament->club->name ?? 'N/A' }}</div>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    @if($tournament->is_dual_meet)
-                                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full uppercase">Dual Meet</span>
+                                                    @if($tournament->bracket_type === 'round_robin')
+                                                        <span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-semibold rounded-full">Round Robin</span>
                                                     @else
-                                                        <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full uppercase">Standard</span>
+                                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">Single Elimination</span>
                                                     @endif
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -201,43 +237,75 @@
                 <!-- Upcoming Tournaments -->
                 <div x-show="activeTab === 'upcoming'" x-cloak>
                     @php
-                        $upcomingTournaments = $allTournaments->where('status', 'upcoming');
+                        // Treat 'published' as upcoming so managers can see newly published events that will start soon
+                        $upcomingTournaments = $allTournaments->filter(function($t) {
+                            return in_array($t->status, ['upcoming', 'published']);
+                        });
                     @endphp
                     @if($upcomingTournaments->count() > 0)
                         <div class="bg-white rounded-lg shadow overflow-hidden">
                             <div class="overflow-x-auto">
                                 <table class="min-w-full divide-y divide-gray-200">
                                     <thead class="bg-gray-50">
+                                        @php
+                                            $nextDir = $dir === 'asc' ? 'desc' : 'asc';
+                                            $sortLink = function($key) use ($nextDir, $sort) {
+                                                return request()->fullUrlWithQuery([
+                                                    'sort' => $key,
+                                                    'dir' => ($sort === $key ? $nextDir : 'asc'),
+                                                ]);
+                                            };
+                                            $arrow = function($key) use ($sort, $dir) {
+                                                if ($sort !== $key) return '↕';
+                                                return $dir === 'asc' ? '▲' : '▼';
+                                            };
+                                        @endphp
                                         <tr>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tournament Name</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dates</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organizer</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <a href="{{ $sortLink('name') }}" class="inline-flex items-center gap-1 hover:text-gray-900">
+                                                    Tournament Name <span class="text-gray-400">{{ $arrow('name') }}</span>
+                                                </a>
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <a href="{{ $sortLink('start_date') }}" class="inline-flex items-center gap-1 hover:text-gray-900">
+                                                    Dates <span class="text-gray-400">{{ $arrow('start_date') }}</span>
+                                                </a>
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <a href="{{ $sortLink('venue') }}" class="inline-flex items-center gap-1 hover:text-gray-900">
+                                                    Venue <span class="text-gray-400">{{ $arrow('venue') }}</span>
+                                                </a>
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <a href="{{ $sortLink('organizer') }}" class="inline-flex items-center gap-1 hover:text-gray-900">
+                                                    Organizer <span class="text-gray-400">{{ $arrow('organizer') }}</span>
+                                                </a>
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Format</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200">
                                         @foreach($upcomingTournaments as $tournament)
-                                            <tr class="hover:bg-gray-50 transition duration-150">
+                                            <tr x-show="!searchQuery || '{{ addslashes(strtolower($tournament->name)) }}'.includes(searchQuery.toLowerCase()) || '{{ addslashes(strtolower($tournament->venue_name ?? '')) }}'.includes(searchQuery.toLowerCase()) || '{{ addslashes(strtolower($tournament->club->name ?? '')) }}'.includes(searchQuery.toLowerCase())" class="hover:bg-gray-50 transition duration-150">
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <div class="text-sm font-medium text-gray-900">{{ $tournament->name }}</div>
-                                                </td>
-                                                <td class="px-6 py-4">
-                                                    <div class="text-sm text-gray-500 max-w-md truncate">{{ $tournament->description ?? 'N/A' }}</div>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <div class="text-sm text-gray-900">{{ $tournament->start_date->format('M d, Y') }}</div>
                                                     <div class="text-sm text-gray-500">{{ $tournament->end_date->format('M d, Y') }}</div>
                                                 </td>
+                                                <td class="px-6 py-4 whitespace-normal break-words" style="max-width: 200px;">
+                                                    <div class="text-sm text-gray-900 leading-snug">{{ $tournament->venue_name ?? 'N/A' }}</div>
+                                                </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <div class="text-sm text-gray-900">{{ $tournament->club->name ?? 'N/A' }}</div>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    @if($tournament->is_dual_meet)
-                                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full uppercase">Dual Meet</span>
+                                                    @if($tournament->bracket_type === 'round_robin')
+                                                        <span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-semibold rounded-full">Round Robin</span>
                                                     @else
-                                                        <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full uppercase">Standard</span>
+                                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">Single Elimination</span>
                                                     @endif
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -266,36 +334,65 @@
                             <div class="overflow-x-auto">
                                 <table class="min-w-full divide-y divide-gray-200">
                                     <thead class="bg-gray-50">
+                                        @php
+                                            $nextDir = $dir === 'asc' ? 'desc' : 'asc';
+                                            $sortLink = function($key) use ($nextDir, $sort) {
+                                                return request()->fullUrlWithQuery([
+                                                    'sort' => $key,
+                                                    'dir' => ($sort === $key ? $nextDir : 'asc'),
+                                                ]);
+                                            };
+                                            $arrow = function($key) use ($sort, $dir) {
+                                                if ($sort !== $key) return '↕';
+                                                return $dir === 'asc' ? '▲' : '▼';
+                                            };
+                                        @endphp
                                         <tr>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tournament Name</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dates</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organizer</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <a href="{{ $sortLink('name') }}" class="inline-flex items-center gap-1 hover:text-gray-900">
+                                                    Tournament Name <span class="text-gray-400">{{ $arrow('name') }}</span>
+                                                </a>
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <a href="{{ $sortLink('start_date') }}" class="inline-flex items-center gap-1 hover:text-gray-900">
+                                                    Dates <span class="text-gray-400">{{ $arrow('start_date') }}</span>
+                                                </a>
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <a href="{{ $sortLink('venue') }}" class="inline-flex items-center gap-1 hover:text-gray-900">
+                                                    Venue <span class="text-gray-400">{{ $arrow('venue') }}</span>
+                                                </a>
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <a href="{{ $sortLink('organizer') }}" class="inline-flex items-center gap-1 hover:text-gray-900">
+                                                    Organizer <span class="text-gray-400">{{ $arrow('organizer') }}</span>
+                                                </a>
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Format</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200">
                                         @foreach($completedTournaments as $tournament)
-                                            <tr class="hover:bg-gray-50 transition duration-150 opacity-75">
+                                            <tr x-show="!searchQuery || '{{ addslashes(strtolower($tournament->name)) }}'.includes(searchQuery.toLowerCase()) || '{{ addslashes(strtolower($tournament->venue_name ?? '')) }}'.includes(searchQuery.toLowerCase()) || '{{ addslashes(strtolower($tournament->club->name ?? '')) }}'.includes(searchQuery.toLowerCase())" class="hover:bg-gray-50 transition duration-150 opacity-75">
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <div class="text-sm font-medium text-gray-900">{{ $tournament->name }}</div>
-                                                </td>
-                                                <td class="px-6 py-4">
-                                                    <div class="text-sm text-gray-500 max-w-md truncate">{{ $tournament->description ?? 'N/A' }}</div>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <div class="text-sm text-gray-900">{{ $tournament->start_date->format('M d, Y') }}</div>
                                                     <div class="text-sm text-gray-500">{{ $tournament->end_date->format('M d, Y') }}</div>
                                                 </td>
+                                                <td class="px-6 py-4 whitespace-normal break-words" style="max-width: 200px;">
+                                                    <div class="text-sm text-gray-900 leading-snug">{{ $tournament->venue_name ?? 'N/A' }}</div>
+                                                </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <div class="text-sm text-gray-900">{{ $tournament->club->name ?? 'N/A' }}</div>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    @if($tournament->is_dual_meet)
-                                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full uppercase">Dual Meet</span>
+                                                    @if($tournament->bracket_type === 'round_robin')
+                                                        <span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-semibold rounded-full">Round Robin</span>
                                                     @else
-                                                        <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full uppercase">Standard</span>
+                                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">Single Elimination</span>
                                                     @endif
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -316,22 +413,43 @@
 
                 <!-- Your Tournaments -->
                 <div x-show="activeTab === 'your'" x-cloak>
+                    @php
+                        $nextDir = $dir === 'asc' ? 'desc' : 'asc';
+                        $sortLink = function($key) use ($nextDir, $sort) {
+                            return request()->fullUrlWithQuery([
+                                'sort' => $key,
+                                'dir' => ($sort === $key ? $nextDir : 'asc'),
+                            ]);
+                        };
+                        $arrow = function($key) use ($sort, $dir) {
+                            if ($sort !== $key) return '↕';
+                            return $dir === 'asc' ? '▲' : '▼';
+                        };
+                    @endphp
                     @if($myTournaments->count() > 0)
                         <div class="bg-white rounded-lg shadow overflow-hidden">
                             <div class="overflow-x-auto">
                                 <table class="min-w-full divide-y divide-gray-200">
                                     <thead class="bg-gray-50">
                                         <tr>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tournament Name</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <a href="{{ $sortLink('name') }}" class="inline-flex items-center gap-1 hover:text-gray-900">
+                                                    Tournament Name <span class="text-gray-400">{{ $arrow('name') }}</span>
+                                                </a>
+                                            </th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <a href="{{ $sortLink('start_date') }}" class="inline-flex items-center gap-1 hover:text-gray-900">
+                                                    Created <span class="text-gray-400">{{ $arrow('start_date') }}</span>
+                                                </a>
+                                            </th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200">
                                         @foreach($myTournaments as $tournament)
-                                            <tr class="hover:bg-gray-50 transition duration-150">
+                                            <tr x-show="!searchQuery || '{{ addslashes(strtolower($tournament->name)) }}'.includes(searchQuery.toLowerCase()) || '{{ addslashes(strtolower($tournament->description ?? '')) }}'.includes(searchQuery.toLowerCase()) || '{{ addslashes(strtolower($tournament->club->name ?? '')) }}'.includes(searchQuery.toLowerCase())" class="hover:bg-gray-50 transition duration-150">
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <div class="text-sm font-medium text-gray-900">{{ $tournament->name }}</div>
                                                 </td>
@@ -340,10 +458,10 @@
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <span class="px-2 py-1 text-xs font-semibold rounded-full 
-                                                        @if($tournament->status === 'draft') bg-gray-100 text-gray-700
-                                                        @elseif($tournament->status === 'published') bg-blue-100 text-blue-700
+                                                        @if($tournament->status === 'published') bg-blue-100 text-blue-700
                                                         @elseif($tournament->status === 'ongoing') bg-green-100 text-green-700
                                                         @elseif($tournament->status === 'completed') bg-purple-100 text-purple-700
+                                                        @elseif($tournament->status === 'upcoming') bg-yellow-100 text-yellow-700
                                                         @else bg-red-100 text-red-700
                                                         @endif">
                                                         {{ ucfirst($tournament->status) }}

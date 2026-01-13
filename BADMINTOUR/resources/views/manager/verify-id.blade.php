@@ -30,7 +30,7 @@
         <div class="w-full max-w-2xl">
             <!-- Logo -->
             <div class="flex justify-center mb-8">
-                <img src="{{ asset('images/badmintour-logo.png') }}" alt="BadminTour Logo" class="h-24">
+                <img src="{{ asset('images/logo.jpg') }}" alt="BadminTour Logo" class="h-24">
             </div>
 
             <!-- Main Card -->

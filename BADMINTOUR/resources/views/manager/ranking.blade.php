@@ -18,6 +18,87 @@
         wins: 20,
         losses: 4,
         winRate: 83.3
+    },
+    sortColumn: 'rank',
+    sortDirection: 'asc',
+    searchQuery: '',
+    allRankings: @js($rankings->map(function($r) {
+        return [
+            'rank' => $r->rank,
+            'player_name' => $r->player->first_name . ' ' . $r->player->last_name,
+            'club_name' => $r->club ? $r->club->name : 'No Club',
+            'matches_played' => $r->matches_played,
+            'wins' => $r->wins,
+            'losses' => $r->losses,
+            'current_rating' => $r->current_rating,
+            'is_provisional' => $r->is_provisional ?? false,
+            'player_id' => $r->player->id,
+            'player_name' => $r->player->first_name . ' ' . $r->player->last_name,
+            'player' => [
+                'first_name' => $r->player->first_name,
+                'last_name' => $r->player->last_name,
+            ],
+            'club' => $r->club ? ['name' => $r->club->name] : null,
+            'win_rate' => $r->win_rate,
+        ];
+    })->toArray()),
+    
+    get rankings() {
+        if (!this.searchQuery.trim()) {
+            return this.allRankings;
+        }
+        const query = this.searchQuery.toLowerCase().trim();
+        return this.allRankings.filter(ranking => {
+            const playerName = ranking.player_name.toLowerCase();
+            const clubName = (ranking.club_name || '').toLowerCase();
+            return playerName.includes(query) || clubName.includes(query);
+        });
+    },
+    
+    sort(column) {
+        if (this.sortColumn === column) {
+            this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            this.sortColumn = column;
+            this.sortDirection = 'asc';
+        }
+        
+        this.rankings.sort((a, b) => {
+            let aVal = a[column];
+            let bVal = b[column];
+            
+            // Handle null ranks (N/A) - always put them at bottom
+            if (column === 'rank') {
+                if (aVal === null && bVal === null) return 0;
+                if (aVal === null) return 1; // a goes to bottom
+                if (bVal === null) return -1; // b goes to bottom
+            }
+            
+            // Handle null club names
+            if (column === 'club_name') {
+                aVal = aVal || '';
+                bVal = bVal || '';
+            }
+            
+            // Numeric comparisons
+            if (['rank', 'matches_played', 'wins', 'losses', 'current_rating'].includes(column)) {
+                aVal = aVal ?? 0;
+                bVal = bVal ?? 0;
+                return this.sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+            }
+            
+            // String comparisons
+            aVal = String(aVal).toLowerCase();
+            bVal = String(bVal).toLowerCase();
+            if (aVal < bVal) return this.sortDirection === 'asc' ? -1 : 1;
+            if (aVal > bVal) return this.sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+    },
+    
+    getSortIcon(column) {
+        if (this.sortColumn !== column) return '↕️';
+        return this.sortDirection === 'asc' ? '↑' : '↓';
     }
 }">
     <div class="flex h-screen overflow-hidden">
@@ -31,61 +112,67 @@
                 <div class="flex items-center justify-between">
                     <h1 class="text-3xl font-bold text-[#2C5F4F]">RANKINGS OVERVIEW</h1>
                     <div class="flex items-center gap-4">
-                        <button class="relative">
+                        <a href="{{ route('notifications.index') }}" class="relative">
                             <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                             </svg>
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
 
             <!-- Content Area -->
             <div class="flex-1 overflow-y-auto bg-gray-50 p-8">
-                <!-- Category Tabs -->
-                <div class="mb-6 flex flex-wrap gap-3">
-                    <button @click="activeCategory = 'mens-singles'" 
-                            :class="activeCategory === 'mens-singles' ? 'bg-[#1B4965] text-white' : 'bg-white text-black border-2 border-black'"
-                            class="px-6 py-2 rounded-lg font-semibold transition duration-200 hover:opacity-90">
-                        MEN'S SINGLES
-                    </button>
-                    <button @click="activeCategory = 'womens-singles'" 
-                            :class="activeCategory === 'womens-singles' ? 'bg-[#1B4965] text-white' : 'bg-white text-black border-2 border-black'"
-                            class="px-6 py-2 rounded-lg font-semibold transition duration-200 hover:opacity-90">
-                        WOMEN'S SINGLES
-                    </button>
-                    <button @click="activeCategory = 'mens-doubles'" 
-                            :class="activeCategory === 'mens-doubles' ? 'bg-[#1B4965] text-white' : 'bg-white text-black border-2 border-black'"
-                            class="px-6 py-2 rounded-lg font-semibold transition duration-200 hover:opacity-90">
-                        MEN'S DOUBLES
-                    </button>
-                    <button @click="activeCategory = 'womens-doubles'" 
-                            :class="activeCategory === 'womens-doubles' ? 'bg-[#1B4965] text-white' : 'bg-white text-black border-2 border-black'"
-                            class="px-6 py-2 rounded-lg font-semibold transition duration-200 hover:opacity-90">
-                        WOMEN'S DOUBLES
-                    </button>
-                    <button @click="activeCategory = 'mixed-doubles'" 
-                            :class="activeCategory === 'mixed-doubles' ? 'bg-[#1B4965] text-white' : 'bg-white text-black border-2 border-black'"
-                            class="px-6 py-2 rounded-lg font-semibold transition duration-200 hover:opacity-90">
-                        MIXED DOUBLES
-                    </button>
+                <!-- Division Tabs (Primary Navigation) -->
+                <div class="mb-4 flex flex-wrap gap-3">
+                    @if(isset($divisions))
+                        @foreach($divisions as $divKey => $divLabel)
+                            <a href="{{ route('manager.ranking', ['category' => $category ?? 'All', 'division' => $divKey]) }}" 
+                               class="px-6 py-3 rounded-lg font-bold text-sm transition duration-200 shadow-sm {{ ($division ?? 'All') === $divKey ? 'bg-[#2C5F4F] text-white shadow-md' : 'bg-white text-black border-2 border-[#2C5F4F] hover:bg-gray-50' }}">
+                                {{ strtoupper($divLabel) }}
+                            </a>
+                        @endforeach
+                    @endif
+                </div>
+
+                <!-- Category Dropdown (Secondary Navigation) -->
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tournament Category</label>
+                    <select 
+                        x-data="{ currentCategory: {{ json_encode($category ?? 'All') }}, currentDivision: {{ json_encode($division ?? 'All') }} }"
+                        x-model="currentCategory"
+                        @change="const url = new URL(window.location.href); url.searchParams.set('category', $event.target.value); if (currentDivision !== 'All') { url.searchParams.set('division', currentDivision); } window.location.href = url.toString();"
+                        class="w-full max-w-md px-4 py-3 border-2 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] bg-white text-gray-900 font-semibold">
+                        @if(isset($categories))
+                            @foreach($categories as $cat)
+                                <option value="{{ $cat }}" {{ ($category ?? '') === $cat ? 'selected' : '' }}>
+                                    {{ strtoupper($cat) }}
+                                </option>
+                            @endforeach
+                        @else
+                            <option value="All" {{ ($category ?? '') === 'All' ? 'selected' : '' }}>ALL</option>
+                        @endif
+                    </select>
                 </div>
 
                 <!-- Search + Filter Bar -->
                 <div class="mb-6 bg-white rounded-lg shadow-sm p-6">
                     <div class="flex flex-col lg:flex-row gap-4 items-center justify-between">
-                        <div class="flex-1 w-full lg:w-auto">
+                        <div class="flex-1 w-full lg:w-auto relative">
                             <input type="text" 
+                                   x-model="searchQuery"
                                    placeholder="Search player name or club" 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
+                                   class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
+                            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
                         </div>
                         <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
                             <select class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
                                 <option value="">Filter by Club</option>
-                                <option value="manila">Manila Badminton Club</option>
-                                <option value="bcba">BCBA</option>
-                                <option value="laguna">Laguna Sports Club</option>
-                                <option value="quezon">Quezon City BC</option>
+                                @foreach($clubs as $filterClub)
+                                    <option value="{{ $filterClub->id }}">{{ $filterClub->name }}</option>
+                                @endforeach
                             </select>
                             <button class="bg-[#D4A574] hover:bg-[#C4956A] text-white px-6 py-2 rounded-lg font-semibold transition duration-200 shadow-sm">
                                 Export Rankings
@@ -100,173 +187,77 @@
                         <table class="w-full">
                             <thead class="bg-[#2C5F4F] text-white">
                                 <tr>
-                                    <th class="px-6 py-4 text-left font-semibold">Rank</th>
-                                    <th class="px-6 py-4 text-left font-semibold">Player Name</th>
-                                    <th class="px-6 py-4 text-left font-semibold">Club</th>
-                                    <th class="px-6 py-4 text-left font-semibold">Matches Played</th>
-                                    <th class="px-6 py-4 text-left font-semibold">Wins</th>
-                                    <th class="px-6 py-4 text-left font-semibold">Losses</th>
-                                    <th class="px-6 py-4 text-left font-semibold">Points</th>
+                                    <th class="px-6 py-4 text-left font-semibold cursor-pointer hover:bg-[#244D3E] transition" @click="sort('rank')">
+                                        Rank <span x-text="getSortIcon('rank')" class="ml-1">↑</span>
+                                    </th>
+                                    <th class="px-6 py-4 text-left font-semibold cursor-pointer hover:bg-[#244D3E] transition" @click="sort('player_name')">
+                                        Player Name <span x-text="getSortIcon('player_name')" class="ml-1">↕️</span>
+                                    </th>
+                                    <th class="px-6 py-4 text-left font-semibold cursor-pointer hover:bg-[#244D3E] transition" @click="sort('club_name')">
+                                        Club <span x-text="getSortIcon('club_name')" class="ml-1">↕️</span>
+                                    </th>
+                                    <th class="px-6 py-4 text-left font-semibold cursor-pointer hover:bg-[#244D3E] transition" @click="sort('matches_played')">
+                                        Matches Played <span x-text="getSortIcon('matches_played')" class="ml-1">↕️</span>
+                                    </th>
+                                    <th class="px-6 py-4 text-left font-semibold cursor-pointer hover:bg-[#244D3E] transition" @click="sort('wins')">
+                                        Wins <span x-text="getSortIcon('wins')" class="ml-1">↕️</span>
+                                    </th>
+                                    <th class="px-6 py-4 text-left font-semibold cursor-pointer hover:bg-[#244D3E] transition" @click="sort('losses')">
+                                        Losses <span x-text="getSortIcon('losses')" class="ml-1">↕️</span>
+                                    </th>
+                                    <th class="px-6 py-4 text-left font-semibold cursor-pointer hover:bg-[#244D3E] transition" @click="sort('current_rating')">
+                                        Points <span x-text="getSortIcon('current_rating')" class="ml-1">↕️</span>
+                                    </th>
                                     <th class="px-6 py-4 text-left font-semibold">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Rank 1 -->
-                                <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150">
-                                    <td class="px-6 py-4">
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#D4A574] text-white font-bold">1</span>
-                                    </td>
-                                    <td class="px-6 py-4 font-semibold text-gray-900">John Doe</td>
-                                    <td class="px-6 py-4 text-gray-600">Manila Badminton Club</td>
-                                    <td class="px-6 py-4 text-gray-600">24</td>
-                                    <td class="px-6 py-4 text-green-600 font-semibold">20</td>
-                                    <td class="px-6 py-4 text-red-600 font-semibold">4</td>
-                                    <td class="px-6 py-4 font-bold text-gray-900">2850</td>
-                                    <td class="px-6 py-4">
-                                        <button @click="showPlayerModal = true; selectedPlayer = {
-                                            name: 'John Doe',
-                                            club: 'Manila Badminton Club',
-                                            rank: 1,
-                                            points: 2850,
-                                            matchesPlayed: 24,
-                                            wins: 20,
-                                            losses: 4,
-                                            winRate: 83.3
-                                        }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
-                                            View Stats
-                                        </button>
-                                    </td>
-                                </tr>
-                                <!-- Rank 2 -->
-                                <tr class="bg-gray-50 border-b border-gray-200 hover:bg-gray-100 transition duration-150">
-                                    <td class="px-6 py-4">
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-400 text-white font-bold">2</span>
-                                    </td>
-                                    <td class="px-6 py-4 font-semibold text-gray-900">Maria Santos</td>
-                                    <td class="px-6 py-4 text-gray-600">BCBA</td>
-                                    <td class="px-6 py-4 text-gray-600">22</td>
-                                    <td class="px-6 py-4 text-green-600 font-semibold">18</td>
-                                    <td class="px-6 py-4 text-red-600 font-semibold">4</td>
-                                    <td class="px-6 py-4 font-bold text-gray-900">2720</td>
-                                    <td class="px-6 py-4">
-                                        <button @click="showPlayerModal = true; selectedPlayer = {
-                                            name: 'Maria Santos',
-                                            club: 'BCBA',
-                                            rank: 2,
-                                            points: 2720,
-                                            matchesPlayed: 22,
-                                            wins: 18,
-                                            losses: 4,
-                                            winRate: 81.8
-                                        }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
-                                            View Stats
-                                        </button>
-                                    </td>
-                                </tr>
-                                <!-- Rank 3 -->
-                                <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150">
-                                    <td class="px-6 py-4">
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-400 text-white font-bold">3</span>
-                                    </td>
-                                    <td class="px-6 py-4 font-semibold text-gray-900">Robert Chen</td>
-                                    <td class="px-6 py-4 text-gray-600">Laguna Sports Club</td>
-                                    <td class="px-6 py-4 text-gray-600">26</td>
-                                    <td class="px-6 py-4 text-green-600 font-semibold">19</td>
-                                    <td class="px-6 py-4 text-red-600 font-semibold">7</td>
-                                    <td class="px-6 py-4 font-bold text-gray-900">2650</td>
-                                    <td class="px-6 py-4">
-                                        <button @click="showPlayerModal = true; selectedPlayer = {
-                                            name: 'Robert Chen',
-                                            club: 'Laguna Sports Club',
-                                            rank: 3,
-                                            points: 2650,
-                                            matchesPlayed: 26,
-                                            wins: 19,
-                                            losses: 7,
-                                            winRate: 73.1
-                                        }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
-                                            View Stats
-                                        </button>
-                                    </td>
-                                </tr>
-                                <!-- Rank 4 -->
-                                <tr class="bg-gray-50 border-b border-gray-200 hover:bg-gray-100 transition duration-150">
-                                    <td class="px-6 py-4">
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 text-white font-bold">4</span>
-                                    </td>
-                                    <td class="px-6 py-4 font-semibold text-gray-900">Jennifer Lee</td>
-                                    <td class="px-6 py-4 text-gray-600">Quezon City BC</td>
-                                    <td class="px-6 py-4 text-gray-600">20</td>
-                                    <td class="px-6 py-4 text-green-600 font-semibold">15</td>
-                                    <td class="px-6 py-4 text-red-600 font-semibold">5</td>
-                                    <td class="px-6 py-4 font-bold text-gray-900">2580</td>
-                                    <td class="px-6 py-4">
-                                        <button @click="showPlayerModal = true; selectedPlayer = {
-                                            name: 'Jennifer Lee',
-                                            club: 'Quezon City BC',
-                                            rank: 4,
-                                            points: 2580,
-                                            matchesPlayed: 20,
-                                            wins: 15,
-                                            losses: 5,
-                                            winRate: 75.0
-                                        }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
-                                            View Stats
-                                        </button>
-                                    </td>
-                                </tr>
-                                <!-- Rank 5 -->
-                                <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150">
-                                    <td class="px-6 py-4">
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 text-white font-bold">5</span>
-                                    </td>
-                                    <td class="px-6 py-4 font-semibold text-gray-900">Michael Tan</td>
-                                    <td class="px-6 py-4 text-gray-600">Manila Badminton Club</td>
-                                    <td class="px-6 py-4 text-gray-600">23</td>
-                                    <td class="px-6 py-4 text-green-600 font-semibold">16</td>
-                                    <td class="px-6 py-4 text-red-600 font-semibold">7</td>
-                                    <td class="px-6 py-4 font-bold text-gray-900">2520</td>
-                                    <td class="px-6 py-4">
-                                        <button @click="showPlayerModal = true; selectedPlayer = {
-                                            name: 'Michael Tan',
-                                            club: 'Manila Badminton Club',
-                                            rank: 5,
-                                            points: 2520,
-                                            matchesPlayed: 23,
-                                            wins: 16,
-                                            losses: 7,
-                                            winRate: 69.6
-                                        }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
-                                            View Stats
-                                        </button>
-                                    </td>
-                                </tr>
-                                <!-- Rank 6 -->
-                                <tr class="bg-gray-50 border-b border-gray-200 hover:bg-gray-100 transition duration-150">
-                                    <td class="px-6 py-4">
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 text-white font-bold">6</span>
-                                    </td>
-                                    <td class="px-6 py-4 font-semibold text-gray-900">Sarah Johnson</td>
-                                    <td class="px-6 py-4 text-gray-600">BCBA</td>
-                                    <td class="px-6 py-4 text-gray-600">21</td>
-                                    <td class="px-6 py-4 text-green-600 font-semibold">14</td>
-                                    <td class="px-6 py-4 text-red-600 font-semibold">7</td>
-                                    <td class="px-6 py-4 font-bold text-gray-900">2450</td>
-                                    <td class="px-6 py-4">
-                                        <button @click="showPlayerModal = true; selectedPlayer = {
-                                            name: 'Sarah Johnson',
-                                            club: 'BCBA',
-                                            rank: 6,
-                                            points: 2450,
-                                            matchesPlayed: 21,
-                                            wins: 14,
-                                            losses: 7,
-                                            winRate: 66.7
-                                        }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
-                                            View Stats
-                                        </button>
-                                    </td>
-                                </tr>
+                                <template x-for="(ranking, index) in rankings" :key="index">
+                                    <tr :class="index % 2 === 0 ? 'bg-white border-b border-gray-200 hover:bg-gray-50' : 'bg-gray-50 border-b border-gray-200 hover:bg-gray-100'" class="transition duration-150">
+                                        <td class="px-6 py-4">
+                                            <template x-if="ranking.rank !== null">
+                                                <span :class="ranking.rank === 1 ? 'bg-[#D4A574]' : 'bg-gray-400'" class="inline-flex items-center justify-center w-8 h-8 rounded-full text-white font-bold" x-text="ranking.rank"></span>
+                                            </template>
+                                            <template x-if="ranking.rank === null">
+                                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 text-gray-600 font-bold text-xs">N/A</span>
+                                            </template>
+                                        </td>
+                                        <td class="px-6 py-4 font-semibold text-gray-900">
+                                            <span x-text="ranking.player_name"></span>
+                                            <template x-if="ranking.is_provisional || ranking.rank === null">
+                                                <span class="text-xs text-gray-500 italic ml-2">(Provisional - No Rank)</span>
+                                            </template>
+                                        </td>
+                                        <td class="px-6 py-4 text-gray-600" x-text="ranking.club_name"></td>
+                                        <td class="px-6 py-4 text-gray-600" x-text="ranking.matches_played"></td>
+                                        <td class="px-6 py-4 text-green-600 font-semibold" x-text="ranking.wins"></td>
+                                        <td class="px-6 py-4 text-red-600 font-semibold" x-text="ranking.losses"></td>
+                                        <td class="px-6 py-4 font-bold text-gray-900" x-text="new Intl.NumberFormat().format(ranking.current_rating)"></td>
+                                        <td class="px-6 py-4">
+                                            <button @click="showPlayerModal = true; selectedPlayer = {
+                                                playerId: ranking.player_id,
+                                                name: ranking.player_name,
+                                                club: ranking.club_name,
+                                                rank: ranking.rank,
+                                                rankDisplay: ranking.rank !== null ? ranking.rank : 'N/A',
+                                                points: ranking.current_rating,
+                                                matchesPlayed: ranking.matches_played,
+                                                wins: ranking.wins,
+                                                losses: ranking.losses,
+                                                winRate: ranking.win_rate
+                                            }" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                                View Stats
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </template>
+                                <template x-if="rankings.length === 0">
+                                    <tr>
+                                        <td colspan="8" class="px-6 py-8 text-center text-gray-500">
+                                            No ranking data available yet.
+                                        </td>
+                                    </tr>
+                                </template>
                             </tbody>
                         </table>
                     </div>
@@ -279,7 +270,7 @@
     <div x-show="showPlayerModal" 
          x-cloak
          class="fixed inset-0 z-50 overflow-y-auto">
-         <!-- Backdrop -->
+        <!-- Backdrop -->
         <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="showPlayerModal = false"></div>
 
         <!-- Modal Content -->
@@ -311,7 +302,7 @@
                         </div>
                         <div class="bg-gray-50 rounded-lg p-4">
                             <p class="text-sm text-gray-500 mb-1">Current Rank</p>
-                            <p class="text-xl font-bold text-[#D4A574]" x-text="'#' + selectedPlayer.rank"></p>
+                            <p class="text-xl font-bold text-[#D4A574]" x-text="selectedPlayer.rank !== null ? '#' + selectedPlayer.rank : 'N/A (Provisional)'"></p>
                         </div>
                         <div class="bg-gray-50 rounded-lg p-4">
                             <p class="text-sm text-gray-500 mb-1">Total Points</p>
@@ -347,9 +338,9 @@
                     <button @click="showPlayerModal = false" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg font-semibold transition duration-200">
                         Close
                     </button>
-                    <button class="bg-[#D4A574] hover:bg-[#C4956A] text-white px-6 py-3 rounded-lg font-semibold transition duration-200">
+                    <a :href="'/players/' + selectedPlayer.playerId" class="bg-[#D4A574] hover:bg-[#C4956A] text-white px-6 py-3 rounded-lg font-semibold transition duration-200 text-center">
                         View Profile
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>

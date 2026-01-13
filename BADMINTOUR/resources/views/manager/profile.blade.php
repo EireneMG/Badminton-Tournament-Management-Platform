@@ -5,395 +5,436 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Club Manager Profile - Badminton Tournament Management</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
 </head>
-<body class="bg-white" x-data="{ 
-    showAddHandlerModal: false,
-    showEditProfileModal: false,
-    showChangePasswordModal: false,
-    showPassword: false,
-    showNewPassword: false,
-    showConfirmPassword: false,
-    showSuccessToast: false
-}">
+<body class="bg-white">
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
         @include('layouts.manager-sidebar')
 
         <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Top Navigation -->
-            <div class="bg-white border-b border-gray-200 px-8 py-4">
-                <div class="flex items-center justify-between">
-                    <h1 class="text-3xl font-bold text-black">CLUB MANAGER PROFILE</h1>
-                    <div class="flex items-center gap-4">
-                        <button class="relative">
-                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
             <!-- Content Area -->
             <div class="flex-1 overflow-y-auto bg-gray-50 p-8">
-                <div class="max-w-5xl mx-auto space-y-6">
-                    <!-- Personal Information -->
-                    <div class="bg-white rounded-lg border-2 border-black p-6">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-2xl font-bold text-black">Personal Information</h2>
-                            <button @click="showEditProfileModal = true" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                <div class="max-w-6xl mx-auto" x-data="{ activeTab: 'overview' }">
+                    <!-- Profile Header Section -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                        <div class="flex items-center justify-between">
+                            <!-- Profile Picture and Info -->
+                            <div class="flex items-center gap-6">
+                                <div class="relative">
+                                    @if($user->profile_photo)
+                                        <img src="{{ asset('storage/' . $user->profile_photo) }}" alt="Profile" class="w-24 h-24 rounded-full object-cover border-4 border-[#D4A574] shadow-md">
+                                    @else
+                                        <div class="w-24 h-24 rounded-full bg-[#2C5F4F] flex items-center justify-center text-white text-3xl font-bold border-4 border-[#D4A574] shadow-md">
+                                            {{ strtoupper(substr($user->first_name ?? 'M', 0, 1) . substr($user->last_name ?? 'N', 0, 1)) }}
+                                        </div>
+                                    @endif
+                                </div>
+                                <div>
+                                    <h1 class="text-3xl font-bold text-gray-900 mb-1">{{ $user->first_name }} {{ $user->last_name }}</h1>
+                                    <p class="text-lg text-gray-600 mb-2">{{ $club?->name ?? 'No Club' }}</p>
+                                        <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 max-w-md">
+                                            <span class="flex items-center gap-1 min-w-0">
+                                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                                </svg>
+                                                <span class="truncate" title="{{ $user->email }}">{{ $user->email }}</span>
+                                            </span>
+                                            @if($user->contact_number)
+                                            <span class="flex items-center gap-1">
+                                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                                </svg>
+                                                {{ $user->contact_number }}
+                                            </span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                            <!-- Action Button -->
+                            <button @click="activeTab = 'edit'" class="px-4 py-2 bg-[#2C5F4F] hover:bg-[#234b3f] text-white rounded-lg font-semibold transition flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
                                 Edit Profile
                             </button>
                         </div>
-                        <div class="space-y-4">
-                            <div>
-                                <p class="text-gray-600">Full Name: <span class="text-black font-semibold">{{ $user->first_name }} {{ $user->last_name }}</span></p>
-                            </div>
-                            <div>
-                                <p class="text-gray-600">Gender: <span class="text-black font-semibold">{{ $user->gender ?? 'Not specified' }}</span></p>
-                            </div>
-                            <div>
-                                <p class="text-gray-600">Email: <span class="text-black font-semibold">{{ $user->email }}</span></p>
-                            </div>
-                            <div>
-                                <p class="text-gray-600">Contact No: <span class="text-black font-semibold">{{ $user->contact_number ?? 'Not specified' }}</span></p>
-                            </div>
+                    </div>
+
+                    <!-- Tabs Navigation -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+                        <div class="border-b border-gray-200">
+                            <nav class="flex space-x-1 px-4" aria-label="Tabs">
+                                <button @click="activeTab = 'overview'" :class="activeTab === 'overview' ? 'border-[#2C5F4F] text-[#2C5F4F]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-6 py-4 border-b-2 font-semibold text-sm transition">
+                                    Overview
+                                </button>
+                                <button @click="activeTab = 'club'" :class="activeTab === 'club' ? 'border-[#2C5F4F] text-[#2C5F4F]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-6 py-4 border-b-2 font-semibold text-sm transition">
+                                    Club
+                                </button>
+                                <button @click="activeTab = 'account'" :class="activeTab === 'account' ? 'border-[#2C5F4F] text-[#2C5F4F]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-6 py-4 border-b-2 font-semibold text-sm transition">
+                                    Account Settings
+                                </button>
+                            </nav>
                         </div>
                     </div>
 
-                    <!-- Club Information -->
-                    <div class="bg-white rounded-lg border-2 border-black p-6">
-                        <h2 class="text-2xl font-bold text-black mb-6">Club Information</h2>
-                        @if($club)
-                        <div class="flex items-center justify-between">
-                            <div class="space-y-2">
-                                <p class="text-black font-semibold text-lg">{{ $club->name }}</p>
-                                <p class="text-gray-600">{{ $clubMemberCount }} {{ $clubMemberCount === 1 ? 'member' : 'members' }}</p>
+                    <!-- Tab Content -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <!-- Edit Profile Tab -->
+                        <div x-show="activeTab === 'edit'" x-cloak>
+                            <div class="space-y-6">
+                            <h3 class="text-lg font-bold mb-4 text-[#2C5F4F]">EDIT PROFILE</h3>
+                            <form action="{{ route('manager.profile.update') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                                @csrf
+                                @method('PUT')
+                                
+                                <!-- Success Message -->
+                                @if (session('success'))
+                                    <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-md">
+                                        <p class="text-sm text-green-700 font-medium">{{ session('success') }}</p>
+                                    </div>
+                                @endif
+
+                                <!-- Error Messages -->
+                                @if ($errors->any())
+                                    <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded-md">
+                                        <p class="text-sm text-red-700 font-medium mb-2">Please fix the following errors:</p>
+                                        <ul class="text-sm text-red-700 list-disc list-inside">
+                                            @foreach ($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+
+                                <!-- Profile Picture -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Profile Picture</label>
+                                    @if($user->profile_photo)
+                                        <div class="mb-2">
+                                            <img src="{{ asset('storage/' . $user->profile_photo) }}" alt="Current Profile" class="w-24 h-24 rounded-full object-cover border-2 border-[#D4A574]">
+                                        </div>
+                                    @endif
+                                    <input 
+                                        type="file" 
+                                        name="profile_photo" 
+                                        accept="image/*"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F]">
+                                    <p class="text-xs text-gray-500 mt-1">Max size: 2MB. Formats: JPEG, PNG, JPG</p>
+                                    @error('profile_photo')
+                                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <!-- First Name -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">First Name <span class="text-red-500">*</span></label>
+                                    <input 
+                                        type="text" 
+                                        name="first_name" 
+                                        value="{{ old('first_name', $user->first_name) }}" 
+                                        required
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F]">
+                                    @error('first_name')
+                                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <!-- Last Name -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Last Name <span class="text-red-500">*</span></label>
+                                    <input 
+                                        type="text" 
+                                        name="last_name" 
+                                        value="{{ old('last_name', $user->last_name) }}" 
+                                        required
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F]">
+                                    @error('last_name')
+                                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <!-- Contact Number -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Contact Number</label>
+                                    <input 
+                                        type="text" 
+                                        name="contact_number" 
+                                        value="{{ old('contact_number', $user->contact_number) }}" 
+                                        pattern="[0-9+\-\s()]+"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F]">
+                                    @error('contact_number')
+                                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <button type="submit" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-6 py-2 rounded-lg font-medium transition">
+                                        Update Profile
+                                    </button>
+                                </div>
+                            </form>
                             </div>
-                            <a href="{{ route('manager.club') }}" class="bg-white hover:bg-gray-50 text-black px-6 py-2 rounded-lg border-2 border-black font-semibold transition duration-200">
-                                View Club
-                            </a>
+                        </div>
+
+                        <!-- Overview Tab -->
+                        <div x-show="activeTab === 'overview'">
+                        <!-- Manager Stats Grid -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center overflow-hidden">
+                                <p class="text-xs text-gray-600 mb-1">EMAIL</p>
+                                <p class="text-sm font-bold truncate" title="{{ $user->email }}">{{ $user->email }}</p>
+                            </div>
+                            <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center overflow-hidden">
+                                <p class="text-xs text-gray-600 mb-1">CONTACT</p>
+                                <p class="text-sm font-bold truncate">{{ $user->contact_number ?? 'N/A' }}</p>
+                            </div>
+                            <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center overflow-hidden">
+                                <p class="text-xs text-gray-600 mb-1">GENDER</p>
+                                <p class="text-lg font-bold">{{ ucfirst($user->gender ?? 'N/A') }}</p>
+                            </div>
+                            <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center overflow-hidden">
+                                <p class="text-xs text-gray-600 mb-1">CLUB MEMBERS</p>
+                                <p class="text-lg font-bold">{{ $clubMemberCount ?? 0 }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Manager Statistics Section -->
+                        <div class="bg-white border-2 border-[#D4A574] rounded-lg p-6 mb-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-bold text-[#2C5F4F]">TOURNAMENT MANAGEMENT STATISTICS</h3>
+                                <a href="{{ route('manager.statistics.export') }}" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-md text-sm font-medium transition flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    Export Statistics
+                                </a>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center">
+                                    <p class="text-xs text-gray-600 mb-1">TOURNAMENTS ORGANIZED</p>
+                                    <p class="text-2xl font-bold text-[#2C5F4F]">{{ $managerStatistics['tournaments_organized'] ?? 0 }}</p>
+                                </div>
+                                <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center">
+                                    <p class="text-xs text-gray-600 mb-1">TOTAL PARTICIPANTS</p>
+                                    <p class="text-2xl font-bold text-[#2C5F4F]">{{ $managerStatistics['total_participants'] ?? 0 }}</p>
+                                </div>
+                                <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center">
+                                    <p class="text-xs text-gray-600 mb-1">MATCHES MANAGED</p>
+                                    <p class="text-2xl font-bold text-[#2C5F4F]">{{ $managerStatistics['matches_managed'] ?? 0 }}</p>
+                                </div>
+                                <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center">
+                                    <p class="text-xs text-gray-600 mb-1">AVG TOURNAMENT SIZE</p>
+                                    <p class="text-2xl font-bold text-[#2C5F4F]">{{ $managerStatistics['average_tournament_size'] ?? 0 }}</p>
+                                </div>
+                                <div class="border-2 border-[#D4A574] rounded-lg p-4 text-center">
+                                    <p class="text-xs text-gray-600 mb-1">COMPLETION RATE</p>
+                                    <p class="text-2xl font-bold text-[#2C5F4F]">{{ $managerStatistics['completion_rate'] ?? 0 }}%</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Club Information -->
+                        @if($club)
+                        <div class="bg-white border-2 border-[#D4A574] rounded-lg p-6 mb-6">
+                            <h3 class="text-lg font-bold mb-4 text-[#2C5F4F]">CLUB INFORMATION</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-1">Club Name</p>
+                                    <p class="font-semibold text-lg">{{ $club->name }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-1">Location</p>
+                                    <p class="font-semibold">{{ $club->city }}, {{ $club->province }}</p>
+                                </div>
+                                @if($club->description)
+                                <div class="col-span-2">
+                                    <p class="text-sm text-gray-600 mb-1">Description</p>
+                                    <p class="font-semibold">{{ $club->description }}</p>
+                                </div>
+                                @endif
+                            </div>
+                            <div class="mt-4">
+                                <a href="{{ route('manager.club') }}" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-md text-sm font-medium transition">
+                                    Manage Club
+                                </a>
+                            </div>
                         </div>
                         @else
-                        <div class="text-center py-8">
-                            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                            </svg>
+                        <div class="bg-white border-2 border-[#D4A574] rounded-lg p-6 mb-6 text-center">
                             <p class="text-gray-500 mb-4">No club created yet</p>
-                            <a href="{{ route('manager.create-club') }}" class="inline-block bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-6 py-2 rounded-lg font-semibold transition duration-200">
+                            <a href="{{ route('manager.create-club') }}" class="inline-block bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-6 py-2 rounded-lg font-semibold transition">
                                 Create Your Club
                             </a>
                         </div>
                         @endif
-                    </div>
-
-                    <!-- Managers / Handlers -->
-                    <div class="bg-white rounded-lg border-2 border-black p-6">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-2xl font-bold text-black">Managers / Handlers</h2>
-                            <button @click="showAddHandlerModal = true" class="bg-white hover:bg-gray-50 text-black px-6 py-2 rounded-lg border-2 border-black font-semibold transition duration-200">
-                                Add Handler
-                            </button>
                         </div>
-                        <div class="min-h-[150px] flex items-center justify-center text-gray-400">
-                            <p>No handlers added yet</p>
-                        </div>
-                    </div>
 
-                    <!-- Change Password -->
-                    <div class="bg-white rounded-lg border-2 border-black p-6">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-2xl font-bold text-black">Security</h2>
-                            <button @click="showChangePasswordModal = true" class="bg-[#D4A574] hover:bg-[#C4956A] text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
-                                Change Password
-                            </button>
+                        <!-- Club Tab -->
+                        <div x-show="activeTab === 'club'">
+                        @if($club)
+                        <div class="bg-white border-2 border-[#D4A574] rounded-lg p-6">
+                            <h3 class="text-lg font-bold mb-4 text-[#2C5F4F]">CLUB DETAILS</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-1">Club Name</p>
+                                    <p class="font-semibold text-lg">{{ $club->name }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-1">Location</p>
+                                    <p class="font-semibold">{{ $club->city }}, {{ $club->province }}</p>
+                                </div>
+                                @if($club->description)
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-1">Description</p>
+                                    <p class="font-semibold">{{ $club->description }}</p>
+                                </div>
+                                @endif
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-1">Members</p>
+                                    <p class="font-semibold">{{ $clubMemberCount }} members</p>
+                                </div>
+                            </div>
+                            <div class="mt-6">
+                                <a href="{{ route('manager.club') }}" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-4 py-2 rounded-md text-sm font-medium transition">
+                                    Manage Club
+                                </a>
+                            </div>
                         </div>
-                        <p class="text-gray-600">Last password change: <span class="text-black font-semibold">Never</span></p>
-                    </div>
+                        @else
+                        <div class="bg-white border-2 border-[#D4A574] rounded-lg p-6 text-center">
+                            <p class="text-gray-500 mb-4">No club created yet</p>
+                            <a href="{{ route('manager.create-club') }}" class="inline-block bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-6 py-2 rounded-lg font-semibold transition">
+                                Create Your Club
+                            </a>
+                        </div>
+                        @endif
+                        </div>
 
-                    <!-- Logins -->
-                    <div class="bg-white rounded-lg border-2 border-black p-6">
-                        <h2 class="text-2xl font-bold text-black mb-6">Logins</h2>
-                        <div class="min-h-[150px] flex items-center justify-center text-gray-400">
-                            <p>No login history available</p>
+                        <!-- Account Settings Tab -->
+                        <div x-show="activeTab === 'account'">
+                        <div class="space-y-6">
+                            <!-- Success Message -->
+                            @if (session('success'))
+                                <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-md">
+                                    <p class="text-sm text-green-700 font-medium">{{ session('success') }}</p>
+                                </div>
+                            @endif
+
+                            <!-- Error Messages -->
+                            @if ($errors->any())
+                                <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded-md">
+                                    <p class="text-sm text-red-700 font-medium mb-2">Please fix the following errors:</p>
+                                    <ul class="text-sm text-red-700 list-disc list-inside">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+
+                            <!-- Update Email Section -->
+                            <div class="bg-white border-2 border-[#D4A574] rounded-lg p-6">
+                                <h3 class="text-lg font-bold mb-4">Update Email Address</h3>
+                                <form action="{{ route('manager.account.update-email') }}" method="POST" class="space-y-4">
+                                    @csrf @method('PUT')
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Current Email</label>
+                                        <input 
+                                            type="email" 
+                                            value="{{ $user->email }}" 
+                                            disabled
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">New Email Address <span class="text-red-500">*</span></label>
+                                        <input 
+                                            type="email" 
+                                            name="email" 
+                                            value="{{ old('email') }}" 
+                                            required
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F]">
+                                        @error('email')
+                                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Current Password <span class="text-red-500">*</span></label>
+                                        <input 
+                                            type="password" 
+                                            name="current_password" 
+                                            required
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F]">
+                                        @error('current_password')
+                                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <button type="submit" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-6 py-2 rounded-lg font-medium transition">
+                                            Update Email
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Update Password Section -->
+                            <div class="bg-white border-2 border-[#D4A574] rounded-lg p-6">
+                                <h3 class="text-lg font-bold mb-4">Update Password</h3>
+                                <form action="{{ route('manager.account.update-password') }}" method="POST" class="space-y-4">
+                                    @csrf @method('PUT')
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Current Password <span class="text-red-500">*</span></label>
+                                        <input 
+                                            type="password" 
+                                            name="current_password" 
+                                            required
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F]">
+                                        @error('current_password')
+                                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">New Password <span class="text-red-500">*</span></label>
+                                        <input 
+                                            type="password" 
+                                            name="password" 
+                                            required
+                                            minlength="8"
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F]">
+                                        <p class="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
+                                        @error('password')
+                                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password <span class="text-red-500">*</span></label>
+                                        <input 
+                                            type="password" 
+                                            name="password_confirmation" 
+                                            required
+                                            minlength="8"
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F]">
+                                        @error('password_confirmation')
+                                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <button type="submit" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-6 py-2 rounded-lg font-medium transition">
+                                            Update Password
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Success Toast Notification -->
-    <div x-show="showSuccessToast" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 transform translate-y-2"
-         x-transition:enter-end="opacity-100 transform translate-y-0"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 transform translate-y-0"
-         x-transition:leave-end="opacity-0 transform translate-y-2"
-         @click="showSuccessToast = false"
-         x-init="$watch('showSuccessToast', value => { if(value) setTimeout(() => showSuccessToast = false, 3000) })"
-         class="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg cursor-pointer">
-        <div class="flex items-center gap-3">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            <span class="font-semibold">Profile updated successfully!</span>
-        </div>
-    </div>
-
-    <!-- Edit Profile Modal -->
-    <div x-show="showEditProfileModal" 
-         x-cloak
-         class="fixed inset-0 z-50 overflow-y-auto">
-        <!-- Backdrop -->
-        <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="showEditProfileModal = false"></div>
-
-        <!-- Modal Content -->
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="relative bg-white rounded-lg shadow-xl max-w-2xl w-full p-8" @click.stop>
-                <!-- Close Button -->
-                <button @click="showEditProfileModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-
-                <!-- Modal Header -->
-                <div class="mb-6">
-                    <h2 class="text-3xl font-bold text-[#2C5F4F]">Edit Profile Information</h2>
-                </div>
-
-                <!-- Form -->
-                <form action="{{ route('profile.update') }}" method="POST" class="space-y-6">
-                    @csrf
-                    @method('PATCH')
-                    <!-- Full Name -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">First Name</label>
-                            <input type="text" 
-                                   name="first_name"
-                                   value="{{ $user->first_name }}"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Last Name</label>
-                            <input type="text" 
-                                   name="last_name"
-                                   value="{{ $user->last_name }}"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
-                        </div>
-                    </div>
-
-                    <!-- Email and Contact Number Row -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Email -->
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
-                            <input type="email" 
-                                   name="email"
-                                   value="{{ $user->email }}"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
-                        </div>
-
-                        <!-- Contact Number -->
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Contact Number</label>
-                            <input type="text" 
-                                   name="contact_number"
-                                   value="{{ $user->contact_number }}"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
-                        </div>
-                    </div>
-
-                    <!-- Gender -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Gender</label>
-                        <select name="gender" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
-                            <option value="Male" {{ $user->gender === 'Male' ? 'selected' : '' }}>Male</option>
-                            <option value="Female" {{ $user->gender === 'Female' ? 'selected' : '' }}>Female</option>
-                            <option value="Other" {{ $user->gender === 'Other' ? 'selected' : '' }}>Other</option>
-                        </select>
-                    </div>
-
-                    <!-- Modal Actions -->
-                    <div class="flex flex-col sm:flex-row gap-4 justify-end pt-4">
-                        <button type="button" @click="showEditProfileModal = false" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg font-semibold transition duration-200">
-                            Cancel
-                        </button>
-                        <button type="submit" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-6 py-3 rounded-lg font-semibold transition duration-200">
-                            Save Changes
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Change Password Modal -->
-    <div x-show="showChangePasswordModal" 
-         x-cloak
-         class="fixed inset-0 z-50 overflow-y-auto">
-        <!-- Backdrop -->
-        <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="showChangePasswordModal = false"></div>
-
-        <!-- Modal Content -->
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="relative bg-white rounded-lg shadow-xl max-w-2xl w-full p-8" @click.stop>
-                <!-- Close Button -->
-                <button @click="showChangePasswordModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-
-                <!-- Modal Header -->
-                <div class="mb-6">
-                    <h2 class="text-3xl font-bold text-[#D4A574]">Change Password</h2>
-                    <p class="text-gray-600 mt-2">Ensure your password is strong and secure</p>
-                </div>
-
-                <!-- Form -->
-                <form action="{{ route('password.update') }}" method="POST" class="space-y-6">
-                    @csrf
-                    @method('PUT')
-                    <!-- Current Password -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Current Password</label>
-                        <div class="relative">
-                            <input :type="showPassword ? 'text' : 'password'" 
-                                   name="current_password"
-                                   placeholder="Enter current password"
-                                   class="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4A574] focus:border-transparent">
-                            <button type="button" @click="showPassword = !showPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                                <svg x-show="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                </svg>
-                                <svg x-show="showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- New Password -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
-                        <div class="relative">
-                            <input :type="showNewPassword ? 'text' : 'password'" 
-                                   name="password"
-                                   placeholder="Enter new password"
-                                   class="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4A574] focus:border-transparent">
-                            <button type="button" @click="showNewPassword = !showNewPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                                <svg x-show="!showNewPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                </svg>
-                                <svg x-show="showNewPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Confirm New Password -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password</label>
-                        <div class="relative">
-                            <input :type="showConfirmPassword ? 'text' : 'password'" 
-                                   name="password_confirmation"
-                                   placeholder="Re-enter new password"
-                                   class="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4A574] focus:border-transparent">
-                            <button type="button" @click="showConfirmPassword = !showConfirmPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                                <svg x-show="!showConfirmPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                </svg>
-                                <svg x-show="showConfirmPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Modal Actions -->
-                    <div class="flex flex-col sm:flex-row gap-4 justify-end pt-4">
-                        <button type="button" @click="showChangePasswordModal = false" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg font-semibold transition duration-200">
-                            Cancel
-                        </button>
-                        <button type="submit" class="bg-[#D4A574] hover:bg-[#C4956A] text-white px-6 py-3 rounded-lg font-semibold transition duration-200">
-                            Update Password
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Handler Modal -->
-    <div x-show="showAddHandlerModal" 
-         x-cloak
-         class="fixed inset-0 z-50 overflow-y-auto">
-        <!-- Backdrop -->
-        <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="showAddHandlerModal = false"></div>
-
-        <!-- Modal Content -->
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="relative bg-white rounded-lg shadow-xl max-w-2xl w-full p-8" @click.stop>
-                <!-- Close Button -->
-                <button @click="showAddHandlerModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-
-                <!-- Modal Header -->
-                <div class="mb-6">
-                    <h2 class="text-3xl font-bold text-[#2C5F4F]">Add Handler</h2>
-                    <p class="text-gray-500 mt-2">This feature is coming soon</p>
-                </div>
-
-                <!-- Form -->
-                <form @submit.prevent="showAddHandlerModal = false" class="space-y-6">
-                    <!-- Handler Name -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Handler Name</label>
-                        <input type="text" 
-                               placeholder="Enter handler's full name"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
-                    </div>
-
-                    <!-- Email -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-                        <input type="email" 
-                               placeholder="handler@email.com"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
-                    </div>
-
-                    <!-- Contact Number -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Contact Number</label>
-                        <input type="text" 
-                               placeholder="0917-XXX-XXXX"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C5F4F] focus:border-transparent">
-                    </div>
-
-                    <!-- Modal Actions -->
-                    <div class="flex flex-col sm:flex-row gap-4 justify-end pt-4">
-                        <button type="button" @click="showAddHandlerModal = false" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg font-semibold transition duration-200">
-                            Cancel
-                        </button>
-                        <button type="button" @click="showAddHandlerModal = false" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-6 py-3 rounded-lg font-semibold transition duration-200">
-                            Add Handler
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
 </body>
 </html>
+
