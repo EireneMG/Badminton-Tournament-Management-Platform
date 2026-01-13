@@ -50,7 +50,7 @@ class CleanupIncompleteTeams extends Command
                 $incompleteRegistrations = TournamentRegistration::where('tournament_id', $tournament->id)
                     ->where('category_id', $category->id)
                     ->whereNull('partner_id')
-                    ->whereIn('status', ['pending_payment', 'paid', 'approved'])
+                    ->whereIn('status', ['pending', 'eligible', 'approved'])
                     ->get();
 
                 foreach ($incompleteRegistrations as $registration) {
