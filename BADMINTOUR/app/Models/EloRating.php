@@ -15,6 +15,17 @@ class EloRating extends Model
         'matches_played',
     ];
 
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'current_rating' => 'integer',
+        'peak_rating' => 'integer',
+        'matches_played' => 'integer',
+    ];
+
     public function player(): BelongsTo
     {
         return $this->belongsTo(User::class, 'player_id');

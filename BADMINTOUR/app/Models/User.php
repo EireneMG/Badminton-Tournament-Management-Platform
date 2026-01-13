@@ -9,6 +9,8 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Mail\ResendDomainErrorHandler;
+use Illuminate\Auth\Notifications\VerifyEmail;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -225,5 +227,32 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isActive(): bool
     {
         return $this->getStatus() === 'Active';
+    }
+
+    /**
+     * Send the email verification notification.
+     * Override to handle Resend domain limitation errors gracefully.
+     *
+     * @return void
+     */
+    public function sendEmailVerificationNotification()
+    {
+        try {
+            parent::sendEmailVerificationNotification();
+        } catch (\Exception $e) {
+            // Check if it's a Resend domain limitation error
+            if (ResendDomainErrorHandler::isDomainLimitationError($e)) {
+                ResendDomainErrorHandler::handleDomainError($e, $this->email, 'email verification');
+                // Log but don't throw - allow registration to complete
+                // User will see error message when trying to resend verification
+                \Illuminate\Support\Facades\Log::warning('Email verification failed due to Resend domain limitation', [
+                    'user_id' => $this->id,
+                    'email' => $this->email,
+                ]);
+            } else {
+                // Re-throw other exceptions
+                throw $e;
+            }
+        }
     }
 }
