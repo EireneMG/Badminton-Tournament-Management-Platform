@@ -23,12 +23,14 @@ class StoreClubRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:1000'],
+            'description' => ['nullable', 'string', 'max:2000'],
             'logo' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
             'province' => ['required', 'string', 'max:255'],
             'city' => ['required', 'string', 'max:255'],
             'contact_email' => ['required', 'email', 'max:255'],
             'contact_phone' => ['required', 'string', 'max:20'],
+            'id_type' => ['required', 'in:philsys_id,drivers_license,umid_sss,philhealth,tin,passport,voters_id,postal_id'],
+            'id_file' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ];
     }
 
