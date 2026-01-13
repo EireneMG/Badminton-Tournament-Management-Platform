@@ -38,6 +38,7 @@ class ClubController extends Controller
             ->get();
         
         $allClubs = Club::withCount('approvedPlayers')
+            ->with('tournaments')
             ->where('active', true)
             ->get();
         
@@ -48,9 +49,7 @@ class ClubController extends Controller
     {
         $player = auth()->user();
         
-        $club->load(['tournaments' => function($query) {
-            $query->where('start_date', '>=', now())->orderBy('start_date', 'asc');
-        }]);
+        $club->load('tournaments');
         
         // Get approved players sorted by name (A-Z)
         $approvedPlayers = $club->approvedPlayers()
@@ -63,7 +62,8 @@ class ClubController extends Controller
             ->where('player_id', $player->id)
             ->first();
         
-        $canJoin = !$myMembership && !$player->approvedClubMembership;
+        // Allow showing the Join button even if previously rejected; block only when pending/approved
+        $canJoin = (!$player->approvedClubMembership) && (!$myMembership || $myMembership->status === 'rejected');
         $isPending = $myMembership && $myMembership->status === 'pending';
         $isApproved = $myMembership && $myMembership->status === 'approved';
         
@@ -79,7 +79,41 @@ class ClubController extends Controller
             ->first();
         
         if ($existingMembership) {
-            return back()->with('error', 'You have already requested to join this club.');
+            if (in_array($existingMembership->status, ['pending', 'approved'])) {
+                return back()->with('error', 'You have already requested to join this club.');
+            }
+            
+            // If previously rejected, enforce 3-day cooldown from last update
+            if ($existingMembership->status === 'rejected') {
+                $cooldownHours = 72;
+                $lastUpdate = $existingMembership->updated_at ?? $existingMembership->created_at;
+                if ($lastUpdate && now()->diffInHours($lastUpdate) < $cooldownHours) {
+                    $remaining = $cooldownHours - now()->diffInHours($lastUpdate);
+                    return back()->with('error', "You were recently rejected. Please try again in {$remaining} hour(s).");
+                }
+                
+                // Reuse the same record for a new pending request
+                $existingMembership->update([
+                    'status' => 'pending',
+                    'request_type' => 'join_request',
+                    'skill_level' => null,
+                    'provisional_elo' => null,
+                ]);
+                
+                Notification::create([
+                    'user_id' => $club->manager_id,
+                    'type' => 'club_join_request',
+                    'title' => 'New Club Join Request',
+                    'message' => $player->first_name . ' ' . $player->last_name . ' has requested to join ' . $club->name,
+                    'data' => [
+                        'club_id' => $club->id,
+                        'player_id' => $player->id,
+                    ],
+                    'action_url' => route('manager.club'),
+                ]);
+                
+                return back()->with('success', 'Join request sent successfully! The club manager will review your request.');
+            }
         }
         
         if ($player->approvedClubMembership) {
@@ -135,6 +169,11 @@ class ClubController extends Controller
         
         // Notify club manager
         $club = $clubPlayer->club;
+        if (!$club) {
+            \Log::warning("ClubPlayer {$clubPlayer->id} has no club, skipping notification");
+            return redirect()->route('clubs.index')
+                ->with('error', 'Action failed: Club not found.');
+        }
         Notification::create([
             'user_id' => $club->manager_id,
             'type' => 'club_invitation_accepted',
@@ -148,7 +187,7 @@ class ClubController extends Controller
         ]);
         
         return redirect()->route('clubs.index')
-            ->with('success', "You have successfully joined {$clubPlayer->club->name}! The club manager will assign your provisional skill level shortly.");
+            ->with('success', "You have successfully joined " . ($clubPlayer->club?->name ?? 'the club') . "! The club manager will assign your provisional skill level shortly.");
     }
     
     /**
@@ -172,11 +211,17 @@ class ClubController extends Controller
         $clubPlayer->update(['status' => 'rejected']);
         
         // Notify club manager
+        $club = $clubPlayer->club;
+        if (!$club) {
+            \Log::warning("ClubPlayer {$clubPlayer->id} has no club, skipping rejection notification");
+            return redirect()->route('clubs.index')
+                ->with('error', 'Action failed: Club not found.');
+        }
         Notification::create([
-            'user_id' => $clubPlayer->club->manager_id,
+            'user_id' => $club->manager_id,
             'type' => 'club_invitation_rejected',
             'title' => 'Club Invitation Rejected',
-            'message' => ($player->first_name . ' ' . $player->last_name) . " has declined your invitation to join {$clubPlayer->club->name}.",
+            'message' => ($player->first_name . ' ' . $player->last_name) . " has declined your invitation to join " . ($club->name ?? 'the club') . ".",
             'data' => [
                 'club_id' => $clubPlayer->club_id,
                 'player_id' => $player->id,
@@ -185,39 +230,47 @@ class ClubController extends Controller
         ]);
         
         return redirect()->route('clubs.index')
-            ->with('success', "You have declined the invitation from {$clubPlayer->club->name}.");
+            ->with('success', "You have declined the invitation from " . ($clubPlayer->club?->name ?? 'the club') . ".");
     }
     
     
     /**
      * Create official ELO rating from provisional skill level
+     * Creates ELO records for all gender-appropriate categories
      */
     protected function createEloFromProvisional(\App\Models\User $player, int $eloRating): void
     {
-        // Determine category based on player gender (default to MS/WS)
-        $category = $player->gender === 'Female' ? 'WS' : 'MS';
+        // Determine categories based on player gender
+        // Male players: MS, MD, XD
+        // Female players: WS, WD, XD
+        $isMale = $player->gender === 'Male';
+        $categories = $isMale 
+            ? ['MS', 'MD', 'XD']  // Male categories
+            : ['WS', 'WD', 'XD']; // Female categories
         
-        // Create or update ELO rating
-        \App\Models\EloRating::updateOrCreate(
-            [
+        // Create or update ELO ratings for all gender-appropriate categories
+        foreach ($categories as $category) {
+            \App\Models\EloRating::updateOrCreate(
+                [
+                    'player_id' => $player->id,
+                    'category' => $category,
+                ],
+                [
+                    'current_rating' => $eloRating,
+                    'peak_rating' => $eloRating,
+                    'matches_played' => 0,
+                ]
+            );
+            
+            // Create ranking history entry for each category
+            \App\Models\RankingHistory::create([
                 'player_id' => $player->id,
                 'category' => $category,
-            ],
-            [
-                'current_rating' => $eloRating,
-                'peak_rating' => $eloRating,
-                'matches_played' => 0,
-            ]
-        );
-        
-        // Create ranking history entry
-        \App\Models\RankingHistory::create([
-            'player_id' => $player->id,
-            'category' => $category,
-            'rating' => $eloRating,
-            'previous_rating' => null,
-            'change' => 0,
-            'recorded_at' => now(),
-        ]);
+                'rating' => $eloRating,
+                'previous_rating' => null,
+                'change' => 0,
+                'recorded_at' => now(),
+            ]);
+        }
     }
 }
