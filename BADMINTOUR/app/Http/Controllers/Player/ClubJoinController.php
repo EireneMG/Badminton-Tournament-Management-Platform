@@ -63,12 +63,12 @@ class ClubJoinController extends Controller
     /**
      * Approve a club join request (Manager only).
      */
-    public function approve($clubPlayerId): RedirectResponse
+    public function approve(ClubPlayer $clubPlayer): RedirectResponse
     {
-        $clubPlayer = ClubPlayer::with('club')->findOrFail($clubPlayerId);
+        $clubPlayer->load('club');
         
         // Authorization: Verify the manager owns this club
-        if ($clubPlayer->club->manager_id !== request()->user()->id) {
+        if (!$clubPlayer->club || $clubPlayer->club->manager_id !== request()->user()->id) {
             abort(403, 'Unauthorized. You can only approve requests for your own club.');
         }
         
@@ -108,7 +108,7 @@ class ClubJoinController extends Controller
             'user_id' => $clubPlayer->player_id,
             'type' => 'club_join_approved',
             'title' => 'Club Join Request Approved',
-            'message' => "Your request to join {$clubPlayer->club->name} has been approved! Your provisional skill level ({$provisionalSkillLevel}) has been set and converted to an initial ELO rating of {$provisionalElo}.",
+            'message' => "Your request to join " . ($clubPlayer->club?->name ?? 'the club') . " has been approved! Your provisional skill level ({$provisionalSkillLevel}) has been set and converted to an initial ELO rating of {$provisionalElo}.",
             'data' => ['club_id' => $clubPlayer->club_id],
             'action_url' => route('clubs.show', $clubPlayer->club_id),
         ]);
@@ -122,45 +122,53 @@ class ClubJoinController extends Controller
     
     /**
      * Create official ELO rating from provisional skill level
+     * Creates ELO records for all gender-appropriate categories
      */
     protected function createEloFromProvisional(User $player, int $eloRating): void
     {
-        // Determine category based on player gender (default to MS/WS)
-        $category = $player->gender === 'Female' ? 'WS' : 'MS';
+        // Determine categories based on player gender
+        // Male players: MS, MD, XD
+        // Female players: WS, WD, XD
+        $isMale = $player->gender === 'Male';
+        $categories = $isMale 
+            ? ['MS', 'MD', 'XD']  // Male categories
+            : ['WS', 'WD', 'XD']; // Female categories
         
-        // Create or update ELO rating
-        \App\Models\EloRating::updateOrCreate(
-            [
+        // Create or update ELO ratings for all gender-appropriate categories
+        foreach ($categories as $category) {
+            \App\Models\EloRating::updateOrCreate(
+                [
+                    'player_id' => $player->id,
+                    'category' => $category,
+                ],
+                [
+                    'current_rating' => $eloRating,
+                    'peak_rating' => $eloRating,
+                    'matches_played' => 0,
+                ]
+            );
+            
+            // Create ranking history entry for each category
+            \App\Models\RankingHistory::create([
                 'player_id' => $player->id,
                 'category' => $category,
-            ],
-            [
-                'current_rating' => $eloRating,
-                'peak_rating' => $eloRating,
-                'matches_played' => 0,
-            ]
-        );
-        
-        // Create ranking history entry
-        \App\Models\RankingHistory::create([
-            'player_id' => $player->id,
-            'category' => $category,
-            'rating' => $eloRating,
-            'previous_rating' => null,
-            'change' => 0,
-            'recorded_at' => now(),
-        ]);
+                'rating' => $eloRating,
+                'previous_rating' => null,
+                'change' => 0,
+                'recorded_at' => now(),
+            ]);
+        }
     }
 
     /**
      * Reject a club join request (Manager only).
      */
-    public function reject($clubPlayerId): RedirectResponse
+    public function reject(ClubPlayer $clubPlayer): RedirectResponse
     {
-        $clubPlayer = ClubPlayer::with('club')->findOrFail($clubPlayerId);
+        $clubPlayer->load('club');
         
         // Authorization: Verify the manager owns this club
-        if ($clubPlayer->club->manager_id !== request()->user()->id) {
+        if (!$clubPlayer->club || $clubPlayer->club->manager_id !== request()->user()->id) {
             abort(403, 'Unauthorized. You can only reject requests for your own club.');
         }
         
@@ -171,7 +179,7 @@ class ClubJoinController extends Controller
             'user_id' => $clubPlayer->player_id,
             'type' => 'club_join_rejected',
             'title' => 'Club Join Request Rejected',
-            'message' => "Your request to join {$clubPlayer->club->name} was not approved.",
+            'message' => "Your request to join " . ($clubPlayer->club?->name ?? 'the club') . " was not approved.",
             'data' => ['club_id' => $clubPlayer->club_id],
             'action_url' => route('player.dashboard'),
         ]);
