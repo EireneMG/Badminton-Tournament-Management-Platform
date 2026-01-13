@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\TournamentMatch;
+use App\Enums\MatchStatus;
 use Carbon\Carbon;
 
 class MatchStatusService
@@ -21,7 +22,7 @@ class MatchStatusService
             $this->updateSingleMatchStatus($match, $now);
         } else {
             // Update all matches that are scheduled or ongoing (not completed or cancelled)
-            $matches = TournamentMatch::whereIn('status', ['scheduled', 'ongoing'])
+            $matches = TournamentMatch::whereIn('status', [MatchStatus::SCHEDULED->value, MatchStatus::ONGOING->value])
                 ->whereNotNull('scheduled_date')
                 ->whereNotNull('scheduled_time')
                 ->get();
@@ -37,30 +38,23 @@ class MatchStatusService
      */
     protected function updateSingleMatchStatus(TournamentMatch $match, Carbon $now): void
     {
-        if (!$match->scheduled_date || !$match->scheduled_time) {
-            // If no schedule, keep as scheduled (default status)
-            if ($match->status !== 'scheduled' && $match->status !== 'completed' && $match->status !== 'cancelled') {
-                $match->update(['status' => 'scheduled']);
+        if (!$match->scheduled_time) {
+            if ($match->status !== MatchStatus::SCHEDULED->value && $match->status !== MatchStatus::COMPLETED->value && $match->status !== MatchStatus::CANCELLED->value) {
+                $match->update(['status' => MatchStatus::SCHEDULED->value]);
             }
             return;
         }
         
-        // Parse scheduled datetime
-        // scheduled_time is cast as datetime, so it might be a full datetime or just time
         try {
-            $scheduledTime = $match->scheduled_time instanceof Carbon 
-                ? $match->scheduled_time 
-                : Carbon::parse($match->scheduled_time);
+            $scheduledDateTime = $match->actual_scheduled_date_time;
             
-            $scheduledDate = $match->scheduled_date instanceof Carbon 
-                ? $match->scheduled_date 
-                : Carbon::parse($match->scheduled_date);
-            
-            // Combine date and time
-            $scheduledDateTime = $scheduledDate->copy()
-                ->setTime($scheduledTime->hour, $scheduledTime->minute, $scheduledTime->second);
+            if (!$scheduledDateTime) {
+                if ($match->status !== 'scheduled' && $match->status !== 'completed' && $match->status !== 'cancelled') {
+                    $match->update(['status' => 'scheduled']);
+                }
+                return;
+            }
         } catch (\Exception $e) {
-            // If parsing fails, keep as scheduled
             if ($match->status !== 'scheduled' && $match->status !== 'completed' && $match->status !== 'cancelled') {
                 $match->update(['status' => 'scheduled']);
             }
@@ -75,29 +69,21 @@ class MatchStatusService
         $matchEndTime = $scheduledDateTime->copy()->addMinutes($matchDuration);
         
         // Determine status based on current time
-        if ($match->status === 'completed' || $match->status === 'cancelled') {
-            // Don't change completed or cancelled matches
+        if ($match->status === MatchStatus::COMPLETED->value || $match->status === MatchStatus::CANCELLED->value) {
             return;
         }
         
         if ($now->lt($scheduledDateTime)) {
-            // Match hasn't started yet
-            if ($match->status !== 'scheduled') {
-                $match->update(['status' => 'scheduled']);
+            if ($match->status !== MatchStatus::SCHEDULED->value) {
+                $match->update(['status' => MatchStatus::SCHEDULED->value]);
             }
         } elseif ($now->gte($scheduledDateTime) && $now->lt($matchEndTime)) {
-            // Match is currently happening
-            if ($match->status !== 'ongoing') {
-                $match->update(['status' => 'ongoing']);
+            if ($match->status !== MatchStatus::ONGOING->value) {
+                $match->update(['status' => MatchStatus::ONGOING->value]);
             }
         } elseif ($now->gte($matchEndTime)) {
-            // Match should have ended (but not marked as completed yet)
-            // Only auto-update to completed if it's been more than 2 hours past end time
-            // This gives managers time to input results
-            $twoHoursAfterEnd = $matchEndTime->copy()->addHours(2);
-            if ($now->gte($twoHoursAfterEnd) && $match->status !== 'completed') {
-                // Don't auto-complete - let manager mark as completed when results are entered
-                // Keep as 'ongoing' or 'scheduled' until manager inputs results
+            if ($match->status !== MatchStatus::ONGOING->value && $match->status !== MatchStatus::COMPLETED->value) {
+                $match->update(['status' => MatchStatus::ONGOING->value]);
             }
         }
     }
@@ -116,22 +102,39 @@ class MatchStatusService
             ->with(['player1', 'player2', 'player1Partner', 'player2Partner', 'category', 'result', 'winner', 'winnerPartner'])
             ->get()
             ->sortBy(function($match) {
-                if (!$match->scheduled_date || !$match->scheduled_time) {
-                    return '9999-12-31 23:59:59'; // Put unscheduled matches at the end
+                try {
+                    $dateTime = $match->actual_scheduled_date_time;
+                    if (!$dateTime) {
+                        return '9999-12-31 23:59:59';
+                    }
+                    return $dateTime->format('Y-m-d H:i:s');
+                } catch (\Exception $e) {
+                    return '9999-12-31 23:59:59';
                 }
-                $date = \Carbon\Carbon::parse($match->scheduled_date)->format('Y-m-d');
-                $time = \Carbon\Carbon::parse($match->scheduled_time)->format('H:i:s');
-                return $date . ' ' . $time;
             })
             ->values();
         
         // Update statuses for matches that need updating (scheduled or ongoing)
+        // This ensures matches are properly marked as ongoing when their scheduled time has passed
+        // IMPORTANT: Never update matches that are already completed or cancelled
         foreach ($matches as $match) {
-            if (in_array($match->status, ['scheduled', 'ongoing']) && $match->scheduled_date && $match->scheduled_time) {
+            if (in_array($match->status, ['scheduled', 'ongoing']) && $match->scheduled_time) {
                 $this->updateSingleMatchStatus($match, Carbon::now());
-                // Refresh the match to get updated status
                 $match->refresh();
             }
+        }
+        
+        foreach ($matches as $match) {
+                    if ($match->status === MatchStatus::SCHEDULED->value && $match->scheduled_time) {
+                        try {
+                            $scheduledDateTime = $match->actual_scheduled_date_time;
+                            if ($scheduledDateTime && Carbon::now()->gte($scheduledDateTime)) {
+                                $match->update(['status' => MatchStatus::ONGOING->value]);
+                                $match->refresh();
+                            }
+                        } catch (\Exception $e) {
+                        }
+                    }
         }
         
         $now = Carbon::now();
@@ -141,44 +144,32 @@ class MatchStatusService
         $completed = collect([]);
         
         foreach ($matches as $match) {
-            if ($match->status === 'completed') {
+            if ($match->status === MatchStatus::COMPLETED->value) {
                 $completed->push($match);
-            } elseif ($match->status === 'ongoing') {
+            } elseif ($match->status === MatchStatus::ONGOING->value) {
                 $ongoing->push($match);
-            } elseif ($match->status === 'scheduled') {
-                // Further filter scheduled matches: show as "ongoing" if time has passed
-                if ($match->scheduled_date && $match->scheduled_time) {
+            } elseif ($match->status === MatchStatus::SCHEDULED->value) {
+                if ($match->scheduled_time) {
                     try {
-                        // Parse scheduled datetime
-                        $scheduledTime = $match->scheduled_time instanceof Carbon 
-                            ? $match->scheduled_time 
-                            : Carbon::parse($match->scheduled_time);
-                        
-                        $scheduledDate = $match->scheduled_date instanceof Carbon 
-                            ? $match->scheduled_date 
-                            : Carbon::parse($match->scheduled_date);
-                        
-                        // Combine date and time
-                        $scheduledDateTime = $scheduledDate->copy()
-                            ->setTime($scheduledTime->hour, $scheduledTime->minute, $scheduledTime->second);
-                        
-                        $category = $match->category;
-                        $matchDuration = $category ? ($category->match_duration_minutes ?? 45) : 45;
-                        $matchEndTime = $scheduledDateTime->copy()->addMinutes($matchDuration);
-                        
-                        if ($now->gte($scheduledDateTime) && $now->lt($matchEndTime)) {
-                            // Should be ongoing
-                            $match->update(['status' => 'ongoing']);
-                            $ongoing->push($match);
+                        $scheduledDateTime = $match->actual_scheduled_date_time;
+                        if ($scheduledDateTime) {
+                            $category = $match->category;
+                            $matchDuration = $category ? ($category->match_duration_minutes ?? 45) : 45;
+                            $matchEndTime = $scheduledDateTime->copy()->addMinutes($matchDuration);
+                            
+                            if ($now->gte($scheduledDateTime) && $now->lt($matchEndTime)) {
+                                $match->update(['status' => MatchStatus::ONGOING->value]);
+                                $ongoing->push($match);
+                            } else {
+                                $scheduled->push($match);
+                            }
                         } else {
                             $scheduled->push($match);
                         }
                     } catch (\Exception $e) {
-                        // If parsing fails, show as scheduled
                         $scheduled->push($match);
                     }
                 } else {
-                    // No schedule - show as scheduled
                     $scheduled->push($match);
                 }
             } else {

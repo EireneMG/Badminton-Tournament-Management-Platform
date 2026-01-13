@@ -29,7 +29,12 @@ class PlayerDivisionService
             $player->birth_day ?? 1
         );
         
-        $age = $birthDate->diffInYears($referenceDate);
+        // Calculate age accurately: check if birthday has occurred in the reference year
+        $age = $referenceDate->year - $birthDate->year;
+        if ($referenceDate->month < $birthDate->month || 
+            ($referenceDate->month === $birthDate->month && $referenceDate->day < $birthDate->day)) {
+            $age--; // Birthday hasn't occurred yet this year
+        }
         
         // Junior: Under 18 years old
         // Senior: 18 years old and above
