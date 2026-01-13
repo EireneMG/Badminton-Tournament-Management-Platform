@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
     // Registration POST handler
-    Route::post('register', [RegisteredUserController::class, 'store']);
+    Route::post('register', [RegisteredUserController::class, 'store'])->name('register.store');
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
@@ -31,16 +31,24 @@ Route::middleware('guest')->group(function () {
 
     Route::post('reset-password', [NewPasswordController::class, 'store'])
         ->name('password.store');
+
+    Route::get('forgot-email', [\App\Http\Controllers\Auth\ForgotEmailController::class, 'create'])
+        ->name('forgot-email');
+
+    Route::post('forgot-email', [\App\Http\Controllers\Auth\ForgotEmailController::class, 'store'])
+        ->name('forgot-email.store');
 });
 
-Route::middleware('auth')->group(function () {
-    Route::get('verify-email', function () {
+Route::get('verify-email', function () {
         return view('auth.verify-email-custom');
     })->name('verification.notice');
 
-    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
-        ->middleware(['signed', 'throttle:6,1'])
-        ->name('verification.verify');
+// Allow verification link without requiring current login; signed link validates user/hash
+Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
+    ->middleware(['signed', 'throttle:6,1'])
+    ->name('verification.verify');
+
+Route::middleware('auth')->group(function () {
 
     Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
         ->middleware('throttle:6,1')
