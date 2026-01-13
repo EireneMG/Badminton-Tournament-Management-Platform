@@ -8,6 +8,7 @@ use App\Models\TournamentRegistration;
 use App\Models\EloRating;
 use App\Models\TournamentMatch;
 use App\Models\Club;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Carbon\Carbon;
@@ -27,12 +28,13 @@ class DashboardController extends Controller
         
         $upcomingTournaments = Tournament::where('start_date', '>', Carbon::now())
             ->where('registration_deadline', '>', Carbon::now())
+            ->whereNotIn('status', ['cancelled'])
             ->orderBy('start_date', 'asc')
             ->limit(3)
             ->get();
         
         $playerRegistrations = TournamentRegistration::where('player_id', $player->id)
-            ->whereIn('status', ['pending', 'eligible', 'awaiting_payment', 'paid', 'approved'])
+            ->whereIn('status', ['pending', 'eligible', 'approved'])
             ->with(['tournament', 'category'])
             ->orderBy('created_at', 'desc')
             ->limit(5)
@@ -56,8 +58,11 @@ class DashboardController extends Controller
             ->orderBy('current_rating', 'desc')
             ->first();
         
+        // Top players by highest rating per player (dedupe across categories)
         $topPlayers = EloRating::with('player.approvedClubMembership.club')
-            ->orderBy('current_rating', 'desc')
+            ->select('player_id', DB::raw('MAX(current_rating) as current_rating'))
+            ->groupBy('player_id')
+            ->orderByDesc('current_rating')
             ->limit(5)
             ->get();
         
