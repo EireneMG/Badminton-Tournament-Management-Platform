@@ -22,8 +22,8 @@ class StoreIdVerificationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id_type' => ['required', 'string', 'in:national_id,drivers_license,passport'],
-            'id_file' => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
+            'id_type' => ['required', 'string', 'in:philsys_id,drivers_license,umid_sss,philhealth,tin,passport,voters_id,postal_id'],
+            'id_file' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ];
     }
 
