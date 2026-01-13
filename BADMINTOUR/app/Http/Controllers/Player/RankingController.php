@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\EloRating;
 use App\Models\MatchResult;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
 class RankingController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
         $category = $request->get('category', 'All');
         $division = $request->get('division', 'All'); // 'Junior', 'Senior', 'Open', or 'All'
@@ -47,47 +47,84 @@ class RankingController extends Controller
         $divisionFilter = ($division === 'All' || $division === '') ? null : $division;
         
         if ($category === 'All') {
-            // Get all players with any rating
-            $allRankings = [];
-            foreach ($categoryMap as $catName => $catCode) {
-                $rankingsData = $rankingService->getAllRankings($catCode, $divisionFilter);
-                foreach ($rankingsData as $data) {
-                    if (!isset($allRankings[$data['player_id']])) {
-                        $allRankings[$data['player_id']] = $data;
-                    }
-                }
-            }
-            $rankingsData = array_values($allRankings);
+            // Get all players showing their HIGHEST ELO across all categories
+            $rankingsData = $rankingService->getAllRankingsHighestElo($divisionFilter);
         } else {
             $eloCategory = $categoryMap[$category] ?? 'MS';
             $rankingsData = $rankingService->getAllRankings($eloCategory, $divisionFilter);
+            
+            // Map ELO category code to category name patterns for database queries
+            $categoryNamePatterns = [
+                'MS' => ['%men%singles%', '%mens%singles%'],
+                'WS' => ['%women%singles%', '%womens%singles%'],
+                'MD' => ['%men%doubles%', '%mens%doubles%'],
+                'WD' => ['%women%doubles%', '%womens%doubles%'],
+                'XD' => ['%mixed%'],
+            ];
+            $patterns = $categoryNamePatterns[$eloCategory] ?? ['%' . $eloCategory . '%'];
             
             // Filter: only show players who have actually played in this category
             // Having an ELO rating in this category already means they've played matches
             // But we also check registrations to be thorough
             $playerIds = collect($rankingsData)->pluck('player_id')->toArray();
             
-            // Get players who registered for this category
-            $playedInCategory = \App\Models\TournamentRegistration::whereIn('player_id', $playerIds)
-                ->whereHas('category', function($query) use ($eloCategory) {
-                    $query->where('name', $eloCategory);
+            // Get players who registered for this category with matching age requirements
+            $playedInCategoryQuery = \App\Models\TournamentRegistration::whereIn('player_id', $playerIds)
+                ->whereHas('category', function($query) use ($patterns, $divisionFilter) {
+                    $query->where(function($q) use ($patterns) {
+                        foreach ($patterns as $pattern) {
+                            $q->orWhere('name', 'LIKE', $pattern);
+                        }
+                    });
+                    
+                    // Filter by age division if specified
+                    if ($divisionFilter && in_array($divisionFilter, ['Junior', 'Senior'])) {
+                        if ($divisionFilter === 'Junior') {
+                            // Junior: max_age = 17 (Under 18)
+                            $q->where('max_age', 17)->whereNull('min_age');
+                        } elseif ($divisionFilter === 'Senior') {
+                            // Senior: min_age = 18 (18+)
+                            $q->where('min_age', 18)->whereNull('max_age');
+                        }
+                    } elseif ($divisionFilter === 'Open') {
+                        // Open: both min_age and max_age are null
+                        $q->whereNull('min_age')->whereNull('max_age');
+                    }
                 })
-                ->where('status', 'approved')
-                ->pluck('player_id')
-                ->unique()
-                ->toArray();
+                ->where('status', 'approved');
             
-            // Get players who played matches in this category
-            $playedInMatches = \App\Models\TournamentMatch::where(function($query) use ($playerIds) {
+            $playedInCategory = $playedInCategoryQuery->pluck('player_id')->unique()->toArray();
+            
+            // Get players who played matches in this category with matching age requirements
+            $playedInMatchesQuery = \App\Models\TournamentMatch::where(function($query) use ($playerIds) {
                     $query->whereIn('player1_id', $playerIds)
                           ->orWhereIn('player2_id', $playerIds)
                           ->orWhereIn('player1_partner_id', $playerIds)
                           ->orWhereIn('player2_partner_id', $playerIds);
                 })
-                ->whereHas('category', function($query) use ($eloCategory) {
-                    $query->where('name', $eloCategory);
-                })
-                ->get()
+                ->whereHas('category', function($query) use ($patterns, $divisionFilter) {
+                    $query->where(function($q) use ($patterns) {
+                        foreach ($patterns as $pattern) {
+                            $q->orWhere('name', 'LIKE', $pattern);
+                        }
+                    });
+                    
+                    // Filter by age division if specified
+                    if ($divisionFilter && in_array($divisionFilter, ['Junior', 'Senior'])) {
+                        if ($divisionFilter === 'Junior') {
+                            // Junior: max_age = 17 (Under 18)
+                            $q->where('max_age', 17)->whereNull('min_age');
+                        } elseif ($divisionFilter === 'Senior') {
+                            // Senior: min_age = 18 (18+)
+                            $q->where('min_age', 18)->whereNull('max_age');
+                        }
+                    } elseif ($divisionFilter === 'Open') {
+                        // Open: both min_age and max_age are null
+                        $q->whereNull('min_age')->whereNull('max_age');
+                    }
+                });
+            
+            $playedInMatches = $playedInMatchesQuery->get()
                 ->flatMap(function($match) {
                     return array_filter([
                         $match->player1_id,
@@ -192,26 +229,58 @@ class RankingController extends Controller
             }
         }
         
+        // Count actual matches played for each player from TournamentMatch
+        $matchesPlayedCounts = [];
+        foreach ($matchResults as $result) {
+            $match = $result->match;
+            if (!$match) continue;
+            
+            $isDoubles = $match->player1_partner_id || $match->player2_partner_id;
+            
+            // Count match for player1
+            if (in_array($match->player1_id, $playerIds)) {
+                $matchesPlayedCounts[$match->player1_id] = ($matchesPlayedCounts[$match->player1_id] ?? 0) + 1;
+            }
+            
+            // Count match for player2
+            if (in_array($match->player2_id, $playerIds)) {
+                $matchesPlayedCounts[$match->player2_id] = ($matchesPlayedCounts[$match->player2_id] ?? 0) + 1;
+            }
+            
+            // Count match for doubles partners
+            if ($isDoubles) {
+                if ($match->player1_partner_id && in_array($match->player1_partner_id, $playerIds)) {
+                    $matchesPlayedCounts[$match->player1_partner_id] = ($matchesPlayedCounts[$match->player1_partner_id] ?? 0) + 1;
+                }
+                if ($match->player2_partner_id && in_array($match->player2_partner_id, $playerIds)) {
+                    $matchesPlayedCounts[$match->player2_partner_id] = ($matchesPlayedCounts[$match->player2_partner_id] ?? 0) + 1;
+                }
+            }
+        }
+        
         // Build final rankings data (without ranks yet)
         // Note: $rankingsData is already sorted by rating descending from RankingService
-        $rankings = collect($rankingsData)->map(function ($data) use ($winCounts, $lossCounts) {
+        $rankings = collect($rankingsData)->map(function ($data) use ($winCounts, $lossCounts, $matchesPlayedCounts) {
             $wins = $winCounts[$data['player_id']] ?? 0;
             $losses = $lossCounts[$data['player_id']] ?? 0;
+            // Use actual match count from TournamentMatch, fallback to wins + losses if available
+            $actualMatchesPlayed = $matchesPlayedCounts[$data['player_id']] ?? ($wins + $losses);
             
             return [
                 'rank' => null, // Will be assigned after ensuring proper sort
+                'player_id' => $data['player_id'], // Add player_id for navigation
                 'player' => $data['player'],
                 'club' => $data['club'],
-                'matches_played' => $data['matches_played'],
+                'matches_played' => $actualMatchesPlayed,
                 'wins' => $wins,
                 'losses' => $losses,
-                'win_rate' => $data['matches_played'] > 0 
-                    ? round(($wins / $data['matches_played']) * 100, 1) 
+                'win_rate' => $actualMatchesPlayed > 0 
+                    ? round(($wins / $actualMatchesPlayed) * 100, 1) 
                     : 0,
                 'current_rating' => $data['current_rating'],
                 'peak_rating' => $data['peak_rating'],
                 'is_provisional' => $data['is_provisional'] ?? false,
-                'has_official_ranking' => $data['has_official_ranking'] ?? ($data['matches_played'] > 0),
+                'has_official_ranking' => $data['has_official_ranking'] ?? ($actualMatchesPlayed > 0),
             ];
         })->values();
         
@@ -245,6 +314,11 @@ class RankingController extends Controller
             return $ranking;
         });
         
-        return view('ranking.index', compact('rankings', 'categories', 'category', 'divisions', 'division'));
+        // Return response with cache-busting headers to ensure fresh ELO data
+        return response()
+            ->view('ranking.index', compact('rankings', 'categories', 'category', 'divisions', 'division'))
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 }
