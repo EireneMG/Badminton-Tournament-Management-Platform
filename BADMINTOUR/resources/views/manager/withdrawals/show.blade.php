@@ -40,6 +40,33 @@
                 @endphp
 
                 <div class="max-w-4xl mx-auto">
+                    {{-- Host Notice --}}
+                    @if(isset($isHost) && $isHost)
+                    <div class="mb-4 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg">
+                        <div class="flex items-start">
+                            <svg class="w-6 h-6 text-green-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div>
+                                <p class="font-bold text-green-800">You are the Tournament Host</p>
+                                <p class="text-sm text-green-700">You can approve or reject this withdrawal request.</p>
+                            </div>
+                        </div>
+                    </div>
+                    @elseif(isset($isHost) && !$isHost)
+                    <div class="mb-4 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
+                        <div class="flex items-start">
+                            <svg class="w-6 h-6 text-amber-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div>
+                                <p class="font-bold text-amber-800">View Only</p>
+                                <p class="text-sm text-amber-700">This withdrawal request can only be processed by the tournament host ({{ $tournament->club->name ?? 'Host Club' }}).</p>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
                     <!-- Success/Error Messages -->
                     @if(session('success'))
                         <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
@@ -77,6 +104,21 @@
                                             <label class="block text-sm font-medium text-gray-700">Partner</label>
                                             <p class="mt-1 text-sm text-gray-900">{{ $partner->first_name }} {{ $partner->last_name }}</p>
                                         </div>
+                                        @php
+                                            $isDoublesCategory = $category && (
+                                                str_contains(strtolower($category->name), 'doubles') || 
+                                                str_contains(strtolower($category->name), 'mixed')
+                                            );
+                                        @endphp
+                                        @if($isDoublesCategory)
+                                        <div class="col-span-2 mt-2">
+                                            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
+                                                <p class="text-sm text-yellow-800">
+                                                    <strong>Note:</strong> Approving this withdrawal will automatically withdraw both players from the tournament.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        @endif
                                     @endif
                                 </div>
                             </div>
@@ -91,7 +133,7 @@
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Category</label>
-                                        <p class="mt-1 text-sm text-gray-900">{{ $category->name ?? 'N/A' }}</p>
+                                        <p class="mt-1 text-sm text-gray-900">{{ $category->full_name ?? 'N/A' }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Start Date</label>
@@ -114,7 +156,8 @@
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
+                    <!-- Action Buttons (Only visible to Host) -->
+                    @if(!isset($isHost) || $isHost)
                     <div class="flex gap-4 justify-end">
                         <button 
                             @click="showRejectModal = true"
@@ -127,6 +170,11 @@
                             Approve Request
                         </button>
                     </div>
+                    @else
+                    <div class="text-center py-4">
+                        <p class="text-gray-500 italic">Only the tournament host can approve or reject withdrawal requests.</p>
+                    </div>
+                    @endif
                 </div>
 
                 <!-- Approve Modal -->

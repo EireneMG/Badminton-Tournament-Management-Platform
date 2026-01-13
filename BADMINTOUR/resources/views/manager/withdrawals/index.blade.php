@@ -81,12 +81,27 @@
                                             $tournament = $registration->tournament;
                                             $category = $registration->category;
                                         @endphp
+                                        @php
+                                            $partner = $registration->partner;
+                                            $isDoublesCategory = $category && (
+                                                str_contains(strtolower($category->name), 'doubles') || 
+                                                str_contains(strtolower($category->name), 'mixed')
+                                            );
+                                        @endphp
                                         <tr>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="text-sm font-medium text-gray-900">
                                                     {{ $player->first_name }} {{ $player->last_name }}
+                                                    @if($partner)
+                                                        <br><span class="text-gray-600 text-xs">& Partner: {{ $partner->first_name }} {{ $partner->last_name }}</span>
+                                                    @endif
                                                 </div>
                                                 <div class="text-sm text-gray-500">{{ $player->email }}</div>
+                                                @if($isDoublesCategory && $partner)
+                                                <div class="text-xs text-yellow-600 mt-1">
+                                                    ⚠️ Team withdrawal - both players will be withdrawn
+                                                </div>
+                                                @endif
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="text-sm text-gray-900">{{ $tournament->name }}</div>
@@ -95,7 +110,7 @@
                                                 </div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {{ $category->name ?? 'N/A' }}
+                                                {{ $category->full_name ?? 'N/A' }}
                                             </td>
                                             <td class="px-6 py-4">
                                                 <div class="text-sm text-gray-900 max-w-xs truncate">
