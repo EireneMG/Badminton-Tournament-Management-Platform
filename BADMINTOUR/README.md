@@ -1,61 +1,123 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# BadminTour
+Badminton tournament platform built with Laravel 12, Vite, Tailwind, and Alpine.js. Deployed at [badmintourph.com](https://badmintourph.com).
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Table of Contents
+- [Introduction](#introduction)
+- [Key Features](#key-features)
+- [Project Structure](#project-structure)
+- [Database Structure](#database-structure)
+- [Installation Guide](#installation-guide)
+- [Usage](#usage)
+- [API](#api)
+- [Environment Variables](#environment-variables)
+- [Contribution Guide](#contribution-guide)
+- [Support & Contact](#support--contact)
 
-## About Laravel
+## Introduction
+BadminTour is a Laravel 12 + Vite/Tailwind/Alpine web app for managing badminton tournaments end-to-end. It supports managers (club organizers) and players for registrations, scheduling, round-robin and single-elimination brackets, match results, rankings, withdrawals, and notifications.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Key Features
+- Role-based dashboards for managers and players.
+- Tournament creation with categories, fees, venues, schedules; supports round-robin and single-elimination brackets.
+- Match generation, round normalization, score entry, walkovers, rescheduling, and winner highlighting.
+- Player registrations with partner invitations, approvals, cancellations, and withdrawals.
+- Rankings/ELO per category and division; stats export for managers/clubs.
+- Email notifications (Resend) and responsive UI via Tailwind + Alpine bundled by Vite.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Installation Guide
+**Deployed:** [https://badmintourph.com](https://badmintourph.com)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+**Local setup**
+```bash
+git clone https://github.com/your-org/badmintour.git
+cd badmintour
+cp .env.example .env
+composer install
+npm install
+php artisan key:generate
+php artisan migrate --seed --class=ProductionSeeder
+npm run build        # or npm run dev for hot reload
+php artisan serve
+```
 
-## Learning Laravel
+## Usage
+- Visit `http://localhost:8000` (or the deployed site).
+- Log in with the test users below.
+- Managers: create tournaments, set categories/fees/venues, generate brackets, manage registrations, record scores/walkovers/reschedules.
+- Players: register for categories, invite partners, view brackets and match history, withdraw when allowed.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## API
+This app is UI-first (Blade views). Web routes live in `routes/web.php`:
+- Auth: register/login/password flows (Laravel Breeze)
+- Manager: tournaments, registrations, matches, withdrawals, exports
+- Player: tournament discovery, registrations, brackets, match history
+Extend `routes/api.php` if you need a public API.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Environment Variables
+Set in `.env`:
+```env
+APP_NAME=BadmintourPH
+APP_ENV=local
+APP_KEY=base64:...
+APP_URL=http://localhost:8000
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=badmintour
+DB_USERNAME=root
+DB_PASSWORD=secret
 
-## Laravel Sponsors
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=noreply@badmintourph.com
+MAIL_FROM_NAME="${APP_NAME}"
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Project Structure
+- `app/` — Laravel app code (models, controllers, services, helpers)
+- `resources/views/` — Blade templates for manager/player dashboards and brackets
+- `routes/web.php` — Web routes (auth, manager, player flows)
+- `database/seeders/ProductionSeeder.php` — Demo data and test accounts
+- `public/` — Public assets and entry point
+- `vite.config.js`, `tailwind.config.js`, `postcss.config.js` — Frontend tooling
+- `composer.json`, `package.json` — PHP and JS dependencies
 
-### Premium Partners
+## Database Structure
+High-level tables:
+- `users` — players and managers with verification flags
+- `clubs`, `club_players` — club ownership and memberships
+- `tournaments` — tournament metadata (status, bracket type, venue, dates, fees)
+- `tournament_categories` — per-tournament divisions (singles/doubles/mixed)
+- `tournament_registrations` — entries per category (with partner where needed)
+- `tournament_matches` — generated matches with rounds, times, courts, winners
+- `match_results` — set scores, walkovers, and outcomes
+- `elo_ratings` / `ranking_histories` — rating snapshots per category
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Test Users
+All test accounts use the password `Password123!`.
 
-## Contributing
+| Role | Email | Password |
+| --- | --- | --- |
+| Club Manager 1 | manager.real1@badmintourph.com | Password123! |
+| Club Manager 2 | manager.real2@badmintourph.com | Password123! |
+| Player 1 | player.test1@badmintourph.com | Password123! |
+| Player 2 | player.test2@badmintourph.com | Password123! |
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Additional seeded players: `player.test3@badmintourph.com` through `player.test32@badmintourph.com` (same password).
 
-## Code of Conduct
+## Contribution Guide
+- Fork, create a feature branch, add tests where possible, open a PR.
+- Keep changes focused; follow Laravel/PHP-CS conventions. For larger proposals, open an issue first.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Support & Contact
+- **Project Team (4 members - Full Stack Developers):**
+  - Eirene Gratuito - eirenegratuito@gmail.com
+  - Claudine Moneek Mejorada - mejoradac45@gmail.com
+  - Princes Angelie Subido - princesubido8@gmail.com
+  - Andrea Laganas - andrea.laganas@gmail.com
+- **Issue Reporting:** Please open an issue on our repository for bugs or feature requests with steps to reproduce and screenshots.
