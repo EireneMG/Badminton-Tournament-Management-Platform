@@ -4,9 +4,11 @@
         selectedPlayer: {},
         sortColumn: 'rank',
         sortDirection: 'asc',
-        rankings: @js($rankings->map(function($r) {
+        searchQuery: '',
+        allRankings: @js($rankings->map(function($r) {
             return [
                 'rank' => $r['rank'],
+                'player_id' => $r['player_id'] ?? null,
                 'player_name' => strtoupper($r['player']->last_name) . ', ' . $r['player']->first_name,
                 'club_name' => $r['club'] ? $r['club']->name : 'No Club',
                 'matches_played' => $r['matches_played'],
@@ -23,6 +25,18 @@
                 'peak_rating' => $r['peak_rating'],
             ];
         })->toArray()),
+        
+        get rankings() {
+            if (!this.searchQuery.trim()) {
+                return this.allRankings;
+            }
+            const query = this.searchQuery.toLowerCase().trim();
+            return this.allRankings.filter(ranking => {
+                const playerName = ranking.player_name.toLowerCase();
+                const clubName = (ranking.club_name || '').toLowerCase();
+                return playerName.includes(query) || clubName.includes(query);
+            });
+        },
         
         sort(column) {
             if (this.sortColumn === column) {
@@ -70,14 +84,45 @@
             return this.sortDirection === 'asc' ? '↑' : '↓';
         }
     }">
-        <!-- Category Tabs -->
-        <div class="bg-white border-2 border-[#D4A574] rounded-lg p-1 mb-6 inline-flex space-x-1">
-            @foreach($categories as $cat)
-                <a href="{{ route('ranking.index', ['category' => $cat]) }}" 
-                   class="{{ $category === $cat ? 'bg-[#C85A54] text-white' : 'bg-white text-gray-700 hover:bg-gray-100' }} px-6 py-2 rounded font-semibold transition">
-                    {{ strtoupper($cat) }}
+        <!-- Division Tabs (Primary Navigation) -->
+        <div class="bg-white border-2 border-[#2C5F4F] rounded-lg p-1 mb-4 inline-flex space-x-1 shadow-sm">
+            @foreach($divisions as $divKey => $divLabel)
+                <a href="{{ route('ranking.index', ['category' => $category, 'division' => $divKey]) }}" 
+                   class="{{ $division === $divKey ? 'bg-[#2C5F4F] text-white shadow-md' : 'bg-white text-gray-700 hover:bg-gray-50' }} px-6 py-3 rounded font-bold text-sm transition duration-200">
+                    {{ strtoupper($divLabel) }}
                 </a>
             @endforeach
+        </div>
+
+        <!-- Category Dropdown (Secondary Navigation) -->
+        <div class="mb-6">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Tournament Category</label>
+            <select 
+                x-data="{ currentCategory: {{ json_encode($category) }}, currentDivision: {{ json_encode($division) }} }"
+                x-model="currentCategory"
+                @change="const url = new URL(window.location.href); url.searchParams.set('category', $event.target.value); if (currentDivision !== 'All') { url.searchParams.set('division', currentDivision); } window.location.href = url.toString();"
+                class="w-full max-w-md px-4 py-3 border-2 border-[#D4A574] rounded-lg focus:outline-none focus:border-[#2C5F4F] bg-white text-gray-900 font-semibold">
+                @foreach($categories as $cat)
+                    <option value="{{ $cat }}" {{ $category === $cat ? 'selected' : '' }}>
+                        {{ strtoupper($cat) }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="mb-6">
+            <div class="relative">
+                <input 
+                    type="text" 
+                    x-model="searchQuery"
+                    placeholder="Search player name or club"
+                    class="w-full max-w-md px-4 py-3 pl-10 border-2 border-[#D4A574] rounded-lg focus:outline-none focus:border-[#2C5F4F] bg-white text-gray-900"
+                >
+                <svg class="w-5 h-5 text-gray-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
         </div>
 
         <!-- Ranking Table -->
@@ -86,25 +131,25 @@
                 <thead class="bg-gray-100 border-b">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase cursor-pointer hover:bg-gray-200 transition" @click="sort('rank')">
-                            Rank <span x-text="getSortIcon('rank')" class="ml-1"></span>
+                            Rank <span x-text="getSortIcon('rank')" class="ml-1">↑</span>
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase cursor-pointer hover:bg-gray-200 transition" @click="sort('player_name')">
-                            Name <span x-text="getSortIcon('player_name')" class="ml-1"></span>
+                            Player Name <span x-text="getSortIcon('player_name')" class="ml-1">↕️</span>
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase cursor-pointer hover:bg-gray-200 transition" @click="sort('club_name')">
-                            Club <span x-text="getSortIcon('club_name')" class="ml-1"></span>
+                            Club <span x-text="getSortIcon('club_name')" class="ml-1">↕️</span>
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase cursor-pointer hover:bg-gray-200 transition" @click="sort('matches_played')">
-                            Matches <span x-text="getSortIcon('matches_played')" class="ml-1"></span>
+                            Matches Played <span x-text="getSortIcon('matches_played')" class="ml-1">↕️</span>
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase cursor-pointer hover:bg-gray-200 transition" @click="sort('wins')">
-                            Wins <span x-text="getSortIcon('wins')" class="ml-1"></span>
+                            Wins <span x-text="getSortIcon('wins')" class="ml-1">↕️</span>
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase cursor-pointer hover:bg-gray-200 transition" @click="sort('losses')">
-                            Losses <span x-text="getSortIcon('losses')" class="ml-1"></span>
+                            Losses <span x-text="getSortIcon('losses')" class="ml-1">↕️</span>
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase cursor-pointer hover:bg-gray-200 transition" @click="sort('current_rating')">
-                            Rating <span x-text="getSortIcon('current_rating')" class="ml-1"></span>
+                            Points <span x-text="getSortIcon('current_rating')" class="ml-1">↕️</span>
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Actions</th>
                     </tr>
@@ -133,6 +178,7 @@
                             <td class="px-6 py-4 font-bold text-gray-900" x-text="new Intl.NumberFormat().format(ranking.current_rating)"></td>
                             <td class="px-6 py-4">
                                 <button @click="showPlayerModal = true; selectedPlayer = {
+                                    playerId: ranking.player_id,
                                     name: ranking.player.first_name + ' ' + ranking.player.last_name,
                                     club: ranking.club_name,
                                     rank: ranking.rank,
@@ -216,6 +262,18 @@
                         <span class="text-gray-700 font-semibold">Win Rate</span>
                         <span class="text-2xl font-bold text-[#2C5F4F]" x-text="selectedPlayer.winRate + '%'"></span>
                     </div>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="mt-6 flex flex-col sm:flex-row gap-4 justify-end">
+                    <button @click="showPlayerModal = false" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg font-semibold transition duration-200">
+                        Close
+                    </button>
+                    <template x-if="selectedPlayer.playerId">
+                        <a :href="'{{ url('/players') }}/' + selectedPlayer.playerId" class="bg-[#2C5F4F] hover:bg-[#244D3E] text-white px-6 py-3 rounded-lg font-semibold transition duration-200 text-center">
+                            View Profile
+                        </a>
+                    </template>
                 </div>
             </div>
         </div>
