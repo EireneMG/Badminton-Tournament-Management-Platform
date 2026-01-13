@@ -25,28 +25,24 @@ class VerificationController extends Controller
     {
         $user = $request->user();
 
-        // Check if manager already has a verification record
-        $existingVerification = $user->managerIdVerification;
-
-        if ($existingVerification && $existingVerification->status === 'submitted') {
-            return back()->with('error', 'You have already submitted your ID verification.');
-        }
-
         // Handle file upload
         $idFilePath = $request->file('id_file')->store('manager-ids', 'public');
 
-        // Create or update verification record
+        // Create or update verification record and auto-verify upon upload
         ManagerIdVerification::updateOrCreate(
             ['manager_id' => $user->id],
             [
                 'id_type' => $request->id_type,
                 'id_file_path' => $idFilePath,
-                'status' => 'submitted',
+                'status' => 'verified',
                 'submitted_at' => now(),
             ]
         );
 
+        // Also mark user verification_status as verified for consistency
+        $user->update(['verification_status' => 'verified']);
+
         return redirect()->route('manager.create-club')
-            ->with('success', 'ID verification submitted successfully! Please complete your club registration.');
+            ->with('success', 'ID uploaded and verified automatically. Please complete your club registration.');
     }
 }
