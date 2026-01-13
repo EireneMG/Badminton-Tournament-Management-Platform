@@ -79,7 +79,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Upper Bracket Column -->
             <div>
                 <h3 class="text-center font-semibold text-black bg-gray-200 py-2 rounded-t-lg uppercase">Upper Bracket</h3>
