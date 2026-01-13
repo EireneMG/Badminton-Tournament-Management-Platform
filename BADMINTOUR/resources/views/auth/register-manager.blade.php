@@ -6,7 +6,17 @@
     <title>Manager Registration - Badminton Tournament Management</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="h-screen overflow-hidden" x-data="{ currentStep: 1 }">
+<body class="h-screen overflow-hidden" x-data="managerSteps()">
+    <!-- Back to Home Button -->
+    <div class="absolute top-4 left-4 z-10">
+        <a href="/" class="inline-flex items-center text-gray-700 hover:text-[#2C5F4F] transition">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Home
+        </a>
+    </div>
+    
     <div class="flex h-full">
         <!-- Left Side - White Background -->
         <div class="w-5/12 bg-white flex flex-col justify-between p-12">
@@ -27,19 +37,30 @@
             <div class="w-full max-w-2xl px-8">
                 <h2 class="text-[#7B1F3C] text-5xl font-bold mb-8 text-center">Register</h2>
                 
-                <!-- Error Messages -->
-                @if ($errors->any())
+                <!-- Error Messages (only for Step 1 fields, excluding email/password) -->
+                @php
+                    $step1Errors = array_filter(
+                        $errors->getMessages(),
+                        function ($messages, $field) {
+                            return !in_array($field, ['email', 'password', 'password_confirmation'], true);
+                        },
+                        ARRAY_FILTER_USE_BOTH
+                    );
+                @endphp
+                @if (!empty($step1Errors))
                     <div class="bg-red-50 border border-red-400 text-red-800 px-4 py-3 rounded-md mb-4">
                         <p class="font-semibold mb-2">Please fix the following errors:</p>
                         <ul class="list-disc list-inside text-sm space-y-1">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
+                            @foreach ($step1Errors as $fieldErrors)
+                                @foreach ($fieldErrors as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
                             @endforeach
                         </ul>
                     </div>
                 @endif
                 
-                <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data" class="space-y-4">
+                <form method="POST" action="{{ route('register.store') }}" enctype="multipart/form-data" class="space-y-4" id="manager-register-form">
                     @csrf
                     <input type="hidden" name="role" value="manager">
 
@@ -55,6 +76,9 @@
                                 required
                                 class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
                             >
+                            @error('first_name')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- Middle Name and Last Name -->
@@ -74,6 +98,9 @@
                                 required
                                 class="px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
                             >
+                            @error('last_name')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- Gender and Contact Number -->
@@ -92,35 +119,23 @@
                                 placeholder="Contact number"
                                 value="{{ old('contact_number') }}"
                                 required
+                                pattern="[0-9()+\-\s]+"
+                                title="Please enter a valid contact number"
                                 class="px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
                             >
+                            @error('contact_number')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- ID Upload Section -->
-                        <div class="border-t border-gray-300 pt-4 mt-4">
-                            <p class="text-gray-700 text-sm font-semibold mb-2">Manager Verification</p>
-                            <p class="text-gray-600 text-xs mb-3">Please upload a valid ID (Government ID, Passport, Driver's License, etc.) for verification purposes. This helps prevent unauthorized manager registrations.</p>
-                            
-                            <div>
-                                <label class="block text-gray-700 text-sm font-medium mb-2">
-                                    Upload Valid ID <span class="text-red-500">*</span>
-                                </label>
-                                <input 
-                                    type="file" 
-                                    name="id_document" 
-                                    accept="image/*,.pdf"
-                                    required
-                                    class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#7B1F3C] file:text-white hover:file:bg-[#6B1A34] file:cursor-pointer"
-                                >
-                                <p class="text-xs text-gray-500 mt-1">Accepted formats: JPG, PNG, PDF (Max 5MB)</p>
-                            </div>
-                        </div>
+                        <!-- Manager ID upload removed from registration; will be collected during club creation -->
 
                         <!-- Next Button -->
                         <div class="pt-4 flex justify-end">
                             <button 
                                 type="button"
-                                @click="currentStep = 2"
+                                @click="goToStep(2)"
                                 class="bg-[#7B1F3C] text-white px-20 py-2.5 rounded-md hover:bg-[#6B1A34] transition font-semibold">
                                 Next
                             </button>
@@ -139,6 +154,9 @@
                                 required
                                 class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
                             >
+                            @error('email')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- Create Password -->
@@ -146,10 +164,14 @@
                             <input 
                                 type="password" 
                                 name="password" 
-                                placeholder="Create password"
+                                placeholder="Create password (minimum 8 characters)"
                                 required
+                                minlength="8"
                                 class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
                             >
+                            @error('password')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- Confirm Password -->
@@ -159,15 +181,19 @@
                                 name="password_confirmation" 
                                 placeholder="Confirm password"
                                 required
+                                minlength="8"
                                 class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
                             >
+                            @error('password_confirmation')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- Buttons -->
                         <div class="pt-4 flex justify-between items-center">
                             <button 
                                 type="button"
-                                @click="currentStep = 1"
+                                @click="goToStep(1)"
                                 class="text-gray-600 hover:text-gray-900 font-semibold">
                                 ← Back
                             </button>
@@ -182,9 +208,39 @@
             </div>
         </div>
     </div>
-
     <style>
     [x-cloak] { display: none !important; }
     </style>
+
+    <script>
+        // Toggle required fields by step to avoid hidden-field validation errors
+        function setManagerRequired(step) {
+            const step1Fields = ['first_name','last_name','contact_number','id_document'];
+            const step2Fields = ['email','password','password_confirmation'];
+
+            step1Fields.forEach(name => {
+                const el = document.querySelector(`[name="${name}"]`);
+                if (el) el.required = (step === 1);
+            });
+            step2Fields.forEach(name => {
+                const el = document.querySelector(`[name="${name}"]`);
+                if (el) el.required = (step === 2);
+            });
+        }
+
+        document.addEventListener('alpine:init', () => {
+            // Alpine helper to move steps and manage required attrs
+            Alpine.data('managerSteps', () => ({
+                currentStep: {{ $errors->has('email') || $errors->has('password') || $errors->has('password_confirmation') ? 2 : 1 }},
+                init() {
+                    setManagerRequired(this.currentStep);
+                },
+                goToStep(step) {
+                    this.currentStep = step;
+                    setManagerRequired(step);
+                }
+            }));
+        });
+    </script>
 </body>
 </html>

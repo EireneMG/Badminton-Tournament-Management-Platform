@@ -7,6 +7,16 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="h-screen overflow-hidden" x-data="playerRegistration()" x-init="init()">
+    <!-- Back to Home Button -->
+    <div class="absolute top-4 left-4 z-10">
+        <a href="/" class="inline-flex items-center text-gray-700 hover:text-[#2C5F4F] transition">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Home
+        </a>
+    </div>
+    
     <div class="flex h-full">
         <!-- Left Side - White Background -->
         <div class="w-5/12 bg-white flex flex-col justify-between p-12">
@@ -27,19 +37,30 @@
             <div class="w-full max-w-2xl px-8">
                 <h2 class="text-[#7B1F3C] text-5xl font-bold mb-8 text-center">Register</h2>
                 
-                <!-- Error Messages -->
-                @if ($errors->any())
+                <!-- Error Messages (only for Step 1 fields, excluding email/password) -->
+                @php
+                    $step1Errors = array_filter(
+                        $errors->getMessages(),
+                        function ($messages, $field) {
+                            return !in_array($field, ['email', 'password', 'password_confirmation'], true);
+                        },
+                        ARRAY_FILTER_USE_BOTH
+                    );
+                @endphp
+                @if (!empty($step1Errors))
                     <div class="bg-red-50 border border-red-400 text-red-800 px-4 py-3 rounded-md mb-4">
                         <p class="font-semibold mb-2">Please fix the following errors:</p>
                         <ul class="list-disc list-inside text-sm space-y-1">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
+                            @foreach ($step1Errors as $fieldErrors)
+                                @foreach ($fieldErrors as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
                             @endforeach
                         </ul>
                     </div>
                 @endif
                 
-                <form method="POST" action="{{ route('register') }}" class="space-y-4">
+                <form method="POST" action="{{ route('register.store') }}" class="space-y-4">
                     @csrf
                     <input type="hidden" name="role" value="player">
 
@@ -70,8 +91,12 @@
                                 name="last_name" 
                                 placeholder="Last name"
                                 value="{{ old('last_name') }}"
+                                required
                                 class="px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
                             >
+                            @error('last_name')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- Contact Number -->
@@ -81,14 +106,21 @@
                                 name="contact_number" 
                                 placeholder="Contact number"
                                 value="{{ old('contact_number') }}"
+                                required
+                                pattern="[0-9()+\-\s]+"
+                                title="Please enter a valid contact number"
                                 class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
                             >
+                            @error('contact_number')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- Birth Date -->
                         <div class="grid grid-cols-3 gap-4">
                             <select 
                                 name="birth_month"
+                                required
                                 class="px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-500 text-sm"
                             >
                                 <option value="">Birth month</option>
@@ -106,19 +138,31 @@
                                 <option value="12" {{ old('birth_month') == '12' ? 'selected' : '' }}>December</option>
                             </select>
                             <input 
-                                type="text" 
+                                type="number" 
                                 name="birth_day" 
                                 placeholder="Day"
                                 value="{{ old('birth_day') }}"
+                                required
+                                min="1" 
+                                max="31"
                                 class="px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
                             >
+                            @error('birth_day')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                             <input 
-                                type="text" 
+                                type="number" 
                                 name="birth_year" 
                                 placeholder="Year"
                                 value="{{ old('birth_year') }}"
+                                required
+                                min="1950" 
+                                max="{{ now()->year }}"
                                 class="px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
                             >
+                            @error('birth_year')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- Region, Province, City -->
@@ -135,6 +179,10 @@
                                     <option :value="region.code" x-text="region.name"></option>
                                 </template>
                             </select>
+                            <!-- Hidden field to ensure province is submitted for NCR -->
+                            <template x-if="selectedRegion === 'NCR'">
+                                <input type="hidden" name="province" value="N/A">
+                            </template>
                             <select 
                                 name="province"
                                 x-model="selectedProvince"
@@ -222,8 +270,12 @@
                                 name="email" 
                                 placeholder="Email Address"
                                 value="{{ old('email') }}"
+                                required
                                 class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
                             >
+                            @error('email')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- Password -->
@@ -231,22 +283,60 @@
                             <input 
                                 type="password" 
                                 name="password" 
-                                placeholder="Create password"
+                                placeholder="Create password (minimum 8 characters)"
+                                required
+                                minlength="8"
                                 class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
                             >
+                            @error('password')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
-                        <!-- Confirm Password -->
                         <div>
                             <input 
                                 type="password" 
                                 name="password_confirmation" 
                                 placeholder="Confirm password"
+                                required
+                                minlength="8"
                                 class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-[#7B1F3C] text-gray-700 placeholder-gray-400 text-sm"
                             >
+                            @error('password_confirmation')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
-                        <!-- Back and Create Buttons -->
+                        <div class="bg-gray-50 border border-gray-300 rounded-lg p-4 max-h-60 overflow-y-auto">
+                            <h3 class="font-semibold text-gray-900 mb-3 text-sm">Terms & Conditions / NDA</h3>
+                            <div class="text-xs text-gray-700 space-y-2">
+                                <p>By creating an account, you agree to the following terms:</p>
+                                <ul class="list-disc list-inside space-y-1 ml-2">
+                                    <li>I understand that participation in badminton tournaments involves physical activity and potential risk of injury.</li>
+                                    <li>I agree to follow all tournament rules and regulations set by the organizing club.</li>
+                                    <li>I consent to the use of my personal information for tournament management and communication purposes.</li>
+                                    <li>I acknowledge that tournament fees are non-refundable once registration is approved.</li>
+                                    <li>I agree to maintain sportsmanlike conduct and respect all participants, officials, and organizers.</li>
+                                </ul>
+                            </div>
+                            <div class="mt-4 flex items-start">
+                                <input 
+                                    type="checkbox" 
+                                    id="accept_terms" 
+                                    name="accept_terms" 
+                                    value="1" 
+                                    required
+                                    class="mt-1 h-4 w-4 text-[#7B1F3C] border-gray-300 rounded focus:ring-[#7B1F3C]"
+                                >
+                                <label for="accept_terms" class="ml-2 text-xs text-gray-700">
+                                    I have read and accept the Terms & Conditions / NDA
+                                </label>
+                            </div>
+                            @error('accept_terms')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <div class="pt-6 flex justify-center space-x-4">
                             <button 
                                 type="button"
@@ -269,33 +359,50 @@
     </div>
 
     <script>
+        // Toggle required attributes based on active step to avoid hidden-field validation errors
+        function setRequiredForStep(step) {
+            const step1Fields = [
+                'first_name','last_name','contact_number','birth_month','birth_day','birth_year',
+                'gender','height','weight','region','province','city'
+            ];
+            const step2Fields = ['email','password','password_confirmation'];
+
+            step1Fields.forEach(name => {
+                const el = document.querySelector(`[name="${name}"]`);
+                if (el) el.required = (step === 1);
+            });
+            step2Fields.forEach(name => {
+                const el = document.querySelector(`[name="${name}"]`);
+                if (el) el.required = (step === 2);
+            });
+        }
+
         // Check which step to show based on validation errors
         document.addEventListener('DOMContentLoaded', function() {
-            // Step 1 fields: first_name, middle_name, last_name, contact_number, birth_month, birth_day, birth_year, gender, height, weight, region, province, city
             const step1HasErrors = {{ $errors->has('first_name') || $errors->has('middle_name') || $errors->has('last_name') || $errors->has('contact_number') || $errors->has('birth_month') || $errors->has('birth_day') || $errors->has('birth_year') || $errors->has('gender') || $errors->has('height') || $errors->has('weight') || $errors->has('region') || $errors->has('province') || $errors->has('city') ? 'true' : 'false' }};
-            
-            // Step 2 fields: email, password, password_confirmation
             const step2HasErrors = {{ $errors->has('email') || $errors->has('password') || $errors->has('password_confirmation') ? 'true' : 'false' }};
-            
-            // Priority: Show Step 1 if it has ANY errors, otherwise show Step 2 if it has errors
-            if (step1HasErrors) {
-                // Stay on Step 1 to fix Step 1 errors first
-                showStep1();
-            } else if (step2HasErrors) {
-                // Only Step 2 has errors, show Step 2
+
+            if (step2HasErrors) {
                 showStep2();
+                setRequiredForStep(2);
+            } else if (step1HasErrors) {
+                showStep1();
+                setRequiredForStep(1);
+            } else {
+                setRequiredForStep(1);
             }
-            // Otherwise stay on Step 1 (default)
         });
 
         function showStep2() {
             document.getElementById('step1').classList.add('hidden');
             document.getElementById('step2').classList.remove('hidden');
+            setRequiredForStep(2);
         }
 
         function showStep1() {
             document.getElementById('step2').classList.add('hidden');
             document.getElementById('step1').classList.remove('hidden');
+            setRequiredForStep(1);
         }
 
         function playerRegistration() {
