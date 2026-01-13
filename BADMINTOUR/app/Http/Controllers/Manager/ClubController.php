@@ -8,6 +8,8 @@ use App\Models\Club;
 use App\Models\ClubPlayer;
 use App\Models\User;
 use App\Models\Notification;
+use App\Models\ManagerIdVerification;
+use App\Services\StatisticsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -15,9 +17,13 @@ use Illuminate\Support\Facades\Storage;
 
 class ClubController extends Controller
 {
-    /**
-     * Display the club management page.
-     */
+    protected StatisticsService $statisticsService;
+
+    public function __construct(StatisticsService $statisticsService)
+    {
+        $this->statisticsService = $statisticsService;
+    }
+
     public function index(): View
     {
         $club = Club::where('manager_id', auth()->id())
@@ -28,7 +34,9 @@ class ClubController extends Controller
             return view('manager.club', [
                 'club' => null,
                 'joinRequests' => collect([]),
-                'approvedPlayers' => collect([])
+                'approvedPlayers' => collect([]),
+                'invitedPlayers' => collect([]),
+                'clubStatistics' => null,
             ]);
         }
         
@@ -38,18 +46,11 @@ class ClubController extends Controller
             ->with('player')
             ->get();
         
-        // Get all invitations (pending and rejected only - approved ones are in Club Members)
-        // Get invited players: includes invitations that are:
-        // 1. Still pending (status='invited')
-        // 2. Accepted but waiting for provisional skill level (status='invited' with no skill_level/provisional_elo)
-        // 3. Rejected invitations
-        // Also include accepted invitations that don't have provisional skill level yet
         $invitedPlayers = \App\Models\ClubPlayer::where('club_id', $club->id)
             ->where('request_type', 'invitation')
             ->where(function($query) {
                 $query->whereIn('status', ['invited', 'rejected'])
                     ->orWhere(function($q) {
-                        // Include 'approved' invitations that don't have provisional skill level yet
                         $q->where('status', 'approved')
                           ->where(function($subQ) {
                               $subQ->whereNull('skill_level')
@@ -59,25 +60,44 @@ class ClubController extends Controller
             })
             ->with('player')
             ->get()
+            ->filter(function($clubPlayer) {
+                return $clubPlayer->player !== null;
+            })
             ->sortBy(function($clubPlayer) {
                 return strtolower($clubPlayer->player->first_name . ' ' . $clubPlayer->player->last_name);
             })
             ->values();
         
-        // Get approved players: only those with status='approved' AND have provisional skill level assigned
-        // This excludes accepted invitations that are still waiting for provisional skill level
         $approvedPlayers = \App\Models\ClubPlayer::where('club_id', $club->id)
             ->where('status', 'approved')
             ->whereNotNull('skill_level')
             ->whereNotNull('provisional_elo')
             ->with('player')
             ->get()
+            ->filter(function($clubPlayer) {
+                return $clubPlayer->player !== null;
+            })
             ->sortBy(function($clubPlayer) {
                 return strtolower($clubPlayer->player->first_name . ' ' . $clubPlayer->player->last_name);
             })
             ->values();
         
-        return view('manager.club', compact('club', 'joinRequests', 'invitedPlayers', 'approvedPlayers'));
+        try {
+            $clubStatistics = $this->statisticsService->getClubStatistics($club);
+        } catch (\Exception $e) {
+            \Log::error("Error fetching club statistics for club {$club->id}: " . $e->getMessage());
+            $clubStatistics = [
+                'total_members' => 0,
+                'active_members' => 0,
+                'tournaments_hosted' => 0,
+                'tournaments_by_status' => ['published' => 0, 'upcoming' => 0, 'ongoing' => 0, 'completed' => 0],
+                'total_matches' => 0,
+                'completed_matches' => 0,
+                'average_elo' => 0,
+            ];
+        }
+        
+        return view('manager.club', compact('club', 'joinRequests', 'invitedPlayers', 'approvedPlayers', 'clubStatistics'));
     }
 
     /**
@@ -91,7 +111,44 @@ class ClubController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('manager.clubs', compact('allClubs'));
+        // Get current manager's club (if exists)
+        $currentManagerClub = Club::where('manager_id', auth()->id())->first();
+
+        return view('manager.clubs', compact('allClubs', 'currentManagerClub'));
+    }
+
+    /**
+     * Display another club's details (read-only view for managers).
+     */
+    public function showClub(Club $club): View
+    {
+        // Get current manager's club
+        $currentManagerClub = Club::where('manager_id', auth()->id())->first();
+
+        // If viewing own club, redirect to My Club
+        if ($currentManagerClub && $club->id === $currentManagerClub->id) {
+            return redirect()->route('manager.club');
+        }
+
+        // Load club with manager and tournaments relationships
+        $club->load(['manager', 'tournaments']);
+
+        // Get approved players using ClubPlayer model (to access skill_level, provisional_elo, etc.)
+        $approvedPlayers = ClubPlayer::where('club_id', $club->id)
+            ->where('status', 'approved')
+            ->whereNotNull('skill_level')
+            ->whereNotNull('provisional_elo')
+            ->with('player')
+            ->get()
+            ->filter(function($clubPlayer) {
+                return $clubPlayer->player !== null;
+            })
+            ->sortBy(function($clubPlayer) {
+                return strtolower($clubPlayer->player->first_name . ' ' . $clubPlayer->player->last_name);
+            })
+            ->values();
+
+        return view('manager.club-view', compact('club', 'currentManagerClub', 'approvedPlayers'));
     }
 
     /**
@@ -220,12 +277,6 @@ class ClubController extends Controller
      */
     public function create(): View
     {
-        // Check if manager is verified
-        if (auth()->user()->verification_status !== 'verified') {
-            return redirect()->route('manager.dashboard')
-                ->with('error', 'Your account must be verified before you can create a club. Please wait for verification or contact support if you have questions.');
-        }
-
         return view('manager.create-club');
     }
 
@@ -236,16 +287,24 @@ class ClubController extends Controller
     {
         $user = $request->user();
 
-        // Check if manager is verified
-        if ($user->verification_status !== 'verified') {
-            return redirect()->route('manager.dashboard')
-                ->with('error', 'Your account must be verified before you can create a club. Please wait for verification or contact support if you have questions.');
-        }
-
         // Check if manager already has a club
         if ($user->managedClub) {
             return back()->with('error', 'You have already created a club.');
         }
+
+        // Handle manager ID verification upload (required at club creation) and auto-verify
+        $idFilePath = $request->file('id_file')->store('manager-ids', 'public');
+
+        ManagerIdVerification::updateOrCreate(
+            ['manager_id' => $user->id],
+            [
+                'id_type' => $request->id_type,
+                'id_file_path' => $idFilePath,
+                'status' => 'verified',
+                'submitted_at' => now(),
+            ]
+        );
+        $user->update(['verification_status' => 'verified']);
 
         $clubData = [
             'manager_id' => $user->id,
@@ -334,12 +393,21 @@ class ClubController extends Controller
                 ->with('error', 'You need to create a club first.');
         }
 
+        // Accept either player_id or player_email
         $validated = $request->validate([
-            'player_email' => 'required|email|exists:users,email',
+            'player_id' => 'nullable|exists:users,id',
+            'player_email' => 'nullable|email|exists:users,email',
             'message' => 'nullable|string|max:500',
         ]);
 
-        $player = User::where('email', $validated['player_email'])->firstOrFail();
+        // Get player by ID or email
+        if ($request->has('player_id') && $request->player_id) {
+            $player = User::findOrFail($validated['player_id']);
+        } elseif ($request->has('player_email') && $request->player_email) {
+            $player = User::where('email', $validated['player_email'])->firstOrFail();
+        } else {
+            return back()->with('error', 'Please provide either a player ID or email address.');
+        }
 
         if ($player->role !== 'player') {
             return back()->with('error', 'Selected user is not a player.');
@@ -527,34 +595,42 @@ class ClubController extends Controller
 
     /**
      * Create official ELO rating from provisional skill level
+     * Creates ELO records for all gender-appropriate categories
      */
     protected function createEloFromProvisional(\App\Models\User $player, int $eloRating): void
     {
-        // Determine category based on player gender (default to MS/WS)
-        $category = $player->gender === 'Female' ? 'WS' : 'MS';
+        // Determine categories based on player gender
+        // Male players: MS, MD, XD
+        // Female players: WS, WD, XD
+        $isMale = $player->gender === 'Male';
+        $categories = $isMale 
+            ? ['MS', 'MD', 'XD']  // Male categories
+            : ['WS', 'WD', 'XD']; // Female categories
         
-        // Create or update ELO rating
-        \App\Models\EloRating::updateOrCreate(
-            [
+        // Create or update ELO ratings for all gender-appropriate categories
+        foreach ($categories as $category) {
+            \App\Models\EloRating::updateOrCreate(
+                [
+                    'player_id' => $player->id,
+                    'category' => $category,
+                ],
+                [
+                    'current_rating' => $eloRating,
+                    'peak_rating' => $eloRating,
+                    'matches_played' => 0,
+                ]
+            );
+            
+            // Create ranking history entry for each category
+            \App\Models\RankingHistory::create([
                 'player_id' => $player->id,
                 'category' => $category,
-            ],
-            [
-                'current_rating' => $eloRating,
-                'peak_rating' => $eloRating,
-                'matches_played' => 0,
-            ]
-        );
-        
-        // Create ranking history entry
-        \App\Models\RankingHistory::create([
-            'player_id' => $player->id,
-            'category' => $category,
-            'rating' => $eloRating,
-            'previous_rating' => null,
-            'change' => 0,
-            'recorded_at' => now(),
-        ]);
+                'rating' => $eloRating,
+                'previous_rating' => null,
+                'change' => 0,
+                'recorded_at' => now(),
+            ]);
+        }
     }
 
 }
