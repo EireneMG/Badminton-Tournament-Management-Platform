@@ -102,7 +102,7 @@ Extend `routes/api.php` if you need a public API.
 If you discover any security vulnerabilities, please report them by opening an issue or contacting the project team directly. We take security seriously and will address issues promptly.
 
 ## License
-Specify your license here. (e.g., MIT, GPL, etc.)
+All rights reserved.
 
 ## Contact
 **Project Team (4 members - Full Stack Developers):**
